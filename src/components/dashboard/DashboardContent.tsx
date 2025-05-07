@@ -4,18 +4,28 @@ import DailyChallengesTab from './sections/DailyChallengesTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Video, CalendarCheck, Trophy } from 'lucide-react';
 import { useDashboardData } from '@/hooks/useDashboardData';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import UserStats from './UserStats';
 import FeatureCards from './FeatureCards';
+import { useUser } from '@/contexts/UserContext';
 
 const DashboardContent: React.FC = () => {
   const { currentEra, learningTrack, isLoading } = useDashboardData();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user } = useUser();
   const params = new URLSearchParams(location.search);
   const hash = window.location.hash.replace('#', '');
   const initialTab = hash || params.get('tab') || 'learning';
   const [activeTab, setActiveTab] = useState<string>(initialTab);
   const [forceRefresh, setForceRefresh] = useState(false);
+
+  // Redirect not logged in users to landing page
+  useEffect(() => {
+    if (!user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
 
   // Listen for content-saved event to refresh the dashboard
   useEffect(() => {

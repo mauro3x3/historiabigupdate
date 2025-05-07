@@ -55,14 +55,15 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
 const AppRoutes = () => {
   const { user, isOnboarded } = useUser();
   
-  const defaultRoute = user 
-    ? (isOnboarded ? <Navigate to="/profile" replace /> : <Navigate to="/onboarding" replace />)
-    : <Navigate to="/home" replace />;
-  
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/home" element={<HomeRevamp />} />
+      <Route path="/" element={<Onboarding />} />
+      <Route path="/landingpage" element={<LandingPage />} />
+      <Route path="/home" element={
+        <ProtectedRoute>
+          <HomeRevamp />
+        </ProtectedRoute>
+      } />
       <Route path="/auth" element={<ThemeProvider disableBackground={true}><Auth /></ThemeProvider>} />
       <Route path="/onboarding" element={<Onboarding />} />
       <Route path="/profile" element={
@@ -124,7 +125,6 @@ const AppRoutes = () => {
       <Route path="/quiz/:id" element={<QuizPlayPage />} />
       <Route path="/quiz-library" element={<QuizLibrary />} />
       <Route path="/achievements" element={<AllAchievements />} />
-      <Route path="/landingpage" element={<LandingPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
