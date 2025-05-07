@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -8,6 +7,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { playCorrectSound, playWrongSound, preloadSounds } from '@/utils/audioUtils';
 import { DailyChallenge } from '@/types';
+import { unlockAchievement } from '@/integrations/supabase/achievements';
 
 interface DailyChallengeQuizProps {
   challenge: DailyChallenge;
@@ -75,8 +75,18 @@ const DailyChallengeQuiz = ({ challenge, onComplete }: DailyChallengeQuizProps) 
             correct: isCorrect,
             xp_earned: isCorrect ? (challenge.xp_reward || 0) : 0
           });
-          
         if (error) throw error;
+        // Unlock achievements
+        await unlockAchievement(user.id, 'daily_challenge_1');
+        // Count user's completed daily challenges
+        const { count } = await supabase
+          .from('user_challenge_progress')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('completed', true);
+        if ((count || 0) >= 10) {
+          await unlockAchievement(user.id, 'daily_challenge_10');
+        }
       }
     } catch (error) {
       console.error("Error saving challenge progress:", error);

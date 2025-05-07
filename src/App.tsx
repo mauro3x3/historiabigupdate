@@ -2,14 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { UserProvider } from "./contexts/UserContext";
 import Index from "./pages/Index";
-import Home from "./pages/Home";
+import HomeRevamp from "./pages/HomeRevamp";
 import Onboarding from "./pages/Onboarding";
-import Profile from "./pages/Dashboard";
+import Profile from "./pages/Profile";
 import Lesson from "./pages/Lesson";
-import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AllLessons from "./pages/AllLessons";
@@ -23,8 +22,17 @@ import MapGameEdit from "./pages/MapGameEdit";
 import Leaderboard from "./pages/Leaderboard";
 import VideoPlayer from "./pages/VideoPlayer";
 import { useUser } from "./contexts/UserContext";
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Film, BookOpen, Map, Gamepad2, Hourglass, User, X } from 'lucide-react';
+import Videos from "./pages/Videos";
+import QuizBuilder from "./pages/QuizBuilder";
+import { Sparkles } from 'lucide-react';
+import QuizPlayPage from "./pages/QuizPlayPage";
+import AllAchievements from "./pages/AllAchievements";
+import { ThemeProvider } from '@/components/ThemeProvider';
+import { ThemeContextProvider } from '@/contexts/ThemeContext';
+import QuizLibrary from '@/pages/QuizLibrary';
+import LandingPage from "./pages/Index";
 
 const queryClient = new QueryClient();
 
@@ -54,10 +62,9 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/" element={defaultRoute} />
-      <Route path="/home" element={<Home />} />
-      <Route path="/auth" element={<Auth />} />
+      <Route path="/home" element={<HomeRevamp />} />
+      <Route path="/auth" element={<ThemeProvider disableBackground={true}><Auth /></ThemeProvider>} />
       <Route path="/onboarding" element={<Onboarding />} />
-      <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
       <Route path="/profile" element={
         <ProtectedRoute>
           <Profile />
@@ -103,7 +110,21 @@ const AppRoutes = () => {
           <MapGameEdit />
         </ProtectedRoute>
       } />
-      <Route path="/admin" element={<Admin />} />
+      <Route path="/videos" element={
+        <ProtectedRoute>
+          <Videos />
+        </ProtectedRoute>
+      } />
+      <Route path="/dashboard" element={<Navigate to="/profile" replace />} />
+      <Route path="/quiz-builder" element={
+        <ProtectedRoute>
+          <QuizBuilder />
+        </ProtectedRoute>
+      } />
+      <Route path="/quiz/:id" element={<QuizPlayPage />} />
+      <Route path="/quiz-library" element={<QuizLibrary />} />
+      <Route path="/achievements" element={<AllAchievements />} />
+      <Route path="/landingpage" element={<LandingPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -113,29 +134,62 @@ const NAV_LINKS = [
   { label: 'Videos', href: '/videos', icon: <Film className="h-6 w-6" /> },
   { label: 'All Lessons', href: '/all-lessons', icon: <BookOpen className="h-6 w-6" /> },
   { label: 'Maps', href: '/historical-map/list', icon: <Map className="h-6 w-6" /> },
-  { label: 'Games', href: '/map-games', icon: <Gamepad2 className="h-6 w-6" /> },
+  { label: 'Games', href: '/map-games', icon: <Gamepad2 className="h-6 w-6" />, subItems: [
+    { label: 'Daily Challenge', href: '/daily-challenge', icon: <Hourglass className="h-6 w-6" /> },
+  ] },
+  { label: 'Quiz Your Friends', href: '/quiz-builder', icon: <Sparkles className="h-6 w-6 text-yellow-400" /> },
   { label: 'Explore Eras', href: '/onboarding', icon: <Hourglass className="h-6 w-6" /> },
   { label: 'Profile', href: '/profile', icon: <User className="h-6 w-6" /> },
 ];
 
 function GlobalFishbowlMenu() {
   const [open, setOpen] = useState(false);
+  const [showBalloon, setShowBalloon] = useState(true);
   const menuId = "fishbowl-menu";
+  const navigate = useNavigate();
+
+  // Show balloon only if not dismissed in last 24 hours
+  useEffect(() => {
+    const lastClosed = localStorage.getItem('fishbowlBalloonClosed');
+    if (lastClosed) {
+      const last = parseInt(lastClosed, 10);
+      const now = Date.now();
+      if (now - last < 24 * 60 * 60 * 1000) {
+        setShowBalloon(false);
+      }
+    }
+  }, []);
+
+  const handleCloseBalloon = () => {
+    setShowBalloon(false);
+    localStorage.setItem('fishbowlBalloonClosed', Date.now().toString());
+  };
+
   return (
     <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end">
       {/* Speech bubble with tail - repositioned to be above and left of the bowl */}
-      <div className={`transition-all duration-300 ${open ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
-        style={{ pointerEvents: open ? 'none' : 'auto', position: 'absolute', right: '110px', bottom: '110px' }}>
-        <div className="relative">
-          <div className="bg-white text-timelingo-navy px-5 py-2 rounded-2xl shadow-lg border border-gray-200 font-semibold text-base animate-fade-in">
-            Want to try other ways of learning?
+      {showBalloon && (
+        <div className={`transition-all duration-300 ${open ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
+          style={{ pointerEvents: open ? 'none' : 'auto', position: 'absolute', right: '110px', bottom: '110px' }}>
+          <div className="relative">
+            <div className="bg-white text-timelingo-navy px-5 py-2 rounded-2xl shadow-lg border border-gray-200 font-semibold text-base animate-fade-in flex items-center gap-2">
+              <span>Want to try other ways of learning?</span>
+              <button
+                className="ml-2 text-gray-400 hover:text-timelingo-purple focus:outline-none"
+                aria-label="Close balloon"
+                onClick={handleCloseBalloon}
+                style={{ fontSize: 18, lineHeight: 1, padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                ×
+              </button>
+            </div>
+            {/* Tail - now points more directly at the mascot */}
+            <svg width="32" height="16" viewBox="0 0 32 16" className="absolute left-[70%] -bottom-3 -translate-x-1/2">
+              <polygon points="16,0 32,16 0,16" fill="#fff" stroke="#e5e7eb" strokeWidth="1" />
+            </svg>
           </div>
-          {/* Tail - now points more directly at the mascot */}
-          <svg width="32" height="16" viewBox="0 0 32 16" className="absolute left-[70%] -bottom-3 -translate-x-1/2">
-            <polygon points="16,0 32,16 0,16" fill="#fff" stroke="#e5e7eb" strokeWidth="1" />
-          </svg>
         </div>
-      </div>
+      )}
       {/* Menu */}
       <div
         className={`transition-all duration-300 mb-2 ${open ? 'opacity-100 translate-y-0' : 'opacity-0 pointer-events-none translate-y-4'}`}
@@ -152,20 +206,40 @@ function GlobalFishbowlMenu() {
             <X className="h-5 w-5" />
           </button>
           {NAV_LINKS.map(link => (
-            <a
-              key={link.href}
-              href={link.href}
-              className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none"
-              tabIndex={open ? 0 : -1}
-              role="menuitem"
-              aria-label={link.label}
-              onClick={() => setOpen(false)}
-            >
-              <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold">
-                {link.icon}
-              </span>
-              {link.label}
-            </a>
+            <React.Fragment key={link.href}>
+              <button
+                type="button"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left"
+                tabIndex={open ? 0 : -1}
+                role="menuitem"
+                aria-label={link.label}
+                onClick={() => { setOpen(false); navigate(link.href); }}
+              >
+                <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold">
+                  {link.icon}
+                </span>
+                {link.label}
+              </button>
+              {/* Render subItems if present (for Games) */}
+              {link.subItems && (
+                <div className="ml-8 flex flex-col gap-1">
+                  {link.subItems.map(sub => (
+                    <button
+                      key={sub.href}
+                      type="button"
+                      className="flex items-center gap-2 px-3 py-1 rounded hover:bg-timelingo-gold/10 text-timelingo-navy text-sm font-medium w-full text-left"
+                      tabIndex={open ? 0 : -1}
+                      role="menuitem"
+                      aria-label={sub.label}
+                      onClick={() => { setOpen(false); navigate(sub.href); }}
+                    >
+                      <span>{sub.icon}</span>
+                      {sub.label}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </React.Fragment>
           ))}
         </div>
       </div>
@@ -187,8 +261,8 @@ function GlobalFishbowlMenu() {
           </svg>
           {/* Mascot with bounce animation */}
           <img
-            src="/images/avatars/goldfish_3.png"
-            alt="Fishbowl mascot"
+            src="/images/avatars/Johan.png"
+            alt="Johan mascot"
             className={`w-20 h-20 object-contain z-10 transition-transform duration-300 animate-bounce-slow ${open ? 'scale-110' : ''}`}
             style={{ marginTop: '10px' }}
           />
@@ -211,19 +285,34 @@ function GlobalFishbowlMenu() {
   );
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <UserProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppRoutes />
-          <GlobalFishbowlMenu />
-        </BrowserRouter>
-      </TooltipProvider>
-    </UserProvider>
-  </QueryClientProvider>
-);
+function RouterWithFishbowl() {
+  const location = useLocation();
+  return (
+    <>
+      <AppRoutes />
+      {location.pathname !== "/landingpage" && location.pathname !== "/auth" && location.pathname !== "/onboarding" && <GlobalFishbowlMenu />}
+    </>
+  );
+}
+
+const App: React.FC = () => {
+  return (
+    <ThemeContextProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <UserProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <RouterWithFishbowl />
+              </BrowserRouter>
+            </TooltipProvider>
+          </UserProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ThemeContextProvider>
+  );
+};
 
 export default App;

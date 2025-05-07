@@ -1,8 +1,8 @@
-
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import { HistoryEra, UserPreferences } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { unlockAchievement } from '@/integrations/supabase/achievements';
 
 interface UserContextType {
   user: User | null;
@@ -58,10 +58,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (profileData.preferred_era) {
               setPreferredEra(profileData.preferred_era as HistoryEra);
             }
-            
-            // Set onboarded state based on having preferences
-            setIsOnboarded(!!profileData.preferred_era);
-            
+            // Set onboarded state based on is_onboarded field
+            setIsOnboarded(!!profileData.is_onboarded);
             // Set preferences
             if (profileData.preferred_era) {
               setPreferences({
@@ -109,6 +107,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setStreak(prevStreak => {
       const newStreak = prevStreak + 1;
       updateUserProfile({ streak: newStreak });
+      // Unlock streak achievements
+      if (user?.id) {
+        if (newStreak >= 3) unlockAchievement(user.id, 'streak_3');
+        if (newStreak >= 7) unlockAchievement(user.id, 'streak_7');
+        if (newStreak >= 30) unlockAchievement(user.id, 'streak_30');
+      }
       return newStreak;
     });
   };
@@ -122,6 +126,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCompletedEras(prevCompletedEras => {
       const newCompletedEras = [...prevCompletedEras, era];
       updateUserProfile({ completed_eras: newCompletedEras });
+      // Unlock era achievements
+      if (user?.id) {
+        if (newCompletedEras.length >= 1) unlockAchievement(user.id, 'era_mastered');
+        if (newCompletedEras.length >= 3) unlockAchievement(user.id, 'era_explorer');
+      }
       return newCompletedEras;
     });
   };

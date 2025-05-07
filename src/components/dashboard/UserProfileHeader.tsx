@@ -25,7 +25,7 @@ interface UserProfileHeaderProps {
 }
 
 const AVATAR_MAP = {
-  mascot_default: '/images/avatars/mascot.png',
+  mascot_default: '/images/avatars/Johan.png',
   // Add more avatar options here in the future
 };
 

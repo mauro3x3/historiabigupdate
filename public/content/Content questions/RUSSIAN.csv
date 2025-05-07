@@ -1,0 +1,44 @@
+module_id,question,options,correct_answer,explanation
+200,"Who founded the Rurik Dynasty, marking the beginning of the Early Rus?","[""Oleg of Novgorod"", ""Yaroslav the Wise"", ""Rurik"", ""Vladimir the Great""]",3,"Rurik, a Varangian prince, is traditionally considered the founder of the Rurik Dynasty."
+201,What was a major consequence of the Mongol invasion?,"[""The fall of Constantinople"", ""The end of the Romanov dynasty"", ""Tributary rule over Rus"", ""The rise of the Vikings""]",3,The Mongols established tributary dominance over the Rus principalities.
+202,Which city became the political center during the rise of the Grand Duchy of Moscow?,"[""Kiev"", ""Novgorod"", ""Moscow"", ""Vladimir""]",3,Moscow rose as the center of power in northeastern Rus.
+203,What did Ivan III do that significantly expanded Muscovite power?,"[""Converted to Catholicism"", ""Married a Mongol princess"", ""Annexed Novgorod"", ""Abolished the boyars""]",3,"Ivan III annexed Novgorod, expanding and consolidating Muscovite power."
+204,Why was Ivan IV called 'the Terrible'?,"[""For his physical appearance"", ""For his cruelty and centralized control"", ""For being weak"", ""For losing wars""]",2,Ivan IV was known for his violent rule and creation of the Oprichnina.
+205,What marked the Time of Troubles?,"[""Foreign invasions and civil war"", ""Religious reformation"", ""Industrial growth"", ""Scientific revolution""]",1,"The Time of Troubles was marked by famine, uprisings, and foreign intervention."
+206,Who founded the Romanov dynasty in 1613?,"[""Ivan Bolotnikov"", ""Mikhail Romanov"", ""Peter the Great"", ""Tsar Nicholas I""]",2,"Mikhail Romanov was elected Tsar, starting the Romanov dynasty."
+207,What was Peter the Great's major reform focus?,"[""Religious tolerance"", ""Scientific isolation"", ""Westernization and modernization"", ""Preserving tradition""]",3,Peter the Great modernized Russia and introduced Western customs.
+208,Which region did Catherine the Great expand into?,"[""Siberia"", ""Ukraine"", ""Alaska"", ""Crimea""]",4,"Catherine secured Crimea, expanding Russian influence in the Black Sea."
+209,What was Russia’s role in the Napoleonic Wars?,"[""Neutral"", ""Ally of Napoleon"", ""Enemy of Napoleon"", ""Did not participate""]",3,Russia opposed Napoleon and played a key role in his defeat.
+210,What did the Decembrists demand?,"[""More serfdom"", ""A return to monarchy"", ""A constitutional monarchy"", ""Colonial expansion""]",3,The Decembrists sought liberal reforms and constitutional government.
+211,What major reform did Alexander II enact?,"[""Industrialization"", ""Emancipation of the serfs"", ""Ban on religion"", ""Annexation of Poland""]",2,Alexander II freed millions of serfs in 1861.
+212,What defined Russian nationalism in the 19th century?,"[""Economic isolation"", ""Western democracy"", ""Orthodoxy, autocracy, nationalism"", ""Peasant uprisings""]",3,"The doctrine of Orthodoxy, Autocracy, and Nationalism defined this period."
+213,What was one cause of the Russo-Turkish Wars?,"[""Religious differences"", ""Trade routes"", ""Ottoman support of rebellion"", ""Control over the Balkans""]",4,Russia aimed to expand influence in the Balkans against Ottoman control.
+214,What did Russia lose in the Crimean War?,"[""Moscow"", ""The Black Sea fleet"", ""Crimea"", ""Sebastopol""]",4,Russia suffered defeat and lost Sebastopol during the Crimean War.
+215,What ideology gained popularity among the Russian intelligentsia in the late 19th century?,"[""Monarchism"", ""Nationalism"", ""Marxism"", ""Capitalism""]",3,Marxist ideas spread among intellectual circles and revolutionaries.
+216,What triggered the 1905 Revolution?,"[""Nicholas II’s coronation"", ""Bloody Sunday"", ""World War I"", ""The famine of 1891""]",2,"Bloody Sunday, a massacre of protestors, ignited nationwide unrest."
+217,What challenge did Russia face during World War I?,"[""A strong navy"", ""Efficient economy"", ""Heavy casualties and discontent"", ""Lack of alliance""]",3,High casualties and poor logistics led to unrest and revolution.
+218,What was the result of the February Revolution of 1917?,"[""Tsar was reinstated"", ""Bolsheviks seized power"", ""Provisional government formed"", ""A new constitution""]",3,The Tsar abdicated and a Provisional Government was established.
+219,Who led the October Revolution?,"[""Trotsky"", ""Kerensky"", ""Lenin"", ""Nicholas II""]",3,Lenin led the Bolsheviks in the October Revolution.
+220,What was the outcome of the Russian Civil War?,"[""White Army won"", ""Russia joined NATO"", ""Bolsheviks consolidated power"", ""Tsar returned""]",3,The Red Army defeated the Whites and solidified Soviet control.
+221,When was the USSR officially founded?,"[""1918"", ""1920"", ""1922"", ""1930""]",3,The Soviet Union was established in 1922.
+222,What was one of Lenin’s key legacies?,"[""Privatization"", ""Tsarist revival"", ""New Economic Policy"", ""Capitalism""]",3,Lenin introduced the NEP to stabilize the economy.
+223,How did Stalin consolidate power?,"[""Elections"", ""Debates"", ""Purges and propaganda"", ""Alliances""]",3,Stalin used purges and propaganda to eliminate opposition.
+224,What was the Great Purge?,"[""A war"", ""A plague"", ""Mass repression and executions"", ""A tax reform""]",3,Stalin’s regime eliminated real and imagined enemies through terror.
+225,What was the Soviet term for WWII?,"[""Red War"", ""Russian War"", ""Great Patriotic War"", ""Soviet Defense War""]",3,The USSR called WWII the Great Patriotic War.
+226,What was a major feature of Khrushchev’s reforms?,"[""More censorship"", ""Collectivization"", ""De-Stalinization"", ""Cultural purges""]",3,Khrushchev denounced Stalin and relaxed some policies.
+227,What event nearly led to nuclear war in 1962?,"[""Berlin Blockade"", ""Vietnam War"", ""Cuban Missile Crisis"", ""Sputnik launch""]",3,The Cuban Missile Crisis brought the US and USSR to the brink.
+228,What characterized the Brezhnev Era?,"[""Rapid reforms"", ""Liberalism"", ""Stagnation and repression"", ""Total collapse""]",3,The Brezhnev era is remembered for stagnation and political repression.
+229,What conflict drained Soviet resources in the 1980s?,"[""Korean War"", ""Vietnam War"", ""Afghan War"", ""Chechen War""]",3,The Afghan War became a quagmire for Soviet forces.
+230,What was a key element of Gorbachev’s reform policy?,"[""Censorship"", ""Expansionism"", ""Glasnost and Perestroika"", ""Isolation""]",3,Gorbachev introduced openness (glasnost) and restructuring (perestroika).
+231,What happened in 1991?,"[""Lenin returned"", ""The USSR collapsed"", ""Putin became president"", ""China joined USSR""]",2,The Soviet Union officially dissolved in 1991.
+232,What defined post-Soviet Russia under Yeltsin?,"[""Economic boom"", ""War with China"", ""Political instability and crisis"", ""Cultural isolation""]",3,The 1990s were marked by corruption and economic hardship.
+233,When did Vladimir Putin first become president?,"[""1991"", ""1999"", ""2000"", ""2004""]",3,Putin was elected president in 2000.
+234,What was the Second Chechen War about?,"[""Economic policy"", ""Oil"", ""Independence and terrorism"", ""Religion""]",3,It was a conflict to suppress Chechen separatism and terrorism.
+235,What has shaped Russia-West relations in the 21st century?,"[""Alliances"", ""Sanctions and military tension"", ""Colonial trade"", ""Cultural exchange""]",2,"Relations have been shaped by tension, especially post-2014."
+236,What is a major feature of Russia's economy?,"[""Heavy exports of coal"", ""Dependence on oil and gas"", ""Tech innovation"", ""Foreign aid""]",2,The Russian economy relies heavily on oil and gas exports.
+237,When did the war in Ukraine begin?,"[""2001"", ""2008"", ""2014"", ""2022""]",3,The war in Ukraine began in 2014 with Crimea’s annexation.
+238,What defines modern Russian media?,"[""Government control and propaganda"", ""Free press"", ""Censorship bans"", ""Religious content""]",1,Russian media is largely state-controlled and propagandistic.
+239,How has the Orthodox Church re-emerged in modern Russia?,"[""Banned completely"", ""Merged with the government"", ""Revived as a cultural and political force"", ""Left politics""]",3,The Church plays a strong cultural and symbolic role.
+240,What is Russia’s demographic crisis?,"[""Too much immigration"", ""Youth dominance"", ""Population decline and aging"", ""Overcrowding""]",3,Russia faces declining birth rates and an aging population.
+241,What describes Putin’s political system?,"[""Liberal democracy"", ""Monarchy"", ""Military junta"", ""Centralized autocracy""]",4,Putin’s system is characterized as centralized and authoritarian.
+242,What has replaced political opposition in Russia?,"[""Open debate"", ""Competing parties"", ""State-dominated parties and repression"", ""Referendums""]",3,Opposition is suppressed; the political landscape is state-controlled.

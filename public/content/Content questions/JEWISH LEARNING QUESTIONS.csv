@@ -1,0 +1,101 @@
+module_id,question,options,correct_answer,explanation
+16,Who was the first patriarch of the Jewish people?,"[""Moses"", ""Isaac"", ""Abraham"", ""Jacob""]",2,Abraham is considered the first patriarch in Jewish tradition.
+17,What significant event involved Abraham and Isaac?,"[""Crossing the Red Sea"", ""The Binding of Isaac"", ""Jacob’s Ladder"", ""Giving of the Law""]",1,The Binding of Isaac is a key moment of faith in Abraham's life.
+21,Who was the son of Isaac that carried on the covenant?,"[""Esau"", ""Jacob"", ""Joseph"", ""Moses""]",1,Jacob received the blessing and continued the covenant.
+300,What was the relationship between Jacob and Esau?,"[""Friends"", ""Father and son"", ""Twin brothers"", ""Enemies from different tribes""]",2,"Jacob and Esau were twin brothers, sons of Isaac and Rebekah."
+301,What vision did Jacob have while fleeing from Esau?,"[""A burning bush"", ""A golden calf"", ""A ladder to heaven"", ""A city on a hill""]",2,Jacob dreamed of a ladder reaching to heaven with angels on it.
+302,Why did Joseph’s brothers resent him?,"[""He was older"", ""He stole from them"", ""He had dreams and a special coat"", ""He was a priest""]",2,Joseph’s dreams and his colorful coat sparked jealousy.
+303,Where did Joseph rise to power?,"[""Babylon"", ""Jerusalem"", ""Egypt"", ""Canaan""]",2,Joseph became a powerful leader in Egypt.
+304,Why did Joseph’s family come to Egypt?,"[""To escape slavery"", ""To find gold"", ""Because of a famine"", ""To build a temple""]",2,A famine led Joseph’s family to Egypt for food.
+305,Why was Moses hidden as a baby?,"[""To avoid the Egyptians"", ""Because of a prophecy"", ""Due to Pharaoh's decree to kill Hebrew boys"", ""To join a caravan""]",2,Pharaoh ordered all Hebrew baby boys to be killed.
+306,Who found baby Moses in the river?,"[""A Hebrew nurse"", ""An Egyptian soldier"", ""Pharaoh’s daughter"", ""A merchant""]",2,Pharaoh’s daughter discovered Moses and raised him.
+307,Where did Moses see the burning bush?,"[""Mount Sinai"", ""The Red Sea"", ""Midian"", ""Jericho""]",2,Moses encountered the burning bush in the wilderness near Midian.
+308,What did Moses ask Pharaoh to do?,"[""Give him land"", ""Let his people go"", ""Build a temple"", ""Join a treaty""]",1,Moses demanded that Pharaoh let the Israelites go.
+309,How many plagues did God send on Egypt?,"[""5"", ""7"", ""10"", ""12""]",2,Ten plagues were sent as divine judgment on Egypt.
+310,What event marks the Israelites’ escape from Egypt?,"[""Crossing the Jordan"", ""Passover"", ""Red Sea crossing"", ""Giving of the Law""]",2,Crossing the Red Sea marks their final escape from Egypt.
+311,How did God part the Red Sea?,"[""With wind"", ""With Moses’ staff"", ""With fire"", ""With thunder""]",1,God parted the sea through Moses’ staff and a strong east wind.
+312,What did the people find at Marah?,"[""Honey"", ""Sweet water"", ""Bitter water"", ""Nothing""]",2,"They found bitter water, which God made sweet."
+313,What food did God provide in the desert?,"[""Bread and wine"", ""Fruit"", ""Manna and quail"", ""Fish and olives""]",2,God provided manna in the morning and quail in the evening.
+314,How did Moses provide water at Rephidim?,"[""From a spring"", ""By praying"", ""By striking a rock"", ""By digging a well""]",2,"Moses struck the rock, and water flowed out."
+315,Where did God give the Ten Commandments?,"[""Jericho"", ""Mount Nebo"", ""Mount Sinai"", ""Bethlehem""]",2,God gave the law to Moses on Mount Sinai.
+316,What were the Ten Commandments written on?,"[""Scrolls"", ""Sheep skins"", ""Stone tablets"", ""Clay pots""]",2,They were inscribed on stone tablets by God.
+317,What type of laws did God give in addition to the Ten Commandments?,"[""Only moral laws"", ""Only sacrificial laws"", ""Civil, moral, and ceremonial laws"", ""No other laws""]",2,God provided a comprehensive law system covering all aspects of life.
+318,What did the Israelites build while waiting for Moses?,"[""A new temple"", ""An idol in the shape of a calf"", ""A golden chariot"", ""An altar of stones""]",1,They made a golden calf and worshiped it.
+319,How did Moses respond to Israel’s sin with the golden calf?,"[""He ignored it"", ""He asked for their punishment"", ""He destroyed the tablets and interceded"", ""He left the people""]",2,Moses shattered the tablets and pleaded for their forgiveness.
+320,What was the Tabernacle?,"[""A giant altar"", ""A mobile temple"", ""A throne"", ""A holy book""]",1,The Tabernacle was a portable dwelling place for God’s presence.
+321,What indicated God’s presence in the Tabernacle?,"[""Incense"", ""Sacrifice"", ""A cloud and fire"", ""Music""]",2,A cloud by day and fire by night showed God's presence.
+322,What happened to Nadab and Abihu?,"[""They became kings"", ""They were promoted"", ""They were consumed by fire"", ""They led worship successfully""]",2,They died after offering unauthorized fire before God.
+323,Why did God order a census in the wilderness?,"[""To count the animals"", ""To measure wealth"", ""To organize the camp"", ""To punish the people""]",2,God used the census to structure Israel's camp around the Tabernacle.
+324,What did the laws of purity cover?,"[""Only spiritual life"", ""Only the priesthood"", ""Health, food, and ritual purity"", ""Temple design""]",2,These laws taught holiness through daily life and worship.
+325,Why was Miriam struck with leprosy?,"[""She stole"", ""She doubted God"", ""She challenged Moses’ authority"", ""She entered the Tabernacle""]",2,Miriam spoke against Moses and was disciplined by God.
+326,What report did the majority of the spies bring?,"[""That the land was empty"", ""That Israel would easily win"", ""That the land was dangerous and filled with giants"", ""That it wasn’t worth taking""]",2,"Ten spies were fearful, causing the people to rebel."
+327,What happened to Korah and his followers?,"[""They won the priesthood"", ""They left Israel"", ""The ground swallowed them"", ""They built an idol""]",2,The earth opened and swallowed the rebels alive.
+328,How did God confirm Aaron’s leadership?,"[""Sent fire from heaven"", ""Spoke from the cloud"", ""Made his staff blossom"", ""Turned his robe golden""]",2,Aaron’s staff budded and produced almonds overnight.
+329,How were the people healed from snake bites?,"[""By sacrifices"", ""By drinking holy water"", ""By looking at a bronze serpent"", ""By Moses laying hands""]",2,God instructed Moses to lift a bronze serpent for healing.
+330,Who tried to curse Israel but ended up blessing them?,"[""Balak"", ""Balaam"", ""Jethro"", ""Pharaoh""]",1,Balaam was hired to curse but was compelled to bless.
+331,What did Moses do wrong at Meribah?,"[""He forgot to pray"", ""He hit the rock instead of speaking"", ""He built an idol"", ""He blamed Aaron""]",1,He disobeyed God by striking the rock instead of speaking to it.
+332,Who died before entering the Promised Land?,"[""Joshua"", ""Caleb"", ""Miriam and Aaron"", ""All Levites""]",2,Both Miriam and Aaron died in the wilderness.
+333,What is Deuteronomy largely composed of?,"[""Historical stories"", ""Poetry"", ""Moses’ final speeches and laws"", ""Songs and parables""]",2,Moses addressed the people with laws and farewell speeches.
+334,Who led the Israelites after Moses?,"[""Aaron"", ""Samuel"", ""Joshua"", ""Caleb""]",2,Joshua took leadership and led Israel into Canaan.
+335,How did the Israelites cross the Jordan River?,"[""They built a bridge"", ""They swam"", ""The priests stepped in and the water stopped"", ""They went around it""]",2,The water stopped when the priests carrying the Ark stepped in.
+336,How did Jericho’s walls fall?,"[""Catapults"", ""Underground digging"", ""Marching and shouting"", ""Setting fire""]",2,The walls collapsed after Israel marched and shouted in obedience to God.
+337,What miracle did God perform during the battle led by Joshua?,"[""Sent a storm"", ""Made the ground shake"", ""Stopped the sun"", ""Blinded the enemies""]",3,God stopped the sun so the Israelites could finish the battle.
+338,What did Joshua do with the land of Canaan?,"[""Destroyed it"", ""Sold it"", ""Divided it among the tribes"", ""Gave it to foreigners""]",3,Joshua divided the land among the twelve tribes of Israel.
+339,Who was the only female judge of Israel?,"[""Deborah"", ""Ruth"", ""Miriam"", ""Esther""]",1,Deborah was a prophetess and judge who led Israel to victory.
+340,How many men did Gideon use to defeat the Midianites?,"[""10,000"", ""3,000"", ""300"", ""30,000""]",3,Gideon defeated the Midianites with only 300 men.
+341,What tragic vow did Jephthah make?,"[""To burn the Torah"", ""To sacrifice the first to greet him"", ""To become a priest"", ""To destroy an altar""]",2,Jephthah vowed to sacrifice whoever greeted him first—his daughter.
+342,What was the source of Samson's strength?,"[""Armor"", ""Training"", ""His hair"", ""Magic stones""]",3,Samson's strength was tied to his uncut hair as a Nazirite.
+343,What did Micah create that showed spiritual confusion?,"[""A new Torah"", ""A metal idol"", ""A worship song"", ""A war plan""]",2,Micah made an idol and set up his own priesthood.
+344,What happened to the tribe of Benjamin?,"[""They left Israel"", ""They were blessed"", ""They almost went extinct"", ""They conquered Jerusalem""]",3,"After a civil war, Benjamin was nearly wiped out."
+345,What did Ruth famously say to Naomi?,"[""Leave me alone"", ""Where you go I will go"", ""I will return to Moab"", ""This God is not mine""]",2,Ruth pledged loyalty: 'Where you go I will go... Your God will be my God.'
+346,Why did Hannah pray at the temple?,"[""To thank God for harvest"", ""To ask for forgiveness"", ""To ask for a child"", ""To gain riches""]",3,"Hannah prayed earnestly for a child, which God granted."
+347,What role did Samuel have?,"[""Judge"", ""Prophet"", ""Priest"", ""All of the above""]",4,"Samuel was a judge, prophet, and priest."
+348,Why did Israel lose the Ark of the Covenant?,"[""It was too heavy"", ""They misused it in battle"", ""It broke"", ""It was taken by priests""]",2,"They treated it like a magic object, not reverently."
+349,Who was Israel's first king?,"[""David"", ""Solomon"", ""Saul"", ""Samuel""]",3,Saul was the first king anointed to lead Israel.
+350,Why was Saul rejected as king?,"[""He was too old"", ""He ignored Samuel"", ""He disobeyed God's commands"", ""He wanted to be a priest""]",3,Saul's disobedience led to his rejection.
+351,Who anointed David as king?,"[""Samuel"", ""Nathan"", ""Moses"", ""Saul""]",1,Samuel anointed David while Saul was still king.
+352,How did David defeat Goliath?,"[""With a sword"", ""With a bow"", ""With a sling and stone"", ""By pushing him""]",3,David struck Goliath with a stone from his sling.
+353,How did Saul respond to David's rising fame?,"[""He praised him"", ""He crowned him"", ""He sought to kill him"", ""He left Israel""]",3,Saul became jealous and sought to kill David.
+354,What did David do when he had the chance to kill Saul?,"[""Attacked him"", ""Ignored him"", ""Fled"", ""Spared him""]",4,"David spared Saul, refusing to harm the Lord's anointed."
+355,What city did David make the capital?,"[""Bethlehem"", ""Hebron"", ""Jerusalem"", ""Shiloh""]",3,David made Jerusalem the political and religious capital.
+356,What happened when David brought the Ark to Jerusalem?,"[""It broke"", ""God appeared"", ""David danced with joy"", ""Enemies attacked""]",3,David danced joyfully as the Ark entered the city.
+357,What sin did David commit with Bathsheba?,"[""Stealing"", ""Lying"", ""Adultery and murder"", ""Blasphemy""]",3,David committed adultery with Bathsheba and arranged her husband's death.
+358,Who rebelled against David to take the throne?,"[""Absalom"", ""Solomon"", ""Saul"", ""Joab""]",1,"Absalom, David's son, led a rebellion against him."
+359,What did David do after taking a census?,"[""Celebrated"", ""Destroyed it"", ""Built an altar and repented"", ""Punished the people""]",3,David repented and built an altar after realizing his sin.
+360,What did Solomon ask from God?,"[""Wealth"", ""Fame"", ""Wisdom"", ""Long life""]",3,"Solomon asked for wisdom, and God granted it abundantly."
+361,What major construction did Solomon oversee?,"[""The Ark"", ""The Tower of Babel"", ""The First Temple"", ""A palace in Egypt""]",3,Solomon built the First Temple in Jerusalem.
+362,What led Solomon into idolatry?,"[""Wealth"", ""Old age"", ""Foreign wives"", ""War""]",3,Solomon’s foreign wives led him to worship other gods.
+363,Which book is traditionally attributed to Solomon’s reflections?,"[""Psalms"", ""Job"", ""Ecclesiastes"", ""Isaiah""]",3,Solomon is traditionally credited with writing Ecclesiastes.
+364,Who visited Solomon to test his wisdom?,"[""The Queen of Sheba"", ""Pharaoh"", ""David"", ""Hiram of Tyre""]",1,The Queen of Sheba came to test Solomon's wisdom.
+365,What happened after Solomon died?,"[""Israel conquered Egypt"", ""The kingdom divided"", ""A new temple was built"", ""A great flood""]",2,The kingdom split into northern and southern parts.
+366,What prophet declared a drought over Israel?,"[""Elisha"", ""Hosea"", ""Isaiah"", ""Elijah""]",4,Elijah declared a drought as judgment on Israel.
+367,How did Elijah prove God’s power at Mount Carmel?,"[""He prayed and fire consumed the sacrifice"", ""He sang songs"", ""He flooded the altar"", ""He built a golden statue""]",1,Fire from heaven consumed Elijah’s offering after he prayed.
+368,Who succeeded Elijah as prophet?,"[""Isaiah"", ""Elisha"", ""Jeremiah"", ""Zechariah""]",2,Elisha became the next great prophet after Elijah.
+369,What did Ahab do to Naboth?,"[""Rewarded him"", ""Hired him"", ""Killed him to take his vineyard"", ""Made him king""]",3,Ahab took Naboth’s vineyard through deceit and murder.
+370,How did a widow pay her debts in Elisha’s time?,"[""With gold"", ""By selling oil"", ""With livestock"", ""By praying""]",2,"Elisha multiplied her oil, allowing her to sell it and pay off debts."
+371,What disease did Naaman have?,"[""Leprosy"", ""Blindness"", ""Fever"", ""Deafness""]",1,"Naaman, a Syrian commander, had leprosy."
+372,How was Jonah punished for fleeing God’s call?,"[""Struck by lightning"", ""Imprisoned"", ""Swallowed by a fish"", ""Turned into stone""]",3,Jonah was swallowed by a great fish.
+373,What did Amos condemn in Israel?,"[""Foreign worship"", ""Royal taxes"", ""Idolatry and injustice"", ""Poor farming""]",3,Amos condemned social injustice and idolatry.
+374,What was Hosea’s marriage a symbol of?,"[""Royal union"", ""God’s anger"", ""Israel’s unfaithfulness"", ""A king’s promise""]",3,Hosea’s marriage symbolized God’s love for unfaithful Israel.
+375,What vision did Isaiah have?,"[""Angels on a ladder"", ""A valley of bones"", ""The Lord on a throne"", ""A burning tree""]",3,"Isaiah saw God seated on a throne, surrounded by seraphim."
+376,What happened during Hezekiah’s reign?,"[""Israel fell"", ""Jerusalem was destroyed"", ""An angel struck the Assyrians"", ""A new temple was built""]",3,God sent an angel to destroy the Assyrian army threatening Jerusalem.
+377,What did King Josiah find that led to national reform?,"[""The Ark"", ""A lost scroll of the Law"", ""The Tabernacle"", ""Gold coins""]",2,Josiah found the Book of the Law and renewed the covenant.
+378,What happened in 586 BCE?,"[""The Temple was built"", ""Israel was united"", ""Jerusalem fell to Babylon"", ""David became king""]",3,Jerusalem fell and the Temple was destroyed by Babylon.
+379,What is Jeremiah known as?,"[""The fiery prophet"", ""The weeping prophet"", ""The joyful prophet"", ""The exiled prophet""]",2,Jeremiah is called the weeping prophet for his lament over Judah.
+380,What did Ezekiel see in a vision?,"[""A great beast"", ""A burning bush"", ""Dry bones coming to life"", ""A golden chariot""]",3,He saw a valley of dry bones being revived by God.
+381,Why was Daniel thrown into the lions' den?,"[""He disobeyed the king"", ""He worshiped idols"", ""He helped enemies"", ""He refused to stop praying""]",4,Daniel was punished for praying to God instead of the king.
+382,What did the mysterious writing on the wall mean?,"[""Joy and peace"", ""The king would prosper"", ""The kingdom was ending"", ""There would be a drought""]",3,Daniel interpreted it as a sign of the end of Babylon’s rule.
+383,"What happened to Shadrach, Meshach, and Abednego?","[""They escaped from jail"", ""They were thrown into fire and survived"", ""They became kings"", ""They were exiled""]",2,They were thrown into a furnace but were not harmed.
+384,Why is Esther remembered?,"[""She built a temple"", ""She became a prophet"", ""She saved the Jews"", ""She was the mother of a king""]",3,Esther courageously saved the Jewish people from destruction.
+385,What did Ezra focus on?,"[""Rebuilding walls"", ""Teaching the Torah"", ""Fighting enemies"", ""Census-taking""]",2,Ezra taught the Torah and led spiritual reform.
+386,What did Nehemiah rebuild?,"[""The Temple"", ""The Tabernacle"", ""The palace"", ""Jerusalem's wall""]",4,Nehemiah led the rebuilding of Jerusalem's walls.
+387,Who was the last prophet of the Old Testament?,"[""Ezekiel"", ""Jeremiah"", ""Malachi"", ""Isaiah""]",3,Malachi was the final prophet before the prophetic silence.
+388,When was the Second Temple completed?,"[""516 BCE"", ""100 BCE"", ""70 CE"", ""586 BCE""]",1,The Second Temple was completed and dedicated in 516 BCE.
+389,Who were the Pharisees?,"[""Temple builders"", ""A group focused on oral law and purity"", ""Warriors"", ""Exiles""]",2,The Pharisees emphasized oral law and personal piety.
+390,What culture influenced the Jews after Alexander’s conquest?,"[""Roman"", ""Egyptian"", ""Babylonian"", ""Greek""]",4,Greek (Hellenistic) culture deeply influenced Jewish society.
+391,What event sparked the Maccabean Revolt?,"[""Building a palace"", ""A Roman invasion"", ""Temple desecration"", ""A king’s wedding""]",3,Desecrating the Temple and banning Jewish practices started the revolt.
+392,What miracle is Hanukkah based on?,"[""Victory in battle"", ""A talking donkey"", ""Surviving fire"", ""Oil lasting 8 days""]",4,One day’s oil miraculously lasted eight days in the Temple.
+393,When did Rome take control of Judea?,"[""586 BCE"", ""167 BCE"", ""63 BCE"", ""70 CE""]",3,Rome annexed Judea in 63 BCE.
+394,What did Herod the Great renovate?,"[""The walls"", ""The Tabernacle"", ""The Second Temple"", ""The Ark""]",3,Herod expanded and beautified the Second Temple.
+395,What group lived in isolation and awaited the Messiah?,"[""Sadducees"", ""Pharisees"", ""Essenes"", ""Zealots""]",3,"The Essenes lived apart, emphasizing purity and prophecy."
+396,What was the state of the Jewish world at the end of the Old Testament?,"[""Peaceful"", ""United under one king"", ""Awaiting a messiah"", ""Destroyed and forgotten""]",3,The people were under foreign rule and longing for redemption.

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/Logo';
@@ -17,7 +16,7 @@ const AllLessons = () => {
   const { preferences } = useUser();
   const [lessonsWithProgress, setLessonsWithProgress] = useState<HistoryLesson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedEra, setSelectedEra] = useState<HistoryEra | 'all'>(preferences?.era || 'all');
+  const [selectedEra, setSelectedEra] = useState<HistoryEra | 'all'>('all');
   
   // Fetch user data and lesson progress
   useEffect(() => {

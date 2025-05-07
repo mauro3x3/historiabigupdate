@@ -1,160 +1,113 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import Logo from '@/components/Logo';
-import { useUser } from '@/contexts/UserContext';
-import GuestContent from '@/components/home/hero/GuestContent';
+import { useNavigate } from 'react-router-dom';
 
-const Index = () => {
+// Automatically import all background images in /public/images/ that start with 'background'
+const imageModules = import.meta.glob('/public/images/background*', { eager: true, as: 'url' });
+const backgroundImages = Object.values(imageModules);
+
+const LandingPage = () => {
   const navigate = useNavigate();
-  const { user, isOnboarded } = useUser();
-  
-  React.useEffect(() => {
-    // If user is already authenticated and onboarded, redirect to dashboard
-    if (user && isOnboarded) {
-      navigate('/dashboard');
-    }
-  }, [user, isOnboarded, navigate]);
+  const [bgIndex, setBgIndex] = useState(() => Math.floor(Math.random() * backgroundImages.length));
 
-  const handleGetStarted = () => {
-    if (user) {
-      navigate('/onboarding');
-    } else {
-      navigate('/auth');
-    }
-  };
+  // Change background every hour (3600000 ms)
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setBgIndex(prev => {
+        let next = Math.floor(Math.random() * backgroundImages.length);
+        // Ensure a different image
+        while (next === prev && backgroundImages.length > 1) {
+          next = Math.floor(Math.random() * backgroundImages.length);
+        }
+        return next;
+      });
+    }, 3600000);
+    return () => clearInterval(interval);
+  }, []);
 
-  if (!user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-purple-50">
-        <GuestContent />
-      </div>
-    );
-  }
-
-  // If user is logged in, show the original content (or redirect)
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-purple-50">
-      <div className="container mx-auto px-4">
-        <header className="py-6 flex justify-between items-center">
-          <Logo />
-          <div>
-            <Button variant="outline" className="mr-2" onClick={() => navigate('/auth')}>
-              Log In
-            </Button>
-            <Button className="bg-timelingo-purple hover:bg-purple-700" onClick={() => navigate('/auth?tab=signup')}>
-              Sign Up
-            </Button>
-          </div>
-        </header>
-        
-        <main className="py-12">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-5xl font-bold text-timelingo-navy leading-tight">
-                Learn History<br />
-                <span className="text-timelingo-purple">The Fun Way</span>
-              </h1>
-              <p className="text-lg text-gray-600">
-                Discover the past through interactive lessons, historical role-playing, and exciting challenges. Become a history expert one lesson at a time.
-              </p>
-              <div className="flex flex-wrap gap-4">
-                <Button 
-                  size="lg" 
-                  className="bg-timelingo-purple hover:bg-purple-700"
-                  onClick={handleGetStarted}
-                >
-                  Get Started
-                </Button>
-                <Button size="lg" variant="outline">
-                  Learn More
-                </Button>
-              </div>
-              <div className="flex items-center gap-2 text-gray-500">
-                <div className="flex -space-x-2">
-                  {[...Array(4)].map((_, i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gray-300 border-2 border-white" />
-                  ))}
-                </div>
-                <p className="text-sm">Join 10,000+ history enthusiasts</p>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-2xl p-6 shadow-lg border border-gray-200">
-              <div className="aspect-square rounded-xl bg-gray-100 flex flex-col items-center justify-center p-8 mb-4">
-                <div className="text-6xl mb-4">🏛️</div>
-                <div className="text-center">
-                  <h3 className="text-xl font-bold text-timelingo-navy mb-2">
-                    Explore Ancient Civilizations
-                  </h3>
-                  <p className="text-gray-600">
-                    Dive into the world of ancient Egypt, Rome, and more through interactive lessons
-                  </p>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-amber-100 rounded-lg p-3 flex flex-col items-center justify-center">
-                  <span className="text-2xl">⚔️</span>
-                  <span className="text-xs font-medium text-center mt-1">Wars & Battles</span>
-                </div>
-                <div className="bg-blue-100 rounded-lg p-3 flex flex-col items-center justify-center">
-                  <span className="text-2xl">👑</span>
-                  <span className="text-xs font-medium text-center mt-1">Famous Leaders</span>
-                </div>
-                <div className="bg-green-100 rounded-lg p-3 flex flex-col items-center justify-center">
-                  <span className="text-2xl">🔍</span>
-                  <span className="text-xs font-medium text-center mt-1">Discoveries</span>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="py-16">
-            <h2 className="text-3xl font-bold text-center text-timelingo-navy mb-12">
-              How TimeLingo Works
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-timelingo-purple/10 flex items-center justify-center mx-auto mb-4">
-                  <div className="text-2xl">🎯</div>
-                </div>
-                <h3 className="text-xl font-bold text-timelingo-navy mb-2">
-                  Personalized Learning
-                </h3>
-                <p className="text-gray-600">
-                  Tell us your interests and we'll tailor content just for you
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-timelingo-purple/10 flex items-center justify-center mx-auto mb-4">
-                  <div className="text-2xl">🎮</div>
-                </div>
-                <h3 className="text-xl font-bold text-timelingo-navy mb-2">
-                  Interactive Scenarios
-                </h3>
-                <p className="text-gray-600">
-                  Make decisions as historical figures and see how events unfold
-                </p>
-              </div>
-              
-              <div className="text-center">
-                <div className="w-16 h-16 rounded-full bg-timelingo-purple/10 flex items-center justify-center mx-auto mb-4">
-                  <div className="text-2xl">🏆</div>
-                </div>
-                <h3 className="text-xl font-bold text-timelingo-navy mb-2">
-                  Track Your Progress
-                </h3>
-                <p className="text-gray-600">
-                  Earn XP, unlock achievements, and track your learning journey
-                </p>
-              </div>
-            </div>
-          </div>
-        </main>
+    <div
+      className="min-h-screen flex flex-col relative overflow-hidden"
+      style={{
+        background: backgroundImages.length > 0
+          ? `url(${backgroundImages[bgIndex]}) center center / cover no-repeat, linear-gradient(135deg, #f3e8ff 0%, #fef9c3 100%)`
+          : 'linear-gradient(135deg, #f3e8ff 0%, #fef9c3 100%)',
+        transition: 'background-image 0.2s',
+      }}
+    >
+      {/* Soft background shapes (optional, can be removed if you want only the image) */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute top-[-80px] left-[-80px] w-[300px] h-[300px] bg-gradient-to-br from-yellow-100 via-yellow-50 to-purple-100 rounded-full opacity-40 blur-2xl animate-float-slow" />
+        <div className="absolute bottom-[-100px] right-[-100px] w-[350px] h-[350px] bg-gradient-to-tr from-blue-100 via-purple-100 to-yellow-50 rounded-full opacity-30 blur-2xl animate-float-slower" />
+        <div className="absolute top-1/2 left-[-120px] w-[200px] h-[200px] bg-gradient-to-br from-purple-100 to-blue-50 rounded-full opacity-20 blur-2xl animate-float-medium" />
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/40 via-yellow-50/30 to-blue-50/40 animate-gradient-move" style={{ zIndex: 1, pointerEvents: 'none', mixBlendMode: 'lighten' }} />
       </div>
+      <main className="flex-1 flex flex-col items-center justify-center relative z-10">
+        {/* Centered CTA box, lower on the page, with semi-transparent background */}
+        <div className="w-full flex justify-center items-end min-h-[60vh]">
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl px-10 py-8 flex flex-col items-center gap-6 max-w-lg mb-16 border-2 border-purple-100">
+            <h1 className="text-3xl md:text-4xl font-extrabold text-timelingo-navy text-center">
+              The free, fun, and effective way to learn history!
+            </h1>
+            <div className="flex flex-col gap-4 w-full max-w-xs">
+              <Button
+                className="bg-timelingo-purple hover:bg-yellow-400 text-white text-lg font-bold rounded-full py-3 shadow-lg"
+                onClick={() => navigate('/onboarding')}
+              >
+                Get Started
+              </Button>
+              <Button
+                variant="outline"
+                className="text-timelingo-purple text-lg font-bold rounded-full py-3 border-2 border-timelingo-purple bg-white hover:bg-purple-50 shadow"
+                onClick={() => navigate('/auth?tab=login')}
+              >
+                I Already Have an Account
+              </Button>
+            </div>
+          </div>
+        </div>
+      </main>
+      <div className="absolute top-6 left-8 z-20">
+        {/* Cinzel font: Add <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet"> to your index.html */}
+        <span
+          className="text-3xl font-extrabold tracking-widest drop-shadow-lg select-none"
+          style={{ fontFamily: "'Cinzel', serif", color: '#7c3aed' }}
+        >
+          HISTORIA
+        </span>
+      </div>
+      {/* Discord link top right */}
+      <div className="absolute top-6 right-8 z-20">
+        <a
+          href="https://discord.gg/WPFKEJsP"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="px-5 py-2 rounded-full font-semibold text-white bg-indigo-600 hover:bg-indigo-700 shadow-lg transition-colors duration-200 text-lg"
+        >
+          Join Our Discord
+        </a>
+      </div>
+      <style>{`
+        @keyframes bounce { 0%{transform:translateY(0);} 50%{transform:translateY(-30px);} 100%{transform:translateY(0);} }
+        .animate-bounce-slow { animation: bounce 2.5s infinite; }
+        @keyframes float-slow { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-18px);} }
+        .animate-float-slow { animation: float-slow 7s ease-in-out infinite; }
+        @keyframes float-slower { 0%,100%{transform:translateY(0);} 50%{transform:translateY(24px);} }
+        .animate-float-slower { animation: float-slower 12s ease-in-out infinite; }
+        @keyframes float-medium { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-12px);} }
+        .animate-float-medium { animation: float-medium 9s ease-in-out infinite; }
+        @keyframes gradient-move {
+          0% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .animate-gradient-move {
+          background-size: 200% 200%;
+          animation: gradient-move 16s ease-in-out infinite;
+        }
+      `}</style>
     </div>
   );
 };
 
-export default Index;
+export default LandingPage;

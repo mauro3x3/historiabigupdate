@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import OnboardingContainer from '@/components/onboarding/OnboardingContainer';
@@ -7,6 +6,7 @@ import EraSelector from '@/components/onboarding/EraSelector';
 import LearningStyleSelector from '@/components/onboarding/LearningStyleSelector';
 import LearningTimeSelector from '@/components/onboarding/LearningTimeSelector';
 import ReminderPreferences from '@/components/onboarding/ReminderPreferences';
+import SkillLevelSelector from '@/components/onboarding/SkillLevelSelector';
 import { HistoryInterest, HistoryEra, LearningStyle, LearningTime, UserPreferences, ReminderMethod } from '@/types';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
@@ -27,12 +27,14 @@ const Onboarding = () => {
     learningTime,
     reminderMethod,
     reminderTime,
+    skillLevel,
     setInterests,
     setEra,
     setLearningStyle,
     setLearningTime,
     setReminderMethod,
     setReminderTime,
+    setSkillLevel,
     handleNext,
     handleBack,
     finishOnboarding
@@ -57,42 +59,46 @@ const Onboarding = () => {
       onBack={handleBack} 
       isLastStep={step === totalSteps}
     >
-      {step === 1 && (
-        <InterestSelector 
-          selectedInterests={interests} 
-          onSelect={setInterests} 
-        />
-      )}
-      
-      {step === 2 && (
-        <EraSelector 
-          selectedEra={era} 
-          onSelect={setEra} 
-        />
-      )}
-      
-      {step === 3 && (
-        <LearningStyleSelector 
-          selectedStyle={learningStyle} 
-          onSelect={setLearningStyle} 
-        />
-      )}
-
-      {step === 4 && (
-        <LearningTimeSelector
-          selectedTime={learningTime}
-          onSelect={setLearningTime}
-        />
-      )}
-
-      {step === 5 && (
-        <ReminderPreferences
-          selectedMethod={reminderMethod}
-          selectedTime={reminderTime}
-          onMethodSelect={setReminderMethod}
-          onTimeSelect={setReminderTime}
-        />
-      )}
+      <>
+        {step === 1 && (
+          <InterestSelector 
+            selectedInterests={interests} 
+            onSelect={setInterests} 
+          />
+        )}
+        {step === 2 && (
+          <SkillLevelSelector
+            selectedSkill={skillLevel}
+            onSelect={setSkillLevel}
+          />
+        )}
+        {step === 3 && (
+          <EraSelector 
+            selectedEra={era} 
+            onSelect={setEra} 
+          />
+        )}
+        {step === 4 && (
+          <LearningStyleSelector 
+            selectedStyle={learningStyle} 
+            onSelect={setLearningStyle} 
+          />
+        )}
+        {step === 5 && (
+          <LearningTimeSelector
+            selectedTime={learningTime}
+            onSelect={setLearningTime}
+          />
+        )}
+        {step === 6 && (
+          <ReminderPreferences
+            selectedMethod={reminderMethod}
+            selectedTime={reminderTime}
+            onMethodSelect={setReminderMethod}
+            onTimeSelect={setReminderTime}
+          />
+        )}
+      </>
     </OnboardingContainer>
   );
 };

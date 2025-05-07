@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,73 +15,131 @@ import { useQuiz } from '@/hooks/useQuiz';
 import { playBubblesSound, playJoyfulSound, preloadSounds } from '@/utils/audioUtils';
 import { dbService } from '@/services/dbService';
 
-// Phoenix Wright-style Tenma dialogue box with sound and pop-in animation
-const TenmaDialogue = ({ lines, onComplete }: { lines: string[]; onComplete: () => void }) => {
-  const [currentLine, setCurrentLine] = useState(0);
-  const [displayedText, setDisplayedText] = useState('');
-  
+// Phoenix Wright-style Johan dialogue box with sound and pop-in animation
+const playJohanDialogueSound = () => {
+  const audio = new Audio('/sounds/correct-answer.mp3');
+  audio.volume = 0.7;
+  audio.play();
+};
+
+const JohanDialogue = ({ lines, onComplete }: { lines: string[]; onComplete: () => void }) => {
+  const [currentLineIndex, setCurrentLineIndex] = useState(0);
+  const [isVisible, setIsVisible] = useState(true);
+  const soundPlayed = useRef(false);
+
   useEffect(() => {
-    playBubblesSound(); // Play water sound when Tenma appears
-    let i = 0;
-    setDisplayedText('');
-    const interval = setInterval(() => {
-      setDisplayedText(lines[currentLine].slice(0, i + 1));
-      i++;
-      if (i >= lines[currentLine].length) clearInterval(interval);
-    }, 18);
-    return () => clearInterval(interval);
-  }, [currentLine, lines]);
+    if (!soundPlayed.current) {
+      playJohanDialogueSound();
+      soundPlayed.current = true;
+    }
+  }, []);
 
   const handleNext = () => {
-    if (currentLine < lines.length - 1) {
-      setCurrentLine(currentLine + 1);
+    if (currentLineIndex < lines.length - 1) {
+      setCurrentLineIndex(currentLineIndex + 1);
     } else {
-      playJoyfulSound();
-      onComplete();
+      setIsVisible(false);
+      setTimeout(onComplete, 300);
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[300px]">
-      <img 
-        src="/images/avatars/mascot.png" 
-        alt="Tenma" 
-        className="w-32 h-32 mb-2 tenma-pop-in"
-        style={{ animation: 'tenmaPopIn 0.5s cubic-bezier(.68,-0.55,.27,1.55)' }}
-      />
-      <div className="bg-blue-100 border border-blue-300 rounded-xl px-6 py-4 mb-4 text-lg text-blue-900 max-w-xl w-full shadow-lg relative">
-        <span className="block font-bold mb-2">Tenma</span>
-        <span>{displayedText}</span>
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100/80 via-yellow-50/80 to-purple-100/80 backdrop-blur transition-all duration-500 ${isVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'} animate-aurora-fade-in`}>
+      {/* Sparkle/confetti effect */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        {[...Array(18)].map((_, i) => (
+          <span
+            key={i}
+            className={`absolute rounded-full opacity-30 animate-johan-sparkle sparkle-color-${i % 4}`}
+            style={{
+              left: `${10 + Math.random() * 80}%`,
+              top: `${10 + Math.random() * 80}%`,
+              width: `${8 + Math.random() * 12}px`,
+              height: `${8 + Math.random() * 12}px`,
+              animationDelay: `${Math.random() * 6}s`,
+            }}
+          />
+        ))}
       </div>
-      <div className="flex gap-4">
-        {currentLine < lines.length - 1 ? (
-          <Button onClick={handleNext} className="bg-green-500 hover:bg-green-600">Next</Button>
-        ) : (
-          <Button onClick={handleNext} className="bg-green-500 hover:bg-green-600">Start Quiz</Button>
-        )}
+      <div className="flex flex-col items-center justify-center min-h-[60vh] relative z-10">
+        <div className="relative mb-4 flex flex-col items-center">
+          {/* Soft colored glow behind Johan */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-100 blur-2xl opacity-60" style={{ width: 220, height: 220 }} />
+          {/* Johan image with drop shadow */}
+          <img src="/images/avatars/Johan.png" alt="Johan" className="w-44 h-44 z-10 relative drop-shadow-2xl animate-johan-pop" />
+          {/* Animated speech bubble with typing effect */}
+          <div className="absolute -top-28 left-1/2 -translate-x-1/2 bg-white rounded-xl shadow-lg px-6 py-3 text-lg font-semibold text-timelingo-purple border-2 border-yellow-200 animate-bubble-in"
+            style={{ minWidth: 260, maxWidth: 340, fontFamily: 'Baloo 2, cursive', fontWeight: 700, textAlign: 'center', zIndex: 10 }}>
+            {lines[currentLineIndex]}
+            <span className="inline-block w-2 h-5 align-middle animate-type-cursor bg-timelingo-purple/60 ml-1 rounded" />
+            {/* Bubble tail */}
+            <span style={{
+              position: 'absolute',
+              left: '50%',
+              bottom: '-18px',
+              transform: 'translateX(-50%)',
+              width: 0,
+              height: 0,
+              borderLeft: '12px solid transparent',
+              borderRight: '12px solid transparent',
+              borderTop: '18px solid #fff',
+              filter: 'drop-shadow(0 2px 2px #eab30833)'
+            }} />
+          </div>
+        </div>
+        <h2 className="text-3xl font-extrabold text-timelingo-purple mb-2">Johan</h2>
+        {/* Keep the original button as is */}
+        <button
+          onClick={handleNext}
+          className="mt-2 px-10 py-3 text-lg bg-gradient-to-r from-timelingo-gold to-yellow-400 hover:from-yellow-400 hover:to-timelingo-gold text-timelingo-navy rounded-full shadow-lg font-bold tracking-wide transition-all duration-200 transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-4 focus:ring-yellow-200 flex items-center gap-2 animate-fade-in z-20 animate-pulse-btn"
+        >
+          {currentLineIndex < lines.length - 1 ? (<><span>Next</span><svg className="ml-1 w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg></>) : (<><span>Start Quiz</span><svg className="ml-1 w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14" /></svg></>)}
+        </button>
       </div>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&display=swap');
+        .animate-bubble-in { animation: bubbleIn 0.7s cubic-bezier(.22,1,.36,1); }
+        @keyframes bubbleIn {
+          from { opacity: 0; transform: translateY(24px) scale(0.9); }
+          to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .animate-johan-pop { animation: johanPop 0.7s cubic-bezier(.68,-0.55,.27,1.55); }
+        @keyframes johanPop {
+          0% { transform: scale(0.8); opacity: 0; }
+          50% { transform: scale(1.1); }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-johan-sparkle { animation: sparkle 5.5s infinite linear; }
+        @keyframes sparkle {
+          0% { opacity: 0.2; transform: scale(1) translateY(0); }
+          50% { opacity: 0.5; transform: scale(1.3) translateY(-10px); }
+          100% { opacity: 0.2; transform: scale(1) translateY(0); }
+        }
+        .sparkle-color-0 { background: #fbbf24; }
+        .sparkle-color-1 { background: #a5b4fc; }
+        .sparkle-color-2 { background: #f472b6; }
+        .sparkle-color-3 { background: #6ee7b7; }
+      `}</style>
     </div>
   );
 };
 
-// Add Tenma pop-in animation CSS
-const style = document.createElement('style');
-style.innerHTML = `
-@keyframes tenmaPopIn {
-  0% { transform: scale(0.7); opacity: 0; }
-  80% { transform: scale(1.1); opacity: 1; }
-  100% { transform: scale(1); opacity: 1; }
-}
-.tenma-pop-in { animation: tenmaPopIn 0.5s cubic-bezier(.68,-0.55,.27,1.55); }
+// Add Johan pop-in animation CSS
+const styles = `
+  @keyframes johanPopIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .johan-pop-in { animation: johanPopIn 0.5s cubic-bezier(.68,-0.55,.27,1.55); }
 `;
-document.head.appendChild(style);
 
 const LessonPage = () => {
   const { lessonId } = useParams();
   const navigate = useNavigate();
   const { addXp } = useUser();
   const [showStoryPhase, setShowStoryPhase] = useState(true);
-  const [showTenmaTransition, setShowTenmaTransition] = useState(false);
+  const [showJohanTransition, setShowJohanTransition] = useState(false);
   const [animatedStory, setAnimatedStory] = useState('');
   const [nextModule, setNextModule] = useState<any | null>(null);
   
@@ -114,7 +172,7 @@ const LessonPage = () => {
     setSelectedAnswer,
     setIsAnswerCorrect,
     setCorrectAnswers,
-    setLessonCompleted,
+    (val) => { setLessonCompleted(val); },
     isAnswerCorrect,
     selectedAnswer
   );
@@ -138,27 +196,23 @@ const LessonPage = () => {
   // Fetch next module after lesson is completed
   useEffect(() => {
     if (lessonCompleted && lesson && lesson.id) {
-      // Try to fetch all modules in the same journey or chapter
-      // Prefer journey_id if available, else fallback to era
       const fetchNext = async () => {
-        let modulesRes;
-        if ((lesson as any).journey_id) {
-          modulesRes = await dbService.modules.getByJourneyId((lesson as any).journey_id);
-        } else if ((lesson as any).chapter_id) {
-          modulesRes = await dbService.modules.getByChapterId((lesson as any).chapter_id);
-        } else if (lesson.era) {
-          // Fallback: fetch all modules with same era
-          modulesRes = await dbService.modules.getAll();
-          if (modulesRes.data) {
-            modulesRes.data = modulesRes.data.filter((m: any) => m.era === lesson.era);
+        const allRes = await dbService.modules.getAll();
+        let allModules = (allRes.data || []).filter((m: any) =>
+          m.journey_id && lesson.journey_id && String(m.journey_id) === String(lesson.journey_id)
+        );
+        // Do NOT fall back to all modules if none found for journey
+        allModules.sort((a: any, b: any) => {
+          const aLevel = Number(a.level) || 0;
+          const bLevel = Number(b.level) || 0;
+          if (aLevel !== bLevel) {
+            return aLevel - bLevel;
           }
-        }
-        const modules = modulesRes?.data || [];
-        // Sort by position or id
-        modules.sort((a: any, b: any) => (a.position || a.id) - (b.position || b.id));
-        const idx = modules.findIndex((m: any) => String(m.id) === String(lesson.id));
-        if (idx !== -1 && idx < modules.length - 1) {
-          setNextModule(modules[idx + 1]);
+          return a.id - b.id;
+        });
+        let idx = allModules.findIndex((m: any) => String(m.id) === String(lesson.id));
+        if (idx !== -1 && idx < allModules.length - 1) {
+          setNextModule(allModules[idx + 1]);
         } else {
           setNextModule(null);
         }
@@ -166,6 +220,17 @@ const LessonPage = () => {
       fetchNext();
     }
   }, [lessonCompleted, lesson]);
+
+  // On lessonId change, always reset to story phase and not completed
+  useEffect(() => {
+    setShowStoryPhase(true);
+    setShowJohanTransition(false);
+    setCurrentQuestionIndex(0);
+    setSelectedAnswer(null);
+    setIsAnswerCorrect(null);
+    setCorrectAnswers(0);
+    setLessonCompleted(false);
+  }, [lessonId]);
 
   const moveToNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -206,15 +271,19 @@ const LessonPage = () => {
       mainImage = lesson.image_urls.split(',').filter(url => url.trim())[0];
     }
     return (
-      <div className="min-h-screen bg-gradient-to-b from-yellow-50 to-blue-50 flex flex-col items-center justify-center">
-        <div className="max-w-2xl w-full mx-auto p-6 bg-white rounded-lg shadow-lg flex flex-col items-center">
+      <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-white to-blue-100 flex flex-col items-center justify-center relative">
+        {/* Step badge */}
+        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10">
+          <span className="inline-block bg-green-100 text-green-800 text-sm font-semibold px-4 py-1 rounded-full shadow border border-green-200">Step 1 of 2: Story</span>
+        </div>
+        <div className="max-w-xl w-full mx-auto p-8 bg-white/90 rounded-3xl shadow-2xl flex flex-col items-center border border-blue-100 backdrop-blur-md" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #e0e7ff 10%, transparent 80%)' }}>
           {mainImage && (
-            <img src={mainImage} alt="Story visual" className="w-48 h-48 object-cover rounded shadow mb-4" />
+            <img src={mainImage} alt="Story visual" className="w-56 h-56 object-cover rounded-full border-4 border-blue-200 shadow-lg mb-6" />
           )}
-          <div className="w-full prose prose-lg max-w-none mb-6 min-h-[200px]">
+          <div className="w-full prose prose-lg max-w-none mb-8 min-h-[200px] text-center text-gray-800" style={{ fontSize: 20, lineHeight: 1.7 }}>
             <span style={{ whiteSpace: 'pre-line', fontFamily: 'inherit' }}>{animatedStory || <em>Loading story...</em>}</span>
           </div>
-          <Button className="mt-2 px-8 py-3 text-lg bg-green-500 hover:bg-green-600" onClick={() => { setShowStoryPhase(false); setShowTenmaTransition(true); }}>
+          <Button className="mt-2 px-10 py-3 text-lg bg-green-500 hover:bg-green-600 rounded-full shadow-lg font-bold tracking-wide" onClick={() => { setShowStoryPhase(false); setShowJohanTransition(true); }}>
             Continue
           </Button>
         </div>
@@ -222,16 +291,18 @@ const LessonPage = () => {
     );
   }
 
-  // Show Tenma transition before quiz
-  if (showTenmaTransition) {
-    const tenmaLines = [
-      "Yo! I'm Tenma, your adventure buddy!",
-      "That was a wild story, huh? Ready to show me what you learned? Let's go!"
-    ].filter(Boolean);
+  // Show Johan transition before quiz
+  if (showJohanTransition) {
+    const johanLines = [
+      "Yo! I'm Johan, your adventure buddy!",
+      "Ready to test your knowledge? Let's do this!",
+      "Remember, every question is a chance to learn something new!"
+    ];
+
     return (
-      <TenmaDialogue
-        lines={tenmaLines.length > 0 ? tenmaLines : ["Let's get started!"]}
-        onComplete={() => setShowTenmaTransition(false)}
+      <JohanDialogue
+        lines={johanLines.length > 0 ? johanLines : ["Let's get started!"]}
+        onComplete={() => setShowJohanTransition(false)}
       />
     );
   }
@@ -241,7 +312,7 @@ const LessonPage = () => {
       <LessonHeader title={lesson?.title || 'Loading...'} />
       
       <main className="container mx-auto py-8 px-4">
-        {!lessonCompleted ? (
+        {(!lessonCompleted) ? (
           <>
             <LessonProgress 
               currentQuestionIndex={currentQuestionIndex}
@@ -280,18 +351,32 @@ const LessonPage = () => {
             )}
           </>
         ) : (
-          <>
-            <div className="flex flex-col items-center justify-center mb-4">
-              <img src="/images/avatars/mascot.png" alt="Mascot" className="w-32 h-32 mb-2 animate-bounce-slow" />
+          // Always show the completion modal when lessonCompleted is true
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100/80 via-yellow-50/80 to-purple-100/80 backdrop-blur animate-aurora-fade-in">
+            <div className="bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col items-center max-w-lg w-full border-4 border-yellow-200">
+              <span className="text-4xl font-extrabold text-timelingo-purple mb-2">🎉 Module Completed!</span>
+              <h2 className="text-2xl font-bold mb-4 text-center">{lesson?.title}</h2>
+              <p className="text-lg text-gray-700 mb-6 text-center">
+                {lesson?.description || "Great job finishing this module!"}
+              </p>
+              <div className="flex gap-4 mt-2 w-full justify-center">
+                {nextModule && (
+                  <Button
+                    className="px-8 py-3 text-lg bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white rounded-full shadow-lg font-bold tracking-wide"
+                    onClick={() => navigate(`/lesson/${nextModule.id}`)}
+                  >
+                    Next Module
+                  </Button>
+                )}
+                <Button
+                  className="px-8 py-3 text-lg bg-timelingo-purple hover:bg-purple-700 text-white rounded-full shadow-lg font-bold tracking-wide"
+                  onClick={() => navigate('/dashboard')}
+                >
+                  Return to Profile
+                </Button>
+              </div>
             </div>
-            <LessonCompletion
-              correctAnswers={correctAnswers}
-              totalQuestions={questions.length}
-              onReturn={returnToDashboard}
-              onNext={nextModule ? () => navigate(`/lesson/${nextModule.id}`) : undefined}
-              nextModuleTitle={nextModule ? nextModule.title : undefined}
-            />
-          </>
+          </div>
         )}
       </main>
     </div>

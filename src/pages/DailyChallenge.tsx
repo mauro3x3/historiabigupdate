@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Logo from '@/components/Logo';
 import DailyChallengeContainer from '@/components/dailychallenge/DailyChallengeContainer';
 import { Calendar, BookOpen, Clock, Trophy } from 'lucide-react';
+import ChronologyChallenge from '@/components/dailychallenge/chronology/ChronologyChallenge';
 
 const DailyChallenge = () => {
   const navigate = useNavigate();
@@ -67,7 +67,16 @@ const DailyChallenge = () => {
             </div>
             
             <div className="max-w-3xl">
-              <DailyChallengeContainer onComplete={handleComplete} />
+              <DailyChallengeContainer
+                onComplete={handleComplete}
+                renderChallenge={(events, challengeId) => (
+                  <ChronologyChallenge
+                    events={events}
+                    challengeId={challengeId}
+                    onComplete={handleComplete}
+                  />
+                )}
+              />
             </div>
           </div>
           

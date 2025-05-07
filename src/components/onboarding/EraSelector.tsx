@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { HistoryEra } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,26 +33,42 @@ const EraSelector = ({
   const navigate = useNavigate();
   const { setPreferredEra } = useUser();
 
-  // Fetch eras from Supabase
+  // Fetch learning journeys and era display fields separately, then merge in JS
   useEffect(() => {
-    const fetchEras = async () => {
-      const { data, error } = await supabase
+    const fetchLearningTracksAndEras = async () => {
+      // Fetch all learning tracks
+      const { data: tracks, error: tracksError } = await supabase
+        .from('learning_tracks')
+        .select('era, id')
+        .order('id');
+      // Fetch all enabled history eras
+      const { data: erasData, error: erasError } = await supabase
         .from('history_eras')
         .select('*')
-        .eq('is_enabled', true)
-        .order('name');
-      
-      if (data) {
-        // Filter out the crossed-out eras based on the image
-        const filteredData = data.filter(era => 
-          !['age-of-revolutions', 'alt-history', 'american-amendments', 
-            'medieval-europe', 'modern-history', 'us-presidents', 'rome-greece'].includes(era.code)
-        );
-        setEras(filteredData);
+        .eq('is_enabled', true);
+      if (tracksError) {
+        console.error('Error fetching learning tracks:', tracksError);
+        return;
+      }
+      if (erasError) {
+        console.error('Error fetching history eras:', erasError);
+        return;
+      }
+      if (tracks && erasData) {
+        // Merge: for each track, find the matching era for display fields
+        const mapped = tracks.map((track: any) => {
+          const era = erasData.find((e: any) => e.code === track.era);
+          return {
+            code: track.era,
+            name: era?.name || track.era,
+            emoji: era?.emoji || '📚',
+            time_period: era?.time_period || '',
+          };
+        }).filter(e => !!e.name); // Only show if a matching era exists
+        setEras(mapped);
       }
     };
-    
-    fetchEras();
+    fetchLearningTracksAndEras();
   }, []);
 
   // Animation effect to stagger the appearance of era cards

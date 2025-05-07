@@ -9,6 +9,65 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      achievements: {
+        Row: {
+          description: string
+          icon: string
+          id: string
+          name: string
+        }
+        Insert: {
+          description: string
+          icon: string
+          id: string
+          name: string
+        }
+        Update: {
+          description?: string
+          icon?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      chapters: {
+        Row: {
+          created_at: string | null
+          description: string | null
+          id: number
+          journey_id: number | null
+          position: number
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          journey_id?: number | null
+          position?: number
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string | null
+          id?: number
+          journey_id?: number | null
+          position?: number
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chapters_journey_id_fkey"
+            columns: ["journey_id"]
+            isOneToOne: false
+            referencedRelation: "learning_tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       daily_challenges: {
         Row: {
           challenge_date: string
@@ -135,66 +194,6 @@ export type Database = {
           lesson_id?: string
           options?: Json
           question?: string
-        }
-        Relationships: []
-      }
-      lessons: {
-        Row: {
-          character: string | null
-          content: string | null
-          created_at: string
-          description: string | null
-          duration: number | null
-          era: string | null
-          id: number
-          image_urls: string | null
-          is_journey_content: boolean | null
-          lesson_type: string | null
-          level: number | null
-          position: number | null
-          prompt: string | null
-          story_content: string | null
-          title: string | null
-          transition_question: string | null
-          xp_reward: number | null
-        }
-        Insert: {
-          character?: string | null
-          content?: string | null
-          created_at?: string
-          description?: string | null
-          duration?: number | null
-          era?: string | null
-          id?: number
-          image_urls?: string | null
-          is_journey_content?: boolean | null
-          lesson_type?: string | null
-          level?: number | null
-          position?: number | null
-          prompt?: string | null
-          story_content?: string | null
-          title?: string | null
-          transition_question?: string | null
-          xp_reward?: number | null
-        }
-        Update: {
-          character?: string | null
-          content?: string | null
-          created_at?: string
-          description?: string | null
-          duration?: number | null
-          era?: string | null
-          id?: number
-          image_urls?: string | null
-          is_journey_content?: boolean | null
-          lesson_type?: string | null
-          level?: number | null
-          position?: number | null
-          prompt?: string | null
-          story_content?: string | null
-          title?: string | null
-          transition_question?: string | null
-          xp_reward?: number | null
         }
         Relationships: []
       }
@@ -338,42 +337,82 @@ export type Database = {
       }
       modules: {
         Row: {
+          chapter_id: number | null
+          character: string | null
           content_type: string
           created_at: string
           description: string | null
+          duration: number | null
+          era: string | null
           id: number
           image_url: string | null
+          image_urls: string | null
           is_journey_module: boolean
           journey_id: number
+          level: number | null
           position: number
+          prompt: string | null
+          status: string | null
+          story_content: string | null
           title: string
+          transition_question: string | null
           updated_at: string
+          xp_reward: number | null
         }
         Insert: {
+          chapter_id?: number | null
+          character?: string | null
           content_type?: string
           created_at?: string
           description?: string | null
+          duration?: number | null
+          era?: string | null
           id?: number
           image_url?: string | null
+          image_urls?: string | null
           is_journey_module?: boolean
           journey_id: number
+          level?: number | null
           position?: number
+          prompt?: string | null
+          status?: string | null
+          story_content?: string | null
           title: string
+          transition_question?: string | null
           updated_at?: string
+          xp_reward?: number | null
         }
         Update: {
+          chapter_id?: number | null
+          character?: string | null
           content_type?: string
           created_at?: string
           description?: string | null
+          duration?: number | null
+          era?: string | null
           id?: number
           image_url?: string | null
+          image_urls?: string | null
           is_journey_module?: boolean
           journey_id?: number
+          level?: number | null
           position?: number
+          prompt?: string | null
+          status?: string | null
+          story_content?: string | null
           title?: string
+          transition_question?: string | null
           updated_at?: string
+          xp_reward?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "modules_chapter_id_fkey"
+            columns: ["chapter_id"]
+            isOneToOne: false
+            referencedRelation: "chapters"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "modules_journey_id_fkey"
             columns: ["journey_id"]
@@ -463,6 +502,32 @@ export type Database = {
           },
         ]
       }
+      user_achievements: {
+        Row: {
+          achievement_id: string
+          date_earned: string | null
+          user_id: string
+        }
+        Insert: {
+          achievement_id: string
+          date_earned?: string | null
+          user_id: string
+        }
+        Update: {
+          achievement_id?: string
+          date_earned?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_challenge_progress: {
         Row: {
           challenge_id: string
@@ -536,6 +601,8 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          avatar_accessories: Json | null
+          avatar_base: string | null
           completed_eras: string[] | null
           created_at: string
           email: string | null
@@ -546,10 +613,11 @@ export type Database = {
           updated_at: string
           username: string | null
           xp: number
-          avatar_base?: string | null
-          avatar_accessories?: any | null
+          is_onboarded: boolean | null
         }
         Insert: {
+          avatar_accessories?: Json | null
+          avatar_base?: string | null
           completed_eras?: string[] | null
           created_at?: string
           email?: string | null
@@ -560,10 +628,11 @@ export type Database = {
           updated_at?: string
           username?: string | null
           xp?: number
-          avatar_base?: string | null
-          avatar_accessories?: any | null
+          is_onboarded?: boolean | null
         }
         Update: {
+          avatar_accessories?: Json | null
+          avatar_base?: string | null
           completed_eras?: string[] | null
           created_at?: string
           email?: string | null
@@ -574,8 +643,7 @@ export type Database = {
           updated_at?: string
           username?: string | null
           xp?: number
-          avatar_base?: string | null
-          avatar_accessories?: any | null
+          is_onboarded?: boolean | null
         }
         Relationships: []
       }

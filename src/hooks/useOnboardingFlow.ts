@@ -18,8 +18,9 @@ export const useOnboardingFlow = (
   const [learningTime, setLearningTime] = useState<LearningTime | null>(null);
   const [reminderMethod, setReminderMethod] = useState<ReminderMethod | null>(null);
   const [reminderTime, setReminderTime] = useState<string | null>(null);
+  const [skillLevel, setSkillLevel] = useState<string | null>(null);
   
-  const totalSteps = 5;
+  const totalSteps = 6;
   
   const handleNext = () => {
     if (step === 1 && interests.length === 0) {
@@ -27,27 +28,32 @@ export const useOnboardingFlow = (
       return;
     }
     
-    if (step === 2 && !era) {
+    if (step === 2 && !skillLevel) {
+      toast.error('Please select your skill level to continue');
+      return;
+    }
+    
+    if (step === 3 && !era) {
       toast.error('Please select an era to continue');
       return;
     }
     
-    if (step === 3 && !learningStyle) {
+    if (step === 4 && !learningStyle) {
       toast.error('Please select a learning style to continue');
       return;
     }
 
-    if (step === 4 && !learningTime) {
+    if (step === 5 && !learningTime) {
       toast.error('Please select a daily learning time to continue');
       return;
     }
     
-    if (step === 5 && !reminderMethod) {
+    if (step === 6 && !reminderMethod) {
       toast.error('Please select a reminder method to continue');
       return;
     }
 
-    if (step === 5 && reminderMethod !== 'none' && !reminderTime) {
+    if (step === 6 && reminderMethod !== 'none' && !reminderTime) {
       toast.error('Please select a reminder time');
       return;
     }
@@ -66,7 +72,7 @@ export const useOnboardingFlow = (
   };
   
   const finishOnboarding = async () => {
-    if (interests.length > 0 && era && learningStyle && learningTime) {
+    if (interests.length > 0 && skillLevel && era && learningStyle && learningTime) {
       const preferences: UserPreferences = {
         interests,
         era,
@@ -86,7 +92,9 @@ export const useOnboardingFlow = (
             .update({
               updated_at: new Date().toISOString(),
               preferred_era: era,
-              learning_style: learningStyle
+              learning_style: learningStyle,
+              skill_level: skillLevel,
+              is_onboarded: true
             })
             .eq('id', user.id);
             
@@ -108,7 +116,7 @@ export const useOnboardingFlow = (
         }
       }
       
-      toast.success('Welcome to TimeLingo! Your journey begins now.');
+      toast.success('Welcome to Historia! Your journey begins now.');
       
       // Direct user based on learning style
       if (learningStyle === 'visual') {
@@ -116,7 +124,7 @@ export const useOnboardingFlow = (
       } else if (learningStyle === 'daily') {
         navigate('/daily-challenge');
       } else if (learningStyle === 'journey') {
-        navigate('/learning-journeys');
+        navigate('/home');
       } else if (learningStyle === 'mystery') {
         navigate('/mystery-history');
       } else {
@@ -134,12 +142,14 @@ export const useOnboardingFlow = (
     learningTime,
     reminderMethod,
     reminderTime,
+    skillLevel,
     setInterests,
     setEra,
     setLearningStyle,
     setLearningTime,
     setReminderMethod,
     setReminderTime,
+    setSkillLevel,
     handleNext,
     handleBack,
     finishOnboarding

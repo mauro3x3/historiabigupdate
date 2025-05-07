@@ -2,6 +2,7 @@ import { useUser } from '@/contexts/UserContext';
 import { HistoryLesson, QuizQuestion } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { dbService } from '@/services/dbService';
 
 export const useQuiz = (
   lesson: HistoryLesson | null,
@@ -14,7 +15,8 @@ export const useQuiz = (
   setCorrectAnswers: (count: number) => void,
   setLessonCompleted: (completed: boolean) => void,
   isAnswerCorrect: boolean | null,
-  selectedAnswer: number | null
+  selectedAnswer: number | null,
+  allLessonsOrdered?: HistoryLesson[]
 ) => {
   const { addXp, user } = useUser();
 
@@ -78,6 +80,7 @@ export const useQuiz = (
         return;
       }
       
+      // Mark current lesson as completed
       const { error } = await supabase
         .from('user_lesson_progress')
         .upsert({
@@ -89,8 +92,45 @@ export const useQuiz = (
         }, {
           onConflict: 'user_id, lesson_id'
         });
-        
       if (error) throw error;
+
+      // --- Update user_journey_progress for module progression ---
+      if ((lesson as any).journey_id && lesson.id) {
+        // Mark current module as completed
+        await dbService.userJourneyProgress.markCompleted(user.id, Number(lesson.id));
+        // Unlock next module
+        await dbService.userJourneyProgress.unlockNextModule(user.id, Number((lesson as any).journey_id), Number(lesson.id));
+      }
+
+      // --- Unlock all lessons at the next level ---
+      if (allLessonsOrdered && Array.isArray(allLessonsOrdered)) {
+        // Find the current lesson's level
+        const currentLevel = lesson.level;
+        if (typeof currentLevel !== 'undefined') {
+          // Find the next level (the smallest level greater than currentLevel)
+          const levels = allLessonsOrdered
+            .map(l => l.level)
+            .filter(lvl => typeof lvl === 'number') as number[];
+          const uniqueSortedLevels = Array.from(new Set(levels)).sort((a, b) => a - b);
+          const currentLevelIdx = uniqueSortedLevels.indexOf(currentLevel);
+          if (currentLevelIdx !== -1 && currentLevelIdx < uniqueSortedLevels.length - 1) {
+            const nextLevel = uniqueSortedLevels[currentLevelIdx + 1];
+            // Find all lessons at the next level
+            const nextLevelLessons = allLessonsOrdered.filter(l => l.level === nextLevel);
+            for (const nextLesson of nextLevelLessons) {
+              await supabase.from('user_lesson_progress').upsert({
+                user_id: user.id,
+                lesson_id: nextLesson.id,
+                completed: false,
+                stars: 0,
+                xp_earned: 0
+              }, {
+                onConflict: 'user_id, lesson_id'
+              });
+            }
+          }
+        }
+      }
     } catch (error) {
       console.error("Error saving lesson progress:", error);
       toast.error("Failed to save your progress");

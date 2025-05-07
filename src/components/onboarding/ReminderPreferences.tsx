@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ReminderMethod } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -40,6 +39,14 @@ const ReminderPreferences = ({
 }: ReminderPreferencesProps) => {
   const [hasSetReminder, setHasSetReminder] = useState(false);
   
+  // Smart default: 19:00 (7:00 PM) local time
+  const getDefaultTime = () => {
+    if (selectedTime) return selectedTime;
+    const now = new Date();
+    now.setHours(19, 0, 0, 0);
+    return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
+
   const handleSaveTime = (time: string) => {
     onTimeSelect(time);
     setHasSetReminder(true);
@@ -56,13 +63,12 @@ const ReminderPreferences = ({
         {reminderOptions.map((option) => (
           <div 
             key={option.id}
-            className={`reminder-option relative ${selectedMethod === option.id ? 'selected' : ''}`}
+            className={`reminder-option relative rounded-xl border-2 p-6 cursor-pointer transition-all duration-200 flex flex-col items-center text-center shadow-sm ${selectedMethod === option.id ? 'border-timelingo-purple bg-purple-50 scale-105 shadow-lg' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'}`}
             onClick={() => onMethodSelect(option.id)}
           >
             <div className="text-3xl mb-2">{option.icon}</div>
             <h3 className="font-semibold text-timelingo-navy">{option.title}</h3>
             <p className="text-sm text-gray-500">{option.description}</p>
-            
             {selectedMethod === option.id && (
               <div className="absolute -top-2 -right-2 w-6 h-6 bg-timelingo-purple text-white rounded-full flex items-center justify-center shadow-md">
                 ✓
@@ -72,6 +78,12 @@ const ReminderPreferences = ({
         ))}
       </div>
       
+      {selectedMethod === 'none' && (
+        <div className="bg-blue-50 p-4 rounded-lg text-blue-700 text-center">
+          You're in control! We'll trust you to come back on your own. 🚀
+        </div>
+      )}
+      
       {selectedMethod && selectedMethod !== 'none' && (
         <div className="bg-gray-50 p-4 rounded-lg">
           <h3 className="font-semibold text-timelingo-navy mb-3">What time works best for you?</h3>
@@ -79,7 +91,7 @@ const ReminderPreferences = ({
           <div className="flex flex-col sm:flex-row items-center gap-4">
             <div className="flex-1">
               <TimePicker 
-                value={selectedTime || '08:00'} 
+                value={selectedTime || getDefaultTime()} 
                 onChange={handleSaveTime}
               />
             </div>
@@ -93,8 +105,14 @@ const ReminderPreferences = ({
           </div>
           
           <p className="text-xs text-gray-500 mt-2">
-            We'll send you a reminder at this time every day
+            We'll send you a gentle nudge at this time every day.
           </p>
+          
+          {selectedTime && (
+            <div className="mt-2 text-green-700 text-sm font-medium text-center">
+              You'll get a reminder every day at {selectedTime}.
+            </div>
+          )}
         </div>
       )}
     </div>

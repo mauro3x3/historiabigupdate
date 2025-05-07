@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -41,16 +40,6 @@ const OnboardingContainer: React.FC<OnboardingContainerProps> = ({
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-purple-50">
       <div className="container max-w-3xl mx-auto pt-8 px-4">
-        <div className="flex justify-between items-center mb-8">
-          <Logo />
-          <div className="text-sm">
-            <span className="text-gray-500">Already completed? </span>
-            <Button variant="link" className="text-timelingo-purple p-0" onClick={() => navigate('/dashboard')}>
-              Go to Dashboard
-            </Button>
-          </div>
-        </div>
-        
         <div className="bg-white rounded-2xl shadow-md p-6 mb-8 transition-all duration-500 animate-fade-in">
           <ProgressBar current={step} total={totalSteps} className="mb-8" />
           

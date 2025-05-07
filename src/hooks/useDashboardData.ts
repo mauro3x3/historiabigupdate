@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useUser } from '@/contexts/UserContext';
 import { HistoryEra, LearningTrackLevel, HistoryLesson } from '@/types';
@@ -49,22 +48,25 @@ export const useDashboardData = () => {
         if (user) {
           const progressMap = await getLessonProgress(user.id);
           
-          // Add progress data to lessons
+          // Add progress data to lessons and dynamically set isUnlocked
           const levelsWithProgress = track.levels.map(level => {
-            const lessonsWithProgress = level.lessons.map(lesson => {
-              return {
-                ...lesson,
-                progress: progressMap[lesson.id] || { 
-                  completed: false, 
-                  stars: 0, 
-                  xp_earned: 0 
-                }
-              } as HistoryLesson;
-            });
-            
+            // A level is unlocked if any lesson in it is present in progressMap
+            const isUnlocked = true; // Always unlock the level
+
+            const lessonsWithProgress = level.lessons.map(lesson => ({
+              ...lesson,
+              progress: progressMap[lesson.id] || { 
+                completed: false, 
+                stars: 0, 
+                xp_earned: 0 
+              },
+              isUnlocked: true // Always unlock the lesson
+            }));
+
             return {
               ...level,
-              lessons: lessonsWithProgress
+              lessons: lessonsWithProgress,
+              isUnlocked
             };
           });
           

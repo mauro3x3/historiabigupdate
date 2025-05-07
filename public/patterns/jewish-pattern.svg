@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="jewish-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+      <path d="M100 0 L200 100 L100 200 L0 100 Z" fill="none" stroke="#1A1F2C" stroke-width="1" opacity="0.1"/>
+      <path d="M50 50 L150 50 L150 150 L50 150 Z" fill="none" stroke="#FEC04F" stroke-width="1" opacity="0.1"/>
+      <path d="M75 75 L125 75 L125 125 L75 125 Z" fill="none" stroke="#6E59A5" stroke-width="1" opacity="0.1"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#jewish-pattern)"/>
+</svg> 

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LearningTrackLevel } from '@/types';
@@ -108,7 +107,7 @@ const LearningTrack: React.FC<LearningTrackProps> = ({ levels, themeColor = 'tim
                             ? 'bg-gradient-to-r from-green-50 to-green-100 border border-green-200' 
                             : 'bg-white shadow-sm hover:shadow-md cursor-pointer border border-gray-100 hover:border-purple-200' 
                           : 'bg-gray-100 opacity-60 cursor-not-allowed'}`}
-                      onClick={() => isLevelUnlocked && handleStartLesson(lesson.id)}
+                      onClick={() => handleStartLesson(lesson.id)}
                     >
                       {/* Pulsing animation for active lesson */}
                       {isLevelUnlocked && !isCompleted && (

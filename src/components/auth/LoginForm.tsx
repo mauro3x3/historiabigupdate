@@ -16,6 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import GoogleG from './GoogleG'; // (We'll add this SVG inline below)
 
 // Define the schema for the login form
 const loginSchema = z.object({
@@ -108,45 +109,47 @@ const LoginForm = ({ setActiveTab }: LoginFormProps) => {
   };
 
   return (
-    <div className="space-y-6 w-full">
-      {/* Mascot encouragement */}
-      <div className="flex flex-col items-center mb-2">
-        <img src="/images/avatars/goldfish_3.png" alt="Mascot" className="w-14 h-14 object-contain drop-shadow mb-1 animate-bounce-slow" />
-        <div className="text-timelingo-purple font-bold text-lg text-center">Welcome back, King! 💪</div>
-        <div className="text-gray-500 text-sm text-center">Log in to continue your journey.</div>
-      </div>
-      <div className="bg-purple-50/60 border-2 border-purple-100 rounded-2xl shadow-lg p-6 w-full flex flex-col gap-6">
-        <Button 
-          type="button" 
-          variant="outline" 
-          className="w-full font-bold rounded-full border-timelingo-purple hover:bg-purple-100 transition-all duration-150"
+    <div className="w-full flex flex-col items-center gap-6 bg-white/80 backdrop-blur-2xl rounded-2xl shadow-2xl p-6 md:p-10 border border-purple-200 border-opacity-30 font-sans max-h-[90vh] overflow-y-auto" style={{ fontFamily: "'Poppins', 'Nunito', 'Inter', Arial, sans-serif" }}>
+      <div className="w-full flex flex-col gap-6">
+        <button
+          type="button"
           onClick={signInWithGoogle}
           disabled={isGoogleLoading}
+          className="w-full flex items-center justify-center gap-3 py-4 px-6 rounded-full bg-white border border-gray-300 shadow-md hover:bg-gray-100 transition-all duration-150 font-bold text-gray-800 text-lg focus:outline-none focus:ring-2 focus:ring-blue-400 disabled:opacity-60"
+          aria-label="Continue with Google"
         >
-          <Chrome className="mr-2 h-4 w-4" />
+          {/* Google G SVG */}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g clipPath="url(#clip0_17_40)">
+              <path d="M23.04 12.2615C23.04 11.4448 22.9655 10.6615 22.8273 9.90918H12V14.3532H18.3073C18.0273 15.8015 17.1682 17.0115 15.9227 17.8015V20.2615H19.36C21.36 18.4415 23.04 15.6615 23.04 12.2615Z" fill="#4285F4"/>
+              <path d="M12 23.0002C15.24 23.0002 17.96 21.9285 19.36 20.2618L15.9227 17.8018C15.16 18.3218 14.16 18.6618 12 18.6618C8.88 18.6618 6.27 16.5218 5.32 13.6618H1.76V16.2018C3.16 19.8018 7.24 23.0002 12 23.0002Z" fill="#34A853"/>
+              <path d="M5.32 13.6615C5.08 13.1415 4.96 12.5815 4.96 12.0002C4.96 11.4188 5.08 10.8588 5.32 10.3388V7.79883H1.76C1.08 9.19883 0.72 10.5615 0.72 12.0002C0.72 13.4388 1.08 14.8015 1.76 16.2015L5.32 13.6615Z" fill="#FBBC05"/>
+              <path d="M12 5.3385C14.04 5.3385 15.48 6.12183 16.32 6.90183L19.44 3.78183C17.96 2.40183 15.24 1.00016 12 1.00016C7.24 1.00016 3.16 4.1985 1.76 7.7985L5.32 10.3385C6.27 7.4785 8.88 5.3385 12 5.3385Z" fill="#EA4335"/>
+            </g>
+            <defs>
+              <clipPath id="clip0_17_40">
+                <rect width="24" height="24" fill="white"/>
+              </clipPath>
+            </defs>
+          </svg>
           {isGoogleLoading ? "Signing in..." : "Continue with Google"}
-        </Button>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <Separator className="w-full" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Or continue with email
-            </span>
-          </div>
+        </button>
+        <div className="relative flex items-center my-2">
+          <span className="flex-grow border-t border-gray-200"></span>
+          <span className="mx-4 text-base text-gray-400 font-bold">or</span>
+          <span className="flex-grow border-t border-gray-200"></span>
         </div>
         {!showForgot ? (
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel className="text-lg font-bold">Email</FormLabel>
                     <FormControl>
-                      <Input placeholder="your.email@example.com" {...field} className="rounded-full px-4 py-2 border-timelingo-purple focus:border-timelingo-purple" />
+                      <Input placeholder="your.email@example.com" {...field} className="rounded-full px-6 py-4 border-2 border-timelingo-purple focus:border-yellow-400 bg-white/90 text-xl shadow-lg" />
                     </FormControl>
                     <FormMessage className="text-red-500 font-semibold" />
                   </FormItem>
@@ -157,70 +160,57 @@ const LoginForm = ({ setActiveTab }: LoginFormProps) => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <FormLabel className="text-lg font-bold">Password</FormLabel>
                     <FormControl>
-                      <Input type="password" placeholder="••••••" {...field} className="rounded-full px-4 py-2 border-timelingo-purple focus:border-timelingo-purple" />
+                      <Input type="password" placeholder="••••••" {...field} className="rounded-full px-6 py-4 border-2 border-timelingo-purple focus:border-yellow-400 bg-white/90 text-xl shadow-lg" />
                     </FormControl>
                     <FormMessage className="text-red-500 font-semibold" />
                   </FormItem>
                 )}
               />
-              <div className="flex justify-end">
+              <div className="flex justify-end mb-2">
                 <button
                   type="button"
-                  className="text-timelingo-purple text-sm font-semibold hover:underline focus:outline-none"
+                  className="text-timelingo-purple text-base font-semibold hover:underline focus:outline-none"
                   onClick={() => setShowForgot(true)}
                 >
                   Forgot password?
                 </button>
               </div>
-              <Button 
-                type="submit" 
-                className="w-full bg-timelingo-purple hover:bg-yellow-400 hover:text-timelingo-navy text-white font-bold rounded-full py-3 text-lg shadow-lg transition-all duration-150 transform hover:scale-105 active:scale-95"
-                disabled={isLoading}
-              >
-                {isLoading ? "Logging in..." : "Log In"}
-              </Button>
+              <div className="pt-2">
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gradient-to-br from-timelingo-purple via-purple-400 to-yellow-300 hover:from-yellow-400 hover:via-timelingo-purple hover:to-purple-400 hover:text-timelingo-navy text-white font-bold rounded-full py-4 text-2xl shadow-2xl transition-all duration-150 transform hover:scale-105 active:scale-95 border-0"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Logging in..." : "Log In"}
+                </Button>
+              </div>
             </form>
           </Form>
         ) : (
-          <form onSubmit={handleForgotPassword} className="space-y-4 w-full flex flex-col items-center">
+          <form onSubmit={handleForgotPassword} className="space-y-6 w-full flex flex-col items-center">
             <div className="w-full">
-              <label htmlFor="forgot-email" className="block text-timelingo-purple font-semibold mb-1">Enter your email</label>
+              <label htmlFor="forgot-email" className="block text-timelingo-purple font-bold mb-2 text-lg">Enter your email</label>
               <Input
                 id="forgot-email"
                 type="email"
                 placeholder="your.email@example.com"
                 value={forgotEmail}
                 onChange={e => setForgotEmail(e.target.value)}
-                className="rounded-full px-4 py-2 border-timelingo-purple focus:border-timelingo-purple w-full"
+                className="rounded-full px-6 py-4 border-2 border-timelingo-purple focus:border-yellow-400 w-full bg-white/90 text-xl shadow-lg"
                 required
               />
             </div>
-            <div className="flex gap-2 w-full">
-              <Button
-                type="submit"
-                className="flex-1 bg-timelingo-purple hover:bg-yellow-400 hover:text-timelingo-navy text-white font-bold rounded-full py-2 text-md shadow-lg transition-all duration-150"
-                disabled={forgotLoading}
-              >
+            <div className="flex gap-4 w-full">
+              <Button type="button" variant="outline" className="w-1/2 rounded-full py-4 text-lg" onClick={() => setShowForgot(false)} disabled={forgotLoading}>Cancel</Button>
+              <Button type="submit" className="w-1/2 bg-gradient-to-br from-timelingo-purple via-purple-400 to-yellow-300 text-white rounded-full py-4 text-lg shadow-lg border-0" disabled={forgotLoading}>
                 {forgotLoading ? 'Sending...' : 'Send Reset Email'}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="flex-1 rounded-full border-timelingo-purple"
-                onClick={() => setShowForgot(false)}
-              >
-                Back
               </Button>
             </div>
           </form>
         )}
       </div>
-      <style>{`
-        @keyframes bounce { 0%{transform:translateY(0);} 50%{transform:translateY(-15px);} 100%{transform:translateY(0);} }
-        .animate-bounce-slow { animation: bounce 2.5s infinite; }
-      `}</style>
     </div>
   );
 };

@@ -44,24 +44,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         handleToDashboard={handleToDashboard}
         user={user}
       />
-      
-      <div className={`bg-white p-6 rounded-xl border border-${eraTheme.accent}-200 shadow-sm relative overflow-hidden`}>
-        {/* Background pattern with pointer-events-none to allow clicking through it */}
-        <div className={`absolute inset-0 ${eraTheme.bgPattern} opacity-10 pointer-events-none`}></div>
-        
-        {!user ? (
-          <GuestContent />
-        ) : (
-          <LearningContent 
-            isLoading={isLoading}
-            preferredEra={preferredEra}
-            learningTrack={learningTrack}
-            eraTheme={eraTheme}
-            onEraChange={onEraChange}
-            changingEra={changingEra}
-          />
-        )}
-      </div>
+      {/* Old learning path UI removed */}
     </div>
   );
 };

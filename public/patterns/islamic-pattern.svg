@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <pattern id="islamic-pattern" x="0" y="0" width="200" height="200" patternUnits="userSpaceOnUse">
+      <path d="M0 0 L200 200 M200 0 L0 200" stroke="#1B4D3E" stroke-width="1" opacity="0.1"/>
+      <circle cx="100" cy="100" r="50" fill="none" stroke="#FEC04F" stroke-width="1" opacity="0.1"/>
+      <path d="M50 100 L150 100 M100 50 L100 150" stroke="#6E59A5" stroke-width="1" opacity="0.1"/>
+    </pattern>
+  </defs>
+  <rect width="100%" height="100%" fill="url(#islamic-pattern)"/>
+</svg> 

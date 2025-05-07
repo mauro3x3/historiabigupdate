@@ -40,4 +40,48 @@ export const dbService = {
     update: (id: number, data: any) => supabase.from('chapters').update(data).eq('id', id),
     delete: (id: number) => supabase.from('chapters').delete().eq('id', id),
   },
+  
+  userJourneyProgress: {
+    getByUserAndModule: (userId: string, moduleId: number) =>
+      supabase.from('user_journey_progress').select('*').eq('user_id', userId).eq('module_id', moduleId).single(),
+    markCompleted: (userId: string, moduleId: number) =>
+      supabase.from('user_journey_progress').update({ is_completed: true, completed_at: new Date().toISOString() }).eq('user_id', userId).eq('module_id', moduleId),
+    unlockNextModule: async (userId: string, journeyId: number, currentModuleId: number) => {
+      // Get the position of the current module
+      const { data: currentModule, error: currentModuleError } = await supabase
+        .from('modules')
+        .select('position')
+        .eq('id', currentModuleId)
+        .single();
+      if (currentModuleError || !currentModule) return { error: currentModuleError || 'Current module not found' };
+      // Get the next module in the journey
+      const { data: nextModule, error: nextModuleError } = await supabase
+        .from('modules')
+        .select('id, journey_id')
+        .eq('journey_id', journeyId)
+        .gt('position', currentModule.position)
+        .order('position', { ascending: true })
+        .limit(1)
+        .single();
+      if (nextModuleError || !nextModule) return { error: nextModuleError || 'No next module' };
+      // Insert unlock for the next module if not already unlocked
+      const { data: existing, error: existingError } = await supabase
+        .from('user_journey_progress')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('module_id', nextModule.id)
+        .maybeSingle();
+      if (existingError) return { error: existingError };
+      if (!existing) {
+        return await supabase.from('user_journey_progress').insert({
+          user_id: userId,
+          journey_id: journeyId,
+          module_id: nextModule.id,
+          is_completed: false,
+          unlocked_at: new Date().toISOString(),
+        });
+      }
+      return { data: 'Already unlocked' };
+    },
+  },
 };

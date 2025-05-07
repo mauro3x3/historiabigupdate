@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUser } from '@/contexts/UserContext';
+import { Loader2 } from 'lucide-react';
 
 import AuthLayout from '@/components/auth/AuthLayout';
 import LoginForm from '@/components/auth/LoginForm';
@@ -13,6 +13,7 @@ const AuthPage = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState<string>("login");
   const { user, isOnboarded } = useUser();
+  const [profileLoaded, setProfileLoaded] = useState(false);
 
   // Set initial tab based on URL parameter if present
   useEffect(() => {
@@ -23,18 +24,32 @@ const AuthPage = () => {
     }
   }, [location]);
 
-  // Redirect if already logged in
+  // Wait for user and isOnboarded to be loaded before redirecting
   useEffect(() => {
-    if (user) {
-      // If user is already onboarded, go to profile page
-      if (isOnboarded) {
-        navigate('/profile');
-      } else {
-        // If new user, go to onboarding
-        navigate('/onboarding');
+    if ((user === null) || (user !== null && typeof isOnboarded === 'boolean')) {
+      setProfileLoaded(true);
+    }
+  }, [user, isOnboarded]);
+
+  useEffect(() => {
+    if (profileLoaded) {
+      if (user) {
+        if (isOnboarded) {
+          navigate('/profile');
+        } else {
+          navigate('/onboarding');
+        }
       }
     }
-  }, [user, isOnboarded, navigate]);
+  }, [profileLoaded, user, isOnboarded, navigate]);
+
+  if (!profileLoaded) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
+        <Loader2 className="animate-spin" size={48} />
+      </div>
+    );
+  }
 
   return (
     <AuthLayout>

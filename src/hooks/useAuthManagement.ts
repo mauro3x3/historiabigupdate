@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
@@ -19,12 +18,8 @@ export const useAuthManagement = () => {
         .eq('id', userId)
         .single();
       
-      // If the user has completed preferences in their profile, they're considered onboarded
-      // Check if preferred_era is set or if the profile has been updated after creation
-      if (profileData && (
-          profileData.preferred_era || 
-          profileData.created_at !== profileData.updated_at
-      )) {
+      // Use is_onboarded field to determine onboarding status
+      if (profileData && profileData.is_onboarded) {
         setIsOnboarded(true);
         setIsLoading(false);
         return true;

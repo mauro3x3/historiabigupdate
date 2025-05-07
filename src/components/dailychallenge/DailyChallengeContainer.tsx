@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/contexts/UserContext';
@@ -12,9 +11,10 @@ import { DailyChallenge, HistoricalEvent } from '@/types';
 
 interface DailyChallengeContainerProps {
   onComplete: () => void;
+  renderChallenge?: (events: HistoricalEvent[], challengeId: string) => React.ReactNode;
 }
 
-const DailyChallengeContainer = ({ onComplete }: DailyChallengeContainerProps) => {
+const DailyChallengeContainer = ({ onComplete, renderChallenge }: DailyChallengeContainerProps) => {
   const { user } = useUser();
   const [challenge, setChallenge] = useState<DailyChallenge | null>(null);
   const [loading, setLoading] = useState(true);
@@ -156,6 +156,9 @@ const DailyChallengeContainer = ({ onComplete }: DailyChallengeContainerProps) =
 
   // Determine which type of challenge to display - check both question AND options exist
   if (challenge.question && challenge.options && Array.isArray(challenge.options) && challenge.options.length > 0) {
+    if (renderChallenge) {
+      return renderChallenge(challenge.options, challenge.id);
+    }
     return (
       <DailyChallengeQuiz 
         challenge={challenge}
@@ -163,6 +166,9 @@ const DailyChallengeContainer = ({ onComplete }: DailyChallengeContainerProps) =
       />
     );
   } else if (challenge.events && Array.isArray(challenge.events) && challenge.events.length > 0) {
+    if (renderChallenge) {
+      return renderChallenge(challenge.events, challenge.id);
+    }
     return (
       <ChronologyChallenge 
         events={challenge.events} 

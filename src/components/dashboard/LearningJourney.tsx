@@ -65,12 +65,14 @@ const LearningJourney = ({ currentEra, learningTrack, isLoading }: LearningJourn
             <span>View Historical Map</span>
           </Button>
         </div>
-        <LearningTrack 
-          levels={learningTrack.map(level => ({ 
-            ...level, 
-            isUnlocked: true // Default to unlocked for better user experience
-          }))}
-        />
+        <div className="w-full h-[70vh] md:h-[80vh] overflow-y-auto pr-2">
+          <LearningTrack 
+            levels={learningTrack.map(level => ({ 
+              ...level, 
+              isUnlocked: true // Default to unlocked for better user experience
+            }))}
+          />
+        </div>
       </div>
     </div>
   );

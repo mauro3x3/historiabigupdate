@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { LearningStyle } from '@/types';
 import { Check, BookOpen, Video, Calendar, Map, PuzzleIcon } from 'lucide-react';
@@ -39,6 +38,23 @@ const LearningStyleSelector = ({ selectedStyle, onSelect }: LearningStyleSelecto
 
   const learningStyles = [
     {
+      id: 'journey' as LearningStyle,
+      emoji: '🗺️',
+      icon: Map,
+      title: 'Learning Journeys',
+      description: 'Themed paths like "Rise of Rome" or "World War II Leaders"',
+      isNew: true
+    },
+    {
+      id: 'ai-dolphin' as LearningStyle,
+      emoji: '🐬',
+      icon: null,
+      title: 'AI Quiz Dolphin',
+      description: 'Let our friendly AI dolphin create custom quizzes just for you!',
+      isNew: true,
+      isAi: true
+    },
+    {
       id: 'reading' as LearningStyle,
       emoji: '📘',
       icon: BookOpen,
@@ -69,14 +85,6 @@ const LearningStyleSelector = ({ selectedStyle, onSelect }: LearningStyleSelecto
       title: 'Mystery History',
       description: 'Guess the topic from clues, images, or quotes',
       isNew: true
-    },
-    {
-      id: 'journey' as LearningStyle,
-      emoji: '🗺️',
-      icon: Map,
-      title: 'Learning Journeys',
-      description: 'Themed paths like "Rise of Rome" or "World War II Leaders"',
-      isNew: true
     }
   ];
 
@@ -97,19 +105,23 @@ const LearningStyleSelector = ({ selectedStyle, onSelect }: LearningStyleSelecto
               animatedItems.includes(style.id) ? 'animate-scale-in' : 'opacity-0',
               isSelected(style.id) ? 
                 'border-purple-500 bg-purple-50 shadow-md transform scale-102' : 
-                'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'
+                'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50',
+              style.isAi ? 'border-blue-400 bg-blue-50' : ''
             )}
             onClick={() => handleSelect(style.id)}
             style={{ animationDelay: `${index * 75}ms` }}
           >
             <div className="flex-shrink-0 bg-purple-100 rounded-full p-3 text-purple-600">
-              {style.icon && <style.icon className="h-6 w-6" />}
+              {style.icon ? <style.icon className="h-6 w-6" /> : <span className="text-2xl">{style.emoji}</span>}
             </div>
             
             <div className="flex-grow">
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-timelingo-navy">{style.title}</h3>
-                {style.isNew && (
+                {style.isAi && (
+                  <Badge className="bg-blue-500 text-white text-xs">AI-powered</Badge>
+                )}
+                {style.isNew && !style.isAi && (
                   <Badge className="bg-green-500 text-white text-xs">New</Badge>
                 )}
               </div>

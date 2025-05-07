@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { useUser } from "@/contexts/UserContext";
 import UserProfileHeader from "./UserProfileHeader";
-import UserActions from "./UserActions";
 import { supabase } from "@/integrations/supabase/client";
 import { HistoryEra } from "@/types";
 import { Medal, Flame, Star, ArrowRightCircle, BookOpen, Map, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import html2canvas from 'html2canvas';
 import { QRCodeCanvas } from 'qrcode.react';
+import { useNavigate } from 'react-router-dom';
+import { unlockAchievement } from '@/integrations/supabase/achievements';
 
 const MOTIVATIONAL_QUOTES = [
   "Keep going! Every day is progress.",
@@ -18,7 +19,7 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 const AVATAR_OPTIONS = [
-  { key: 'mascot', src: '/images/avatars/mascot.png', label: 'Mascot' },
+  { key: 'mascot', src: '/images/avatars/Johan.png', label: 'Johan' },
   { key: 'goldfish_3', src: '/images/avatars/goldfish_3.png', label: 'Goldfish 3' },
   { key: 'goldfish_4', src: '/images/avatars/goldfish_4.png', label: 'Goldfish 4' },
   { key: 'goldfish_5', src: '/images/avatars/goldfish_5.png', label: 'Goldfish 5' },
@@ -32,6 +33,7 @@ const AVATAR_OPTIONS = [
 
 export default function UserStats(props) {
   const { user, xp, streak, signOut, completedEras, preferredEra, setPreferredEra } = useUser();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState(user?.email?.split('@')[0] || "Historian");
   const [showEraSelector, setShowEraSelector] = useState(false);
@@ -108,6 +110,8 @@ export default function UserStats(props) {
         } else {
           setAvatarBase(selectedAvatar); // fallback
         }
+        // Unlock Profile Pro achievement
+        await unlockAchievement(user.id, 'customize_avatar');
       }
       setShowAvatarModal(false);
       toast.success('Avatar updated!');
@@ -296,11 +300,16 @@ export default function UserStats(props) {
           </div>
           {/* See all achievements link */}
           <div className="mt-2">
-            <a href="#" className="text-sm text-timelingo-gold hover:underline focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all">See all achievements</a>
+            <button
+              className="text-sm text-timelingo-gold hover:underline focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-all bg-transparent border-none cursor-pointer"
+              onClick={() => navigate('/achievements')}
+            >
+              See all achievements
+            </button>
           </div>
           {/* Actions */}
           <div className="mt-8 flex gap-4 flex-wrap justify-center w-full">
-            <UserActions signOut={signOut} user={user} />
+            {/* <UserActions signOut={signOut} user={user} /> */}
           </div>
         </div>
         {/* Animations CSS */}
