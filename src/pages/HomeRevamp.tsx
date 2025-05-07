@@ -103,6 +103,13 @@ const HomeRevamp = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [fallbackEra, setFallbackEra] = useState(null);
 
+  // Redirect not-logged-in users to landing page
+  useEffect(() => {
+    if (!user) {
+      navigate('/', { replace: true });
+    }
+  }, [user, navigate]);
+
   // Load path for selected era
   useEffect(() => {
     let cancelled = false;
