@@ -61,7 +61,7 @@ const AppRoutes = () => {
   
   return (
     <Routes>
-      <Route path="/" element={defaultRoute} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/home" element={<HomeRevamp />} />
       <Route path="/auth" element={<ThemeProvider disableBackground={true}><Auth /></ThemeProvider>} />
       <Route path="/onboarding" element={<Onboarding />} />
@@ -290,7 +290,7 @@ function RouterWithFishbowl() {
   return (
     <>
       <AppRoutes />
-      {location.pathname !== "/landingpage" && location.pathname !== "/auth" && location.pathname !== "/onboarding" && <GlobalFishbowlMenu />}
+      {location.pathname !== "/" && location.pathname !== "/landingpage" && location.pathname !== "/auth" && location.pathname !== "/onboarding" && <GlobalFishbowlMenu />}
     </>
   );
 }

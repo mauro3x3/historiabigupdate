@@ -22,18 +22,7 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
         <div className="absolute inset-0 bg-[url('/images/background-pattern.svg')] opacity-10 mix-blend-overlay" />
       </div>
       {/* Big Johan mascot and greeting for large screens */}
-      <div className="hidden lg:block absolute right-32 top-1/2 -translate-y-1/2 z-10">
-        <div className="relative flex flex-col items-center">
-          <div className="absolute -inset-8 bg-gradient-to-br from-yellow-100 via-purple-100 to-blue-100 rounded-full blur-2xl opacity-60 w-[480px] h-[480px]" />
-          <img src="/images/avatars/Johan.png" alt="Johan greets you!" className="w-[340px] h-[340px] object-contain drop-shadow-2xl relative z-10 animate-bounce-slow" />
-          <div className="mt-6 text-5xl font-extrabold text-timelingo-purple drop-shadow-lg text-center relative z-10">
-            Welcome, future historian!
-          </div>
-          <div className="text-2xl text-timelingo-navy font-medium mt-3 relative z-10 text-center">
-            Johan is excited to see you learn today!
-          </div>
-        </div>
-      </div>
+      {/* Removed mascot and greeting for a cleaner look */}
       <div className="w-full max-w-xl mx-auto pt-20 px-4 flex flex-col items-center z-20">
         {/* Card */}
         <div className="bg-white/70 backdrop-blur-2xl rounded-3xl shadow-2xl p-14 w-full flex flex-col items-center border-2 border-purple-200 border-opacity-40 transition-all duration-300 hover:shadow-3xl mt-2 mb-8">
