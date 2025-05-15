@@ -43,6 +43,7 @@ export const useDashboardData = () => {
         
         // Fetch the track data
         const track = await generateTrackForEra(era);
+        console.log('generateTrackForEra result:', track);
         
         // If user is logged in, fetch progress data
         if (user) {

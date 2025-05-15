@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useLearningJourneys } from '@/hooks/useLearningJourneys';
 import { dbService } from '@/services/dbService';
 import { QuizQuestion } from '@/types';
+import ReadAloudButton from '@/components/ReadAloudButton';
 
 const encouragements = [
   'Great job! 🎉',
@@ -181,6 +182,7 @@ const GuestContent: React.FC = () => {
             <div className="w-full bg-purple-50 rounded-xl shadow p-4 mb-2">
               <div className="text-lg font-bold text-timelingo-navy mb-1">{firstModule.title}</div>
               <div className="text-gray-700" dangerouslySetInnerHTML={{ __html: firstModule.description || '' }} />
+              <ReadAloudButton text={firstModule.story_content || firstModule.description || firstModule.title} />
             </div>
             <Button onClick={handleStartLearning} className="bg-timelingo-gold hover:bg-yellow-400 text-timelingo-navy font-bold px-6 py-2 rounded-full shadow-lg animate-pulse">Start Free Preview</Button>
           </div>
@@ -201,6 +203,7 @@ const GuestContent: React.FC = () => {
             <div className="text-gray-600 text-center mb-2" dangerouslySetInnerHTML={{ __html: firstModule.description || '' }} />
             <div className="bg-gradient-to-br from-yellow-50 to-purple-50 rounded-xl shadow p-6 w-full text-center mb-2">
               {firstModule.story_content && <div className="text-lg font-semibold mb-6" dangerouslySetInnerHTML={{ __html: firstModule.story_content }} />}
+              <ReadAloudButton text={firstModule.story_content || firstModule.description || firstModule.title} />
               {/* Quiz Section */}
               {quizQuestions.length > 0 && (
                 <div className="w-full flex flex-col gap-6 items-center">

@@ -11,6 +11,8 @@ import { useUser } from '@/contexts/UserContext';
 
 const DashboardContent: React.FC = () => {
   const { currentEra, learningTrack, isLoading } = useDashboardData();
+  console.log("learningTrack", learningTrack);
+  console.log("currentEra", currentEra);
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useUser();
@@ -21,11 +23,11 @@ const DashboardContent: React.FC = () => {
   const [forceRefresh, setForceRefresh] = useState(false);
 
   // Redirect not logged in users to landing page
-  useEffect(() => {
-    if (!user) {
-      navigate('/', { replace: true });
-    }
-  }, [user, navigate]);
+  // useEffect(() => {
+  //   if (!user) {
+  //     navigate('/', { replace: true });
+  //   }
+  // }, [user, navigate]);
 
   // Listen for content-saved event to refresh the dashboard
   useEffect(() => {
@@ -57,7 +59,7 @@ const DashboardContent: React.FC = () => {
   const filterJourneyContent = (modules: any[]) => {
     return modules.map(level => ({
       ...level,
-      lessons: level.lessons.filter((lesson: any) => lesson.is_journey_content === true)
+      lessons: level.lessons.filter((lesson: any) => lesson.is_journey_module === true)
     })).filter(level => level.lessons.length > 0);
   };
 
@@ -65,7 +67,7 @@ const DashboardContent: React.FC = () => {
   const filterSideContent = (modules: any[]) => {
     return modules.map(level => ({
       ...level,
-      lessons: level.lessons.filter((lesson: any) => lesson.is_journey_content !== true)
+      lessons: level.lessons.filter((lesson: any) => lesson.is_journey_module !== true)
     })).filter(level => level.lessons.length > 0);
   };
 
@@ -110,21 +112,21 @@ const DashboardContent: React.FC = () => {
           <TabsContent value="learning" key={`learning-${forceRefresh}`}>
             <UserStats learningTrack={learningTrack} />
             <FeatureCards />
-            {/* <LearningSection
+            <LearningSection
               currentEra={currentEra}
               learningTrack={filterJourneyContent(learningTrack)}
               isLoading={isLoading}
-            /> */}
+            />
           </TabsContent>
 
           <TabsContent value="side-content" key={`side-${forceRefresh}`}>
-            {/* <LearningSection
+            <LearningSection
               currentEra={currentEra}
               learningTrack={filterSideContent(learningTrack)}
               isLoading={isLoading}
               title="Side Learning Content"
               description="Explore additional lessons, games, and quizzes to enhance your knowledge."
-            /> */}
+            />
           </TabsContent>
 
           <TabsContent value="videos">

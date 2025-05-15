@@ -53,20 +53,11 @@ const AuthPage = () => {
 
   return (
     <AuthLayout>
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-8">
-          <TabsTrigger value="login">Log In</TabsTrigger>
-          <TabsTrigger value="signup">Sign Up</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="login">
-          <LoginForm setActiveTab={setActiveTab} />
-        </TabsContent>
-        
-        <TabsContent value="signup">
-          <SignupForm setActiveTab={setActiveTab} />
-        </TabsContent>
-      </Tabs>
+      {activeTab === 'login' ? (
+        <LoginForm setActiveTab={setActiveTab} />
+      ) : (
+        <SignupForm setActiveTab={setActiveTab} />
+      )}
     </AuthLayout>
   );
 };

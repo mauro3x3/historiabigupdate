@@ -254,17 +254,19 @@ function GlobalFishbowlMenu() {
         style={{ width: 120, height: 120 }}
       >
         <div className="relative w-full h-full flex items-center justify-center">
-          {/* Bowl SVG */}
-          <svg width="110" height="110" viewBox="0 0 110 110" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0">
-            <ellipse cx="55" cy="70" rx="48" ry="35" fill="#e0f7fa" stroke="#b3e5fc" strokeWidth="4" />
-            <ellipse cx="55" cy="90" rx="30" ry="8" fill="#b3e5fc" opacity="0.5" />
-          </svg>
-          {/* Mascot with bounce animation */}
-          <img
-            src="/images/avatars/Johan.png"
-            alt="Johan mascot"
-            className={`w-20 h-20 object-contain z-10 transition-transform duration-300 animate-bounce-slow ${open ? 'scale-110' : ''}`}
-            style={{ marginTop: '10px' }}
+          {/* Glowing Orb */}
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-0 animate-orb-float"
+            style={{
+              width: '100px',
+              height: '100px',
+              borderRadius: '50%',
+              background: 'radial-gradient(circle at 30% 30%, #fffbe6 0%, #ffd700 30%, #7f5af0 70%, #2dd4bf 100%)',
+              boxShadow: '0 0 32px 8px #ffd70088, 0 0 64px 16px #7f5af088, 0 0 24px 4px #2dd4bf66',
+              opacity: 0.96,
+              border: '4px solid #fff',
+              filter: 'blur(0.5px)',
+            }}
           />
         </div>
         <span className="sr-only">Open navigation menu</span>
@@ -280,6 +282,11 @@ function GlobalFishbowlMenu() {
           50% { transform: translateY(-10px); }
         }
         .animate-bounce-slow { animation: bounce-slow 2.5s infinite; }
+        @keyframes orb-float {
+          0%, 100% { transform: translate(-50%, -50%) scale(1); }
+          50% { transform: translate(-50%, -60%) scale(1.04); }
+        }
+        .animate-orb-float { animation: orb-float 3.5s ease-in-out infinite; }
       `}</style>
     </div>
   );

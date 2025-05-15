@@ -1,4 +1,3 @@
-
 // User related types
 export type LearningStyle = 'reading' | 'visual' | 'daily' | 'mystery' | 'journey';
 export type LearningTime = '5-min' | '15-min' | '30-min' | '60-min' | '10-min';
@@ -58,6 +57,7 @@ export interface HistoryLesson {
   transition_question?: string;
   prompt?: string;
   character?: string;
+  journey_id?: number;
 }
 
 export interface LessonProgress {

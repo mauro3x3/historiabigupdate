@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from 'react';
 import { HistoryEvent } from '@/types';
-import { getHistoricalMapData } from '@/data/maps/mapData';
+import { getHistoricalMapData, getHistoricalMapDataWithImages } from '@/data/maps/mapData';
 
 interface UseHistoricalMapStateProps {
   era: string | undefined;
@@ -29,45 +28,36 @@ export const useHistoricalMapState = ({ era }: UseHistoricalMapStateProps): UseH
   
   useEffect(() => {
     if (!era) return;
-    
-    // First try to load from localStorage to preserve any user changes (like images)
-    const storageKey = `mapData_${era}`;
-    const storedData = localStorage.getItem(storageKey);
-    
-    if (storedData) {
-      try {
-        const parsedData = JSON.parse(storedData);
-        if (parsedData && Array.isArray(parsedData.events) && parsedData.events.length > 0) {
-          console.log(`Loaded ${parsedData.events.length} events from localStorage for era: ${era}`);
-          setEvents(parsedData.events);
-          
-          // Reset state when era changes
-          setSelectedEvent(null);
-          setIsPlaying(false);
-          setActiveEventIndex(0);
-          return;
+    (async () => {
+      // First try to load from localStorage to preserve any user changes (like images)
+      const storageKey = `mapData_${era}`;
+      const storedData = localStorage.getItem(storageKey);
+      if (storedData) {
+        try {
+          const parsedData = JSON.parse(storedData);
+          if (parsedData && Array.isArray(parsedData.events) && parsedData.events.length > 0) {
+            setEvents(parsedData.events);
+            setSelectedEvent(null);
+            setIsPlaying(false);
+            setActiveEventIndex(0);
+            return;
+          }
+        } catch (error) {
+          console.error("Error loading data from localStorage:", error);
         }
-      } catch (error) {
-        console.error("Error loading data from localStorage:", error);
       }
-    }
-    
-    // Fall back to original data if localStorage data is not available or invalid
-    const mapData = getHistoricalMapData(era);
-    setEvents(mapData.events);
-    
-    // Save the original data to localStorage for future reference
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(mapData));
-      console.log(`Saved original data to localStorage for era: ${era}`);
-    } catch (error) {
-      console.error("Error saving to localStorage:", error);
-    }
-    
-    // Reset state when era changes
-    setSelectedEvent(null);
-    setIsPlaying(false);
-    setActiveEventIndex(0);
+      // Always try to fetch from Supabase for fresh images
+      const mapData = await getHistoricalMapDataWithImages(era);
+      setEvents(mapData.events);
+      try {
+        localStorage.setItem(storageKey, JSON.stringify(mapData));
+      } catch (error) {
+        console.error("Error saving to localStorage:", error);
+      }
+      setSelectedEvent(null);
+      setIsPlaying(false);
+      setActiveEventIndex(0);
+    })();
   }, [era]);
 
   // Handle auto-play functionality

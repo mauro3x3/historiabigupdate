@@ -9,6 +9,7 @@ export interface LearningTrack {
 
 export const generateTrackForEra = async (era: HistoryEra): Promise<LearningTrack> => {
   try {
+    // window.alert('generateTrackForEra called with era: ' + era);
     // Fetch all published modules for the era
     const { data: moduleData, error: moduleError } = await supabase
       .from('modules')
@@ -16,6 +17,8 @@ export const generateTrackForEra = async (era: HistoryEra): Promise<LearningTrac
       .eq('era', era)
       .eq('status', 'published')
       .order('position');
+
+    // window.alert('Raw moduleData: ' + JSON.stringify(moduleData));
 
     if (moduleError) {
       console.error('Error fetching modules:', moduleError);
