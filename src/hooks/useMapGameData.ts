@@ -1,23 +1,22 @@
-
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { MapGameEntry, asMapGame, asMapGameEntryArray } from '@/types/mapGame';
 
 export function useMapGameData() {
-  const { gameId } = useParams<{ gameId: string }>();
+  const { gameSlug } = useParams<{ gameSlug: string }>();
   
   // Fetch game details
   const { data: game, isLoading: isGameLoading } = useQuery({
-    queryKey: ['mapGame', gameId],
+    queryKey: ['mapGame', gameSlug],
     queryFn: async () => {
-      if (!gameId) return null;
+      if (!gameSlug) return null;
       const { data, error } = await supabase
         .from('map_games')
         .select('*')
-        .eq('id', gameId)
+        .eq('slug', gameSlug)
         .single();
-        
+      
       if (error) {
         console.error('Error fetching game:', error);
         return null;
@@ -29,15 +28,15 @@ export function useMapGameData() {
   
   // Fetch game entries
   const { data: entries, isLoading: isEntriesLoading } = useQuery({
-    queryKey: ['mapGameEntries', gameId],
+    queryKey: ['mapGameEntries', gameSlug],
     queryFn: async () => {
-      if (!gameId) return [];
+      if (!game || !game.id) return [];
       const { data, error } = await supabase
         .from('map_game_entries')
         .select('*')
-        .eq('game_id', gameId)
+        .eq('game_id', game.id)
         .order('created_at', { ascending: true });
-        
+      
       if (error) {
         console.error('Error fetching entries:', error);
         return [];
@@ -50,7 +49,7 @@ export function useMapGameData() {
   const isLoading = isGameLoading || isEntriesLoading;
   
   return {
-    gameId,
+    gameSlug,
     game,
     entries,
     isLoading

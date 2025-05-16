@@ -11,6 +11,44 @@ import { toast } from '@/components/ui/use-toast';
 import MapNavigation from '@/components/maps/MapNavigation';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
+// Utility to generate a slug from a title
+function generateSlug(title: string) {
+  return title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)+/g, '')
+    .substring(0, 50);
+}
+
+// Ensure all games have slugs (for migration)
+async function ensureSlugsForExistingGames() {
+  const { data: games, error } = await supabase
+    .from('map_games')
+    .select('id, title, slug');
+  if (error) return;
+  for (const game of games) {
+    if (!game.slug) {
+      let baseSlug = generateSlug(game.title);
+      let slug = baseSlug;
+      let i = 1;
+      // Ensure uniqueness
+      while (true) {
+        const { data: existing } = await supabase
+          .from('map_games')
+          .select('id')
+          .eq('slug', slug)
+          .maybeSingle();
+        if (!existing) break;
+        slug = `${baseSlug}-${i++}`;
+      }
+      await supabase
+        .from('map_games')
+        .update({ slug })
+        .eq('id', game.id);
+    }
+  }
+}
+
 const MapGames: React.FC = () => {
   const { user } = useUser();
   const navigate = useNavigate();
@@ -53,6 +91,10 @@ const MapGames: React.FC = () => {
     }
   }, [showLeaderboard]);
 
+  useEffect(() => {
+    ensureSlugsForExistingGames();
+  }, []);
+
   const handleCreateGame = async () => {
     if (!user) {
       toast({
@@ -72,12 +114,27 @@ const MapGames: React.FC = () => {
       return;
     }
 
+    // Generate a unique slug
+    let baseSlug = generateSlug(newGameTitle);
+    let slug = baseSlug;
+    let i = 1;
+    while (true) {
+      const { data: existing } = await supabase
+        .from('map_games')
+        .select('id')
+        .eq('slug', slug)
+        .maybeSingle();
+      if (!existing) break;
+      slug = `${baseSlug}-${i++}`;
+    }
+
     const { data, error } = await supabase
       .from('map_games')
       .insert({
         title: newGameTitle,
         description: newGameDescription || null,
-        created_by: user.id
+        created_by: user.id,
+        slug
       })
       .select()
       .single();
@@ -103,16 +160,16 @@ const MapGames: React.FC = () => {
     refetch();
     
     // Navigate to the game editor
-    navigate(`/map-games/${data.id}/edit`);
+    navigate(`/map-games/${data.slug}/edit`);
   };
 
-  const goToGame = (gameId: string) => {
-    navigate(`/map-games/${gameId}`);
+  const goToGame = (slug: string) => {
+    navigate(`/map-games/${slug}`);
   };
 
-  const goToEditGame = (gameId: string, e: React.MouseEvent) => {
+  const goToEditGame = (slug: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    navigate(`/map-games/${gameId}/edit`);
+    navigate(`/map-games/${slug}/edit`);
   };
 
   return (
@@ -210,7 +267,7 @@ const MapGames: React.FC = () => {
               <Card 
                 key={game.id} 
                 className="cursor-pointer hover:shadow-md transition-shadow border-gray-200 hover:border-timelingo-purple/30 overflow-hidden"
-                onClick={() => goToGame(game.id)}
+                onClick={() => goToGame(game.slug)}
               >
                 <div className="h-2 bg-gradient-to-r from-timelingo-purple to-purple-400"></div>
                 <CardHeader>
@@ -233,7 +290,7 @@ const MapGames: React.FC = () => {
                 <CardFooter className="flex justify-between border-t bg-gray-50">
                   <Button 
                     variant="outline" 
-                    onClick={() => goToGame(game.id)}
+                    onClick={() => goToGame(game.slug)}
                     className="border-timelingo-purple text-timelingo-purple hover:bg-timelingo-purple/10"
                   >
                     <Play size={16} className="mr-2" />
@@ -243,7 +300,7 @@ const MapGames: React.FC = () => {
                     variant="outline"
                     onClick={(e) => {
                       e.stopPropagation();
-                      const url = `${window.location.origin}/map-games/${game.id}`;
+                      const url = `${window.location.origin}/map-games/${game.slug}`;
                       navigator.clipboard.writeText(url);
                       toast({ title: 'Link copied!', description: 'Game link copied to clipboard.' });
                     }}
@@ -252,7 +309,7 @@ const MapGames: React.FC = () => {
                     Share
                   </Button>
                   {user && user.id === game.created_by && (
-                    <Button variant="outline" onClick={(e) => goToEditGame(game.id, e)}>
+                    <Button variant="outline" onClick={(e) => goToEditGame(game.slug, e)}>
                       <Settings size={16} className="mr-2" />
                       Edit
                     </Button>

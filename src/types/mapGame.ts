@@ -8,6 +8,7 @@ export interface MapGame {
   created_by: string | null;
   is_public: boolean;
   play_count: number;
+  slug: string;
 }
 
 export interface MapGameEntry {

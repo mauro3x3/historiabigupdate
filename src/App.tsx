@@ -105,8 +105,8 @@ const AppRoutes = () => {
       <Route path="/historical-map/list" element={<HistoricalMapsList />} />
       <Route path="/historical-map/:era" element={<HistoricalMap />} />
       <Route path="/map-games" element={<MapGames />} />
-      <Route path="/map-games/:gameId" element={<MapGamePlay />} />
-      <Route path="/map-games/:gameId/edit" element={
+      <Route path="/map-games/:gameSlug" element={<MapGamePlay />} />
+      <Route path="/map-games/:gameSlug/edit" element={
         <ProtectedRoute>
           <MapGameEdit />
         </ProtectedRoute>
