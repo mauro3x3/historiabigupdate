@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import MapNavigation from '@/components/maps/MapNavigation';
 import { useMapGame } from '@/hooks/useMapGame';
 import MapGameLoading from '@/components/maps/game/MapGameLoading';
@@ -6,6 +6,7 @@ import MapGameNotFound from '@/components/maps/game/MapGameNotFound';
 import MapGameCompleted from '@/components/maps/game/MapGameCompleted';
 import GameInterface from '@/components/maps/game/GameInterface';
 import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 const MapGamePlay: React.FC = () => {
   const {
@@ -32,6 +33,15 @@ const MapGamePlay: React.FC = () => {
     navigate,
     user
   } = useMapGame();
+  
+  // Increment play count when game is loaded
+  const hasIncremented = useRef(false);
+  useEffect(() => {
+    if (game && entries && entries.length > 0 && !hasIncremented.current) {
+      hasIncremented.current = true;
+      supabase.rpc('increment_play_count', { game_id: game.id });
+    }
+  }, [game, entries]);
   
   if (isLoading) {
     return <MapGameLoading />;

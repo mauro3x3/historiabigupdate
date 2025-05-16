@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -9,6 +9,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Plus, Play, Settings, Map } from 'lucide-react';
 import { toast } from '@/components/ui/use-toast';
 import MapNavigation from '@/components/maps/MapNavigation';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 const MapGames: React.FC = () => {
   const { user } = useUser();
@@ -16,6 +17,8 @@ const MapGames: React.FC = () => {
   const [isCreating, setIsCreating] = useState(false);
   const [newGameTitle, setNewGameTitle] = useState('');
   const [newGameDescription, setNewGameDescription] = useState('');
+  const [leaderboard, setLeaderboard] = useState<MapGame[]>([]);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
 
   const { data: mapGames, isLoading, refetch } = useQuery({
     queryKey: ['mapGames'],
@@ -38,6 +41,17 @@ const MapGames: React.FC = () => {
       return asMapGameArray(data || []);
     }
   });
+
+  useEffect(() => {
+    if (showLeaderboard) {
+      supabase
+        .from('map_games')
+        .select('*')
+        .order('play_count', { ascending: false })
+        .limit(10)
+        .then(({ data }) => setLeaderboard(data || []));
+    }
+  }, [showLeaderboard]);
 
   const handleCreateGame = async () => {
     if (!user) {
@@ -111,12 +125,38 @@ const MapGames: React.FC = () => {
             <h1 className="text-3xl font-bold text-timelingo-navy">Map Games</h1>
             <p className="text-gray-600 mt-1">Test your historical knowledge by guessing when maps are from</p>
           </div>
-          {user && (
-            <Button onClick={() => setIsCreating(true)} className="bg-timelingo-purple hover:bg-timelingo-purple/90 flex items-center">
-              <Plus size={18} className="mr-2" />
-              Create New Game
-            </Button>
-          )}
+          <div className="flex gap-2">
+            <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
+              <DialogTrigger asChild>
+                <Button variant="outline" className="border-timelingo-gold text-timelingo-gold">Leaderboard</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Most Played Map Games</DialogTitle>
+                </DialogHeader>
+                <div className="mt-4">
+                  {leaderboard.length === 0 ? (
+                    <p className="text-gray-500">No games played yet.</p>
+                  ) : (
+                    <ol className="list-decimal pl-6 space-y-2">
+                      {leaderboard.map((game, idx) => (
+                        <li key={game.id} className="flex justify-between items-center">
+                          <span className="font-semibold">{game.title}</span>
+                          <span className="text-sm text-gray-500">{game.play_count} plays</span>
+                        </li>
+                      ))}
+                    </ol>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+            {user && (
+              <Button onClick={() => setIsCreating(true)} className="bg-timelingo-purple hover:bg-timelingo-purple/90 flex items-center">
+                <Plus size={18} className="mr-2" />
+                Create New Game
+              </Button>
+            )}
+          </div>
         </div>
 
         {isCreating && (
@@ -185,6 +225,9 @@ const MapGames: React.FC = () => {
                 <CardContent>
                   <p className="text-sm text-gray-500">
                     Created: {new Date(game.created_at).toLocaleDateString()}
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Played {game.play_count || 0} times
                   </p>
                 </CardContent>
                 <CardFooter className="flex justify-between border-t bg-gray-50">

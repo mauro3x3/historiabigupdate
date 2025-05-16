@@ -1,4 +1,3 @@
-
 import { Json } from "@/integrations/supabase/types";
 
 export interface MapGame {
@@ -8,6 +7,7 @@ export interface MapGame {
   created_at: string;
   created_by: string | null;
   is_public: boolean;
+  play_count: number;
 }
 
 export interface MapGameEntry {
