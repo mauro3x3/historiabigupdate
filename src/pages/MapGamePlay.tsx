@@ -1,4 +1,3 @@
-
 import React from 'react';
 import MapNavigation from '@/components/maps/MapNavigation';
 import { useMapGame } from '@/hooks/useMapGame';
@@ -6,6 +5,7 @@ import MapGameLoading from '@/components/maps/game/MapGameLoading';
 import MapGameNotFound from '@/components/maps/game/MapGameNotFound';
 import MapGameCompleted from '@/components/maps/game/MapGameCompleted';
 import GameInterface from '@/components/maps/game/GameInterface';
+import { toast } from '@/components/ui/use-toast';
 
 const MapGamePlay: React.FC = () => {
   const {
@@ -56,6 +56,17 @@ const MapGamePlay: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <MapNavigation />
+      <div className="container mx-auto flex justify-end mt-4">
+        <button
+          onClick={() => {
+            navigator.clipboard.writeText(window.location.href);
+            toast({ title: 'Link copied!', description: 'Game link copied to clipboard.' });
+          }}
+          className="px-4 py-2 bg-yellow-400 text-timelingo-navy rounded-lg shadow hover:bg-yellow-300 font-semibold"
+        >
+          Share
+        </button>
+      </div>
       
       {currentEntry && (
         <GameInterface

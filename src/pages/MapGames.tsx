@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -196,6 +195,18 @@ const MapGames: React.FC = () => {
                   >
                     <Play size={16} className="mr-2" />
                     Play
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const url = `${window.location.origin}/map-games/${game.id}`;
+                      navigator.clipboard.writeText(url);
+                      toast({ title: 'Link copied!', description: 'Game link copied to clipboard.' });
+                    }}
+                    className="border-timelingo-gold text-timelingo-gold hover:bg-yellow-50"
+                  >
+                    Share
                   </Button>
                   {user && user.id === game.created_by && (
                     <Button variant="outline" onClick={(e) => goToEditGame(game.id, e)}>
