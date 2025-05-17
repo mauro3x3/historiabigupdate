@@ -1,7 +1,7 @@
-
 import React, { useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { useStorytellingLesson } from '@/hooks/useStorytellingLesson';
+import ReactMarkdown from 'react-markdown';
 
 interface StorytellingLessonProps {
   storyContent: string;
@@ -40,7 +40,7 @@ const StorytellingLesson: React.FC<StorytellingLessonProps> = ({
           return (
             <React.Fragment key={index}>
               <div className="opacity-90">
-                <p className="text-lg md:text-xl leading-relaxed">{paragraph}</p>
+                <ReactMarkdown className="text-lg md:text-xl leading-relaxed">{paragraph}</ReactMarkdown>
               </div>
               
               {shouldInsertImage && imageUrls[imageIndex] && (
