@@ -127,6 +127,8 @@ export const useOnboardingFlow = (
         navigate('/home');
       } else if (learningStyle === 'mystery') {
         navigate('/mystery-history');
+      } else if (learningStyle === 'ai-dolphin') {
+        navigate('/quiz-builder');
       } else {
         navigate('/dashboard');
       }
