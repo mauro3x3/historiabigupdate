@@ -22,7 +22,7 @@ import Leaderboard from "./pages/Leaderboard";
 import VideoPlayer from "./pages/VideoPlayer";
 import { useUser } from "./contexts/UserContext";
 import React, { useState, useEffect } from 'react';
-import { Film, BookOpen, Map, Gamepad2, Hourglass, User, X } from 'lucide-react';
+import { Film, BookOpen, Map, Gamepad2, Hourglass, User, X, Lock, Home as HomeIcon } from 'lucide-react';
 import Videos from "./pages/Videos";
 import QuizBuilder from "./pages/QuizBuilder";
 import { Sparkles } from 'lucide-react';
@@ -126,11 +126,11 @@ const AppRoutes = () => {
 };
 
 const NAV_LINKS = [
+  { label: 'Home', href: '/home', icon: <HomeIcon className="h-6 w-6" /> },
   { label: 'Videos', href: '/videos', icon: <Film className="h-6 w-6" /> },
-  { label: 'All Lessons', href: '/all-lessons', icon: <BookOpen className="h-6 w-6" /> },
-  { label: 'Maps', href: '/historical-map/list', icon: <Map className="h-6 w-6" /> },
-  { label: 'Games', href: '/map-games', icon: <Gamepad2 className="h-6 w-6" />, subItems: [
-  ] },
+  { label: 'All Lessons', href: '/all-lessons', icon: <BookOpen className="h-6 w-6" />, locked: true },
+  { label: 'Maps', href: '/historical-map/list', icon: <Map className="h-6 w-6" />, locked: true },
+  { label: 'Games', href: '/map-games', icon: <Gamepad2 className="h-6 w-6" />, locked: true, subItems: [] },
   { label: 'Quiz Your Friends', href: '/quiz-builder', icon: <Sparkles className="h-6 w-6 text-yellow-400" /> },
   { label: 'Explore Eras', href: '/onboarding', icon: <Hourglass className="h-6 w-6" /> },
   { label: 'Profile', href: '/profile', icon: <User className="h-6 w-6" /> },
@@ -181,16 +181,19 @@ function GlobalFishbowlMenu() {
             <React.Fragment key={link.href}>
               <button
                 type="button"
-                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg"
+                className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg ${link.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
                 tabIndex={open ? 0 : -1}
                 role="menuitem"
                 aria-label={link.label}
-                onClick={() => { setOpen(false); navigate(link.href); }}
+                onClick={() => { if (!link.locked) { setOpen(false); navigate(link.href); } }}
+                disabled={!!link.locked}
               >
                 <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold text-2xl">
                   {link.icon}
+                  {link.locked && <Lock className="h-5 w-5 ml-2 text-gray-400" />}
                 </span>
                 {link.label}
+                {link.locked && <span className="ml-2 text-gray-400 text-sm">Locked</span>}
               </button>
               {/* Render subItems if present (for Games) */}
               {link.subItems && (
