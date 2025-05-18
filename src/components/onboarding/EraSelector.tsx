@@ -159,6 +159,7 @@ const EraSelector = ({
             <h3 className="font-semibold text-timelingo-navy text-lg mb-1">{era.name}</h3>
             <p className="text-xs text-gray-500">{era.time_period}</p>
             
+            {/* Temporarily hiding the View Map button
             <Button 
               variant="outline" 
               size="sm" 
@@ -167,6 +168,7 @@ const EraSelector = ({
             >
               <Map className="h-3 w-3 mr-1" /> View Map
             </Button>
+            */}
             
             {isSelected(era.code) && (
               <div className="absolute -bottom-2 -right-2 bg-purple-500 text-white rounded-full p-1 shadow-md animate-fade-in">

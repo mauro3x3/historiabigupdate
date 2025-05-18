@@ -217,6 +217,7 @@ const HomeRevamp = () => {
       <FullscreenBackground />
       <div className="fixed top-8 right-10 z-40 flex items-center gap-4">
         <div className="flex gap-2 px-5 py-3 rounded-2xl shadow-2xl bg-gradient-to-br from-white/80 to-purple-100/80 backdrop-blur-md border border-purple-200/60">
+          {/* Temporarily hiding the View Map button
           <Button
             variant="default"
             size="lg"
@@ -231,6 +232,7 @@ const HomeRevamp = () => {
             )}
             <span>View Map</span>
           </Button>
+          */}
           <EraPicker era={selectedEra} onChange={handleEraChange} disabled={isLoading} />
         </div>
       </div>
