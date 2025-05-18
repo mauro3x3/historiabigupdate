@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { HistoryVideo, VideoCategory } from '@/types';
@@ -63,6 +62,31 @@ const generateRandomDuration = (): number => {
   return Math.floor(Math.random() * (1200 - 180 + 1)) + 180;
 };
 
+function formatVideoTitle(raw: string): string {
+  // Remove 'historyof' prefix if present
+  let title = raw.replace(/^historyof/i, '');
+  // Known fixes
+  const fixes: Record<string, string> = {
+    'middleeast': 'Middle East',
+    'southasia': 'South Asia',
+    'westerneurope': 'Western Europe',
+    'theworld': 'The World',
+    'westernEurope': 'Western Europe',
+    'northamerica': 'North America',
+    'eastasia': 'East Asia',
+    'southeastasia': 'Southeast Asia',
+    'sub-saharanafrica': 'Sub-Saharan Africa',
+    // Add more as needed
+  };
+  const lower = title.toLowerCase();
+  if (fixes[lower]) return fixes[lower];
+  // Insert spaces before capital letters and between lowercase-uppercase
+  title = title.replace(/([a-z])([A-Z])/g, '$1 $2');
+  // Capitalize each word
+  title = title.replace(/\b\w/g, c => c.toUpperCase());
+  return title.trim();
+}
+
 export const useVideosData = (userId?: string) => {
   const [videos, setVideos] = useState<HistoryVideo[]>([]);
   const [categories, setCategories] = useState<VideoCategory[]>(MOCK_CATEGORIES);
@@ -124,15 +148,12 @@ export const useVideosData = (userId?: string) => {
 
           const storageVideos: HistoryVideo[] = videoFiles.map((file, index) => {
             const videoUrl = supabase.storage.from('videos').getPublicUrl(file.name).data.publicUrl;
-
             const nameWithoutExt = file.name.split('.')[0];
-            let title = nameWithoutExt;
+            let title = formatVideoTitle(nameWithoutExt);
             let era = 'unknown';
             if (nameWithoutExt.startsWith('historyof')) {
-              title = nameWithoutExt.replace('historyof', '');
               era = title;
             }
-            title = title.charAt(0).toUpperCase() + title.slice(1);
 
             let category = 'Uncategorized';
             if (title.toLowerCase().includes('india') || title.toLowerCase().includes('asia')) {

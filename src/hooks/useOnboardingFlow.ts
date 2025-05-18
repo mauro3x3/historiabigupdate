@@ -120,7 +120,7 @@ export const useOnboardingFlow = (
       
       // Direct user based on learning style
       if (learningStyle === 'visual') {
-        navigate('/profile?tab=videos');
+        navigate('/videos');
       } else if (learningStyle === 'daily') {
         navigate('/daily-challenge');
       } else if (learningStyle === 'journey') {

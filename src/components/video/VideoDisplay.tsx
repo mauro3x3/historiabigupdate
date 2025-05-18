@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { HistoryVideo } from '@/types';
@@ -11,7 +10,7 @@ const VideoDisplay = ({ video }: VideoDisplayProps) => {
   // Check if this is a real video URL
   if (video.videoUrl) {
     return (
-      <div className="aspect-video bg-gray-900 rounded-lg mb-4 relative overflow-hidden">
+      <div className="aspect-video bg-gray-900 rounded-2xl mb-4 relative overflow-hidden border-4 border-white shadow-xl">
         <video 
           src={video.videoUrl}
           poster={video.thumbnail}

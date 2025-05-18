@@ -37,12 +37,12 @@ const DashboardHeader = () => {
         </div>
         {/* Right: Actions */}
         <div className="flex items-center gap-6 min-w-[220px] justify-end">
-          <button
+          {/* <button
             className="text-lg font-semibold text-timelingo-gold hover:text-white transition-colors"
             onClick={() => window.location.href = '/videos'}
           >
             Videos
-          </button>
+          </button> */}
           <button className="text-white/70 hover:text-timelingo-purple transition-colors flex items-center gap-1">
             <span className="sr-only">Settings</span>
             <Settings size={22} />

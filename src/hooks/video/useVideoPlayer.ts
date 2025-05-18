@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HistoryVideo } from '@/types';
@@ -48,7 +47,7 @@ export const useVideoPlayer = (videoId: string | undefined) => {
         trackVideoView(videoId);
         
         // Update document title
-        document.title = `${foundVideo.title} - TimeLingo`;
+        document.title = `${foundVideo.title} - Historia`;
         
       } catch (error) {
         console.error('Error fetching video:', error);
@@ -63,7 +62,7 @@ export const useVideoPlayer = (videoId: string | undefined) => {
     
     // Cleanup
     return () => {
-      document.title = 'TimeLingo';
+      document.title = 'Historia';
     };
   }, [videoId, navigate]);
   

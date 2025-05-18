@@ -1,9 +1,33 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { HistoryVideo } from '@/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
+
+function formatVideoTitle(raw: string): string {
+  // Remove 'historyof' prefix if present
+  let title = raw.replace(/^historyof/i, '');
+  // Known fixes
+  const fixes: Record<string, string> = {
+    'middleeast': 'Middle East',
+    'southasia': 'South Asia',
+    'westerneurope': 'Western Europe',
+    'theworld': 'The World',
+    'westernEurope': 'Western Europe',
+    'northamerica': 'North America',
+    'eastasia': 'East Asia',
+    'southeastasia': 'Southeast Asia',
+    'sub-saharanafrica': 'Sub-Saharan Africa',
+    // Add more as needed
+  };
+  const lower = title.toLowerCase();
+  if (fixes[lower]) return fixes[lower];
+  // Insert spaces before capital letters and between lowercase-uppercase
+  title = title.replace(/([a-z])([A-Z])/g, '$1 $2');
+  // Capitalize each word
+  title = title.replace(/\b\w/g, c => c.toUpperCase());
+  return title.trim();
+}
 
 export const useVideoPlayer = (videoId: string | undefined) => {
   const navigate = useNavigate();
@@ -43,6 +67,8 @@ export const useVideoPlayer = (videoId: string | undefined) => {
             .slice(0, 4);
             
           setRelatedVideos(relatedVids);
+          // Set document title using formatted title
+          document.title = `${formatVideoTitle(foundVideo.title)} - Historia`;
         } else {
           // Fetch the video from Supabase database (original code path)
           const { data: videoData, error: videoError } = await supabase
@@ -100,7 +126,7 @@ export const useVideoPlayer = (videoId: string | undefined) => {
         
         // Update document title with the video title
         if (video) {
-          document.title = `${video.title} - TimeLingo`;
+          document.title = `${formatVideoTitle(video.title)} - Historia`;
         }
         
         // Track that the user has watched this video
@@ -122,7 +148,7 @@ export const useVideoPlayer = (videoId: string | undefined) => {
     
     // Cleanup on unmount
     return () => {
-      document.title = 'TimeLingo';
+      document.title = 'Historia';
     };
   }, [videoId, navigate]);
   
@@ -162,19 +188,12 @@ export const useVideoPlayer = (videoId: string | undefined) => {
       
       const storageVideos: HistoryVideo[] = videoFiles.map((file, index) => {
         const videoUrl = supabase.storage.from('videos').getPublicUrl(file.name).data.publicUrl;
-        
-        // Extract era and title from filename
         const nameWithoutExt = file.name.split('.')[0];
-        let title = nameWithoutExt;
+        let title = formatVideoTitle(nameWithoutExt);
         let era = 'unknown';
-        
         if (nameWithoutExt.startsWith('historyof')) {
-          title = nameWithoutExt.replace('historyof', '');
           era = title;
         }
-        
-        // Format title for display
-        title = title.charAt(0).toUpperCase() + title.slice(1);
         
         // Determine category based on filename
         let category = 'Uncategorized';

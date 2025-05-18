@@ -26,16 +26,17 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 const AVATAR_OPTIONS = [
-  { key: 'mascot', src: '/images/avatars/Johan.png', label: 'Johan' },
-  { key: 'goldfish_3', src: '/images/avatars/goldfish_3.png', label: 'Goldfish 3' },
-  { key: 'goldfish_4', src: '/images/avatars/goldfish_4.png', label: 'Goldfish 4' },
-  { key: 'goldfish_5', src: '/images/avatars/goldfish_5.png', label: 'Goldfish 5' },
-  { key: 'goldfish_8', src: '/images/avatars/goldfish_8.png', label: 'Goldfish 8' },
-  { key: 'goldfish_15', src: '/images/avatars/goldfish_15.png', label: 'Goldfish 15' },
-  { key: 'goldfish_29', src: '/images/avatars/goldfish_29.png', label: 'Goldfish 29' },
-  { key: 'goldfish_38', src: '/images/avatars/goldfish_38.png', label: 'Goldfish 38' },
-  { key: 'goldfish_52', src: '/images/avatars/goldfish_52.png', label: 'Goldfish 52' },
-  { key: 'goldfish_84', src: '/images/avatars/goldfish_84.png', label: 'Goldfish 84' },
+  { key: 'mascot', src: '/images/avatars/Johan.png', minLevel: 1 },
+  { key: 'goldfish_3', src: '/images/avatars/goldfish_3.png', minLevel: 1 },
+  { key: 'goldfish_4', src: '/images/avatars/goldfish_4.png', minLevel: 1 },
+  { key: 'goldfish_5', src: '/images/avatars/goldfish_5.png', minLevel: 1 },
+  { key: 'goldfish_38', src: '/images/avatars/goldfish_38.png', minLevel: 1 },
+  { key: 'goldfish_84', src: '/images/avatars/goldfish_84.png', minLevel: 1 },
+  { key: 'goldfish_1000', src: '/images/avatars/goldfish_1000.png', minLevel: 5 },
+  { key: 'goldfish_1001', src: '/images/avatars/goldfish_1001.png', minLevel: 5 },
+  { key: 'goldfish_539', src: '/images/avatars/goldfish_539.png', minLevel: 5 },
+  { key: 'goldfish_540', src: '/images/avatars/goldfish_540.png', minLevel: 5 },
+  { key: 'goldfish_1002', src: '/images/avatars/goldfish_1002.png', minLevel: 5 },
 ];
 
 const ALL_AVATARS = AVATAR_OPTIONS;
@@ -441,19 +442,28 @@ export default function UserStats(props) {
                 {/* Avatar Tab */}
                 {profileTab === 'avatar' && (
                   <div className="grid grid-cols-3 gap-4">
-                    {ALL_AVATARS.map(opt => (
-                    <button
-                      key={opt.key}
-                      className={`rounded-xl border-2 p-2 flex flex-col items-center transition-all focus:outline-none focus:ring-2 focus:ring-timelingo-gold ${selectedAvatar === opt.key ? 'border-timelingo-gold bg-yellow-100 scale-105 shadow-lg' : 'border-gray-200 bg-gray-50 hover:border-timelingo-gold hover:scale-105'}`}
-                      onClick={() => setSelectedAvatar(opt.key)}
-                      aria-label={opt.label}
-                      tabIndex={0}
-                    >
-                      <img src={opt.src} alt={opt.label} className="w-16 h-16 object-contain mb-2" />
-                      <span className="text-xs font-semibold text-timelingo-navy">{opt.label}</span>
-                    </button>
-                  ))}
-                </div>
+                    {ALL_AVATARS.filter(opt => !!opt.src).map(opt => {
+                      const isLocked = level < (opt.minLevel || 1);
+                      return (
+                        <button
+                          key={opt.key}
+                          className={`rounded-xl border-2 p-2 flex flex-col items-center transition-all focus:outline-none focus:ring-2 focus:ring-timelingo-gold relative group ${selectedAvatar === opt.key ? 'border-timelingo-gold bg-yellow-100 scale-105 shadow-lg' : 'border-gray-200 bg-gray-50 hover:border-timelingo-gold hover:scale-105'} ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          onClick={() => !isLocked && setSelectedAvatar(opt.key)}
+                          aria-label={opt.key}
+                          tabIndex={0}
+                          disabled={isLocked}
+                        >
+                          <img src={opt.src} alt={opt.key} className="w-20 h-20 object-contain mb-0" />
+                          {isLocked && (
+                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center rounded-xl">
+                              <svg className="w-8 h-8 text-white mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 17v1m0-4a2 2 0 00-2 2v1a2 2 0 002 2h0a2 2 0 002-2v-1a2 2 0 00-2-2zm0 0V9a4 4 0 10-8 0v4" /></svg>
+                              <span className="text-xs text-white font-bold bg-black/60 px-2 py-0.5 rounded">Unlock at Level {opt.minLevel}</span>
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
                 {/* Featured Courses Tab */}
                 {profileTab === 'courses' && (

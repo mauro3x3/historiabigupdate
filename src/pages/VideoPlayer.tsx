@@ -22,25 +22,22 @@ const VideoPlayer = () => {
   }
   
   return (
-    <div className="container mx-auto py-6 px-4">
-      <VideoPlayerHeader />
-      
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          {/* Video Player */}
-          <VideoDisplay video={video} />
-          
-          {/* Video Details */}
-          <VideoDetails video={video} />
-          
-          {/* Actions */}
-          <VideoPlayerActions />
+    <div className="container mx-auto py-8 px-2 md:px-8">
+      <div className="flex flex-col lg:flex-row gap-8">
+        <div className="flex-1">
+          <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-10 mb-6">
+            <VideoPlayerHeader />
+            <VideoDisplay video={video} />
+            <div className="border-b border-gray-200 my-6" />
+            <VideoDetails video={video} />
+            <VideoPlayerActions />
+          </div>
         </div>
-        
-        {/* Related Videos */}
-        <div>
-          <RelatedVideos videos={relatedVideos} />
-        </div>
+        <aside className="w-full lg:w-[340px] flex-shrink-0">
+          <div className="bg-gradient-to-br from-purple-50 to-white rounded-3xl shadow-xl p-6 sticky top-8">
+            <RelatedVideos videos={relatedVideos} />
+          </div>
+        </aside>
       </div>
     </div>
   );
