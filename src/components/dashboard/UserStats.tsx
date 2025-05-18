@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useUser } from "@/contexts/UserContext";
 import UserProfileHeader from "./UserProfileHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,11 @@ import { useNavigate } from 'react-router-dom';
 import { unlockAchievement } from '@/integrations/supabase/achievements';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useDragAndDrop } from '@/hooks/track-tabs/useDragAndDrop';
+import { useUserAchievements } from '@/hooks/useUserAchievements';
+import { useUserBadges } from '@/hooks/useUserBadges';
+import { useUserFriends } from '@/hooks/useUserFriends';
+import { useUserActivity } from '@/hooks/useUserActivity';
+import { useFeaturedCourses } from '@/hooks/useFeaturedCourses';
 
 const MOTIVATIONAL_QUOTES = [
   "Keep going! Every day is progress.",
@@ -41,13 +46,14 @@ const ALL_COURSES = [
   { title: 'Ancient Egypt', emoji: '🦅' },
   { title: 'Medieval', emoji: '🏰' },
 ];
-const ALL_BADGES = [
-  { icon: '🏆', name: 'Era Master' },
-  { icon: '🔥', name: '7 Day Streak' },
-  { icon: '📜', name: 'Quiz Pro' },
-  { icon: '🌍', name: 'Explorer' },
-  { icon: '🧠', name: 'History Buff' },
-];
+
+const COURSE_COLORS = {
+  Christianity: 'from-yellow-200 to-timelingo-gold',
+  WWII: 'from-timelingo-teal to-teal-400',
+  Rome: 'from-purple-300 to-timelingo-purple',
+  'Ancient Egypt': 'from-yellow-100 to-yellow-400',
+  Medieval: 'from-gray-300 to-gray-600',
+};
 
 function StatCard({ icon, value, label, className, onClick = undefined, disabled = false, ariaLabel, title }) {
   return (
@@ -67,6 +73,11 @@ function StatCard({ icon, value, label, className, onClick = undefined, disabled
   );
 }
 
+interface FeaturedCourse {
+  title: string;
+  emoji: string;
+}
+
 export default function UserStats(props) {
   const { user, xp, streak, signOut, completedEras, preferredEra, setPreferredEra } = useUser();
   const navigate = useNavigate();
@@ -81,11 +92,19 @@ export default function UserStats(props) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const profileUrl = `${window.location.origin}/profile/${user?.id}`;
-  const [featuredCourses, setFeaturedCourses] = useState(ALL_COURSES.slice(0, 3));
-  const [showcaseBadges, setShowcaseBadges] = useState(ALL_BADGES.slice(0, 4));
-  const { handleDragEnd: handleCourseDragEnd } = useDragAndDrop(featuredCourses, setFeaturedCourses);
-  const { handleDragEnd: handleBadgeDragEnd } = useDragAndDrop(showcaseBadges, setShowcaseBadges);
+  const [featuredCourses, setFeaturedCourses] = useState<FeaturedCourse[]>(ALL_COURSES.slice(0, 3));
+  const { handleDragEnd: handleCourseDragEnd } = useFeaturedCourses(featuredCourses, setFeaturedCourses);
   const [profileTab, setProfileTab] = useState('avatar');
+  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
+  const [addFriendInput, setAddFriendInput] = useState('');
+  const [addFriendError, setAddFriendError] = useState('');
+  const addFriendInputRef = useRef<HTMLInputElement>(null);
+  const [eras, setEras] = useState<any[]>([]);
+  const [eraLoading, setEraLoading] = useState(true);
+  const [userFeaturedEras, setUserFeaturedEras] = useState<string[]>([]);
+  const [savingFeaturedEras, setSavingFeaturedEras] = useState(false);
+  const [selectedFeaturedEras, setSelectedFeaturedEras] = useState<string[]>([]);
+  const [eraProgressData, setEraProgressData] = useState([]);
   
   // Load the username and avatar from the database when the component mounts
   useEffect(() => {
@@ -206,11 +225,185 @@ export default function UserStats(props) {
     }
   }
 
+  // Fetch dynamic data from Supabase
+  const { badges, loading: badgesLoading, error: badgesError } = useUserBadges(user?.id);
+  const { friends, loading: friendsLoading, error: friendsError } = useUserFriends(user?.id);
+  const { activity, loading: activityLoading, error: activityError } = useUserActivity(user?.id);
+  const achievements = useUserAchievements(user?.id);
+
+  // Remove the old loading and error states since they're now handled by the hooks
+  const [achievementsLoading, setAchievementsLoading] = useState(true);
+  const [achievementsError, setAchievementsError] = useState('');
+
+  useEffect(() => { setAchievementsLoading(false); }, [achievements]);
+
+  // Add friend by email or username
+  const handleAddFriend = async () => {
+    setAddFriendError('');
+    if (!addFriendInput.trim()) {
+      setAddFriendError('Please enter a username or email.');
+      return;
+    }
+    // Find user by email or username
+    const { data: users, error } = await supabase
+      .from('user_profiles')
+      .select('id, username, email')
+      .or(`email.eq.${addFriendInput},username.eq.${addFriendInput}`);
+    if (error || !users || users.length === 0) {
+      setAddFriendError('User not found.');
+      return;
+    }
+    const friendId = users[0].id;
+    if (friendId === user.id) {
+      setAddFriendError('You cannot add yourself as a friend.');
+      return;
+    }
+    // Check if already friends
+    const { data: existing } = await supabase
+      .from('friends')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('friend_id', friendId);
+    if (existing && existing.length > 0) {
+      setAddFriendError('Already friends.');
+      return;
+    }
+    // Add friend
+    const { error: addError } = await supabase
+      .from('friends')
+      .insert({ user_id: user.id, friend_id: friendId });
+    if (addError) {
+      setAddFriendError('Failed to add friend.');
+      return;
+    }
+    setShowAddFriendModal(false);
+    setAddFriendInput('');
+    toast.success('Friend added!');
+  };
+
+  // Remove friend
+  const handleRemoveFriend = async (friendId: string) => {
+    const { error } = await supabase
+      .from('friends')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('friend_id', friendId);
+    if (error) {
+      toast.error('Failed to remove friend.');
+    } else {
+      toast.success('Friend removed.');
+    }
+  };
+
+  // Calculate eraProgress based on completed modules and total modules
+  const eraProgress = (eras || []).map(era => {
+    // Example: Replace with real calculation from props or Supabase
+    const total = props.eraModuleCounts?.[era.name] || 10;
+    const completed = props.eraCompletedModules?.[era.name] || 0;
+    return {
+      era: era.name,
+      percent: total > 0 ? Math.round((completed / total) * 100) : 0,
+      color: COURSE_COLORS[era.name] || 'from-gray-200 to-gray-400',
+    };
+  }).filter(e => e.percent > 0 || (props.eraModuleCounts && props.eraModuleCounts[e.era]));
+
+  useEffect(() => {
+    const fetchEras = async () => {
+      setEraLoading(true);
+      const { data, error } = await supabase
+        .from('history_eras')
+        .select('*')
+        .eq('is_enabled', true)
+        .order('name', { ascending: true });
+      console.log('Fetched eras:', data, 'Error:', error); // Debug log
+      setEras(data || []);
+      setEraLoading(false);
+    };
+    fetchEras();
+  }, []);
+
+  // Fetch user's featured_eras from user_profiles
+  useEffect(() => {
+    const fetchUserFeaturedEras = async () => {
+      if (!user) return;
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('featured_eras')
+        .eq('id', user.id)
+        .single();
+      if (data && data.featured_eras) {
+        setUserFeaturedEras(data.featured_eras);
+      }
+    };
+    fetchUserFeaturedEras();
+  }, [user]);
+
+  // Helper: get full era objects for user's featured_eras (in order)
+  const featuredEraObjects = userFeaturedEras
+    .map(code => eras.find(e => e.code === code))
+    .filter(Boolean);
+
+  // When opening the modal, sync selection with user's current featured eras
+  useEffect(() => {
+    if (showProfileModal && profileTab === 'courses') {
+      setSelectedFeaturedEras(userFeaturedEras.length > 0 ? userFeaturedEras : []);
+    }
+  }, [showProfileModal, profileTab, userFeaturedEras]);
+
+  // Save selected featured eras to user_profiles
+  const handleSaveFeaturedEras = async () => {
+    setSavingFeaturedEras(true);
+    try {
+      await supabase
+        .from('user_profiles')
+        .update({ featured_eras: selectedFeaturedEras })
+        .eq('id', user.id);
+      setUserFeaturedEras(selectedFeaturedEras);
+      toast.success('Featured courses updated!');
+      setShowProfileModal(false);
+    } catch (e) {
+      toast.error('Failed to update featured courses');
+    } finally {
+      setSavingFeaturedEras(false);
+    }
+  };
+
+  // Helper: get display name for an era
+  function getDisplayEraName(era) {
+    if (!era || !era.name) return '';
+    const mappings = {
+      'Jewish History': 'Judaism',
+      'Christian History': 'Christianity',
+      'Hindu History': 'Hinduism',
+    };
+    if (mappings[era.name]) return mappings[era.name];
+    return era.name.replace(/ History$/, '');
+  }
+
+  // Fetch per-era progress for the current user
+  useEffect(() => {
+    async function fetchEraProgress() {
+      if (!user) return;
+      const { data, error } = await supabase.rpc('get_user_era_progress', { user_id: user.id });
+      // If you don't have an RPC, you can use a SQL query here instead
+      setEraProgressData(data || []);
+    }
+    fetchEraProgress();
+  }, [user]);
+
+  // Helper: get progress for a given era code
+  function getEraProgress(eraCode) {
+    const prog = eraProgressData.find(p => p.era_code === eraCode);
+    if (!prog) return { percent: 0, completed: 0, total: 0 };
+    const percent = prog.total_modules > 0 ? Math.round((prog.completed_modules / prog.total_modules) * 100) : 0;
+    return { percent, completed: prog.completed_modules, total: prog.total_modules };
+  }
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-timelingo-navy/95 to-purple-900/90 flex flex-col lg:flex-row items-start justify-start py-10 relative overflow-x-hidden">
       {/* Animated/Blurred Background Shapes */}
-      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-timelingo-gold/30 to-timelingo-purple/20 rounded-full blur-3xl opacity-60 z-0 animate-pulse-slow" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tr from-timelingo-teal/30 to-timelingo-navy/20 rounded-full blur-2xl opacity-50 z-0 animate-pulse-slow" />
+      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-timelingo-gold/30 to-timelingo-purple/20 rounded-full blur-3xl opacity-60 z-0 animate-pulse-slow pointer-events-none" />
+      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tr from-timelingo-teal/30 to-timelingo-navy/20 rounded-full blur-2xl opacity-50 z-0 animate-pulse-slow pointer-events-none" />
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col items-center z-10">
         {/* Glassy Profile Header */}
@@ -265,87 +458,63 @@ export default function UserStats(props) {
                 {/* Featured Courses Tab */}
                 {profileTab === 'courses' && (
                   <div>
-                    <div className="mb-2 text-sm text-white/80">Drag to reorder your featured courses:</div>
-                    <div className="flex gap-4">
-                      {featuredCourses.map((course, idx) => (
-                        <div
-                          key={course.title}
-                          draggable
-                          onDragStart={e => e.dataTransfer.setData('text/plain', idx.toString())}
-                          onDragOver={e => e.preventDefault()}
-                          onDrop={e => {
-                            const from = Number(e.dataTransfer.getData('text/plain'));
-                            const to = idx;
-                            if (from !== to) {
-                              const items = Array.from(featuredCourses);
-                              const [moved] = items.splice(from, 1);
-                              items.splice(to, 0, moved);
-                              setFeaturedCourses(items);
-                            }
+                    <div className="mb-2 text-sm text-white/80">Select up to 4 featured courses:</div>
+                    <div className="flex gap-4 mb-2">
+                      {selectedFeaturedEras.map((code, idx) => {
+                        const era = eras.find(e => e.code === code);
+                        if (!era) return null;
+                        return (
+                          <div key={era.code} className="min-w-[120px] rounded-xl bg-gradient-to-br from-timelingo-purple to-timelingo-gold p-4 flex flex-col items-center shadow-lg border-2 border-white/20 text-lg font-bold relative">
+                            <span className="text-3xl mb-1">{era.emoji}</span>
+                            <span className="text-lg font-bold text-white mb-1">{getDisplayEraName(era)}</span>
+                            <button
+                              className="absolute top-1 right-1 px-2 py-1 rounded bg-red-500 text-white text-xs"
+                              onClick={() => setSelectedFeaturedEras(selectedFeaturedEras.filter(c => c !== code))}
+                            >Remove</button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="flex gap-2 flex-wrap mt-2">
+                      {eras.filter(e => !selectedFeaturedEras.includes(e.code)).map(era => (
+                        <button
+                          key={era.code}
+                          className={`px-3 py-1 rounded bg-white/10 text-white hover:bg-timelingo-gold/80 hover:text-timelingo-navy ${selectedFeaturedEras.length >= 4 ? 'opacity-50 pointer-events-none' : ''}`}
+                          onClick={() => {
+                            if (selectedFeaturedEras.length < 4) setSelectedFeaturedEras([...selectedFeaturedEras, era.code]);
                           }}
-                          className="min-w-[120px] rounded-xl bg-gradient-to-br from-yellow-200 to-timelingo-gold p-4 flex flex-col items-center shadow-lg border-2 border-white/20 text-lg font-bold cursor-move transition-transform hover:scale-105"
-                        >
-                          <span className="text-2xl mb-1">{course.emoji}</span>
-                          <span className="text-lg font-bold text-white mb-1">{course.title}</span>
-                        </div>
+                          disabled={selectedFeaturedEras.length >= 4}
+                        >{era.emoji} {getDisplayEraName(era)}</button>
                       ))}
                     </div>
-                    <div className="mt-4 text-xs text-white/70">Click a course below to add/remove from your featured list:</div>
-                    <div className="flex gap-2 flex-wrap mt-2">
-                      {ALL_COURSES.filter(c => !featuredCourses.includes(c)).map(course => (
-                        <button key={course.title} className="px-3 py-1 rounded bg-white/10 text-white hover:bg-timelingo-gold/80 hover:text-timelingo-navy" onClick={() => setFeaturedCourses([...featuredCourses, course])}>{course.emoji} {course.title}</button>
-                      ))}
-                      {featuredCourses.length > 1 && featuredCourses.map(course => (
-                        <button key={course.title + '-remove'} className="px-2 py-1 rounded bg-red-500/80 text-white hover:bg-red-700 ml-1" onClick={() => setFeaturedCourses(featuredCourses.filter(c => c !== course))}>Remove {course.emoji}</button>
-                      ))}
+                    <div className="flex gap-2 mt-4 justify-end">
+                      <button className="px-5 py-2 rounded-full bg-gray-200 text-timelingo-navy font-semibold shadow hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors" onClick={() => setShowProfileModal(false)}>Cancel</button>
+                      <button className="px-5 py-2 rounded-full bg-timelingo-gold text-timelingo-navy font-bold shadow hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors" onClick={handleSaveFeaturedEras} disabled={savingFeaturedEras || selectedFeaturedEras.length === 0}>{savingFeaturedEras ? 'Saving...' : 'Save'}</button>
                     </div>
                   </div>
                 )}
                 {/* Badges Tab */}
                 {profileTab === 'badges' && (
                   <div>
-                    <div className="mb-2 text-sm text-white/80">Drag to reorder your showcase badges:</div>
-                    <div className="flex gap-4">
-                      {showcaseBadges.map((badge, idx) => (
-                        <div
-                          key={badge.name}
-                          draggable
-                          onDragStart={e => e.dataTransfer.setData('text/plain', idx.toString())}
-                          onDragOver={e => e.preventDefault()}
-                          onDrop={e => {
-                            const from = Number(e.dataTransfer.getData('text/plain'));
-                            const to = idx;
-                            if (from !== to) {
-                              const items = Array.from(showcaseBadges);
-                              const [moved] = items.splice(from, 1);
-                              items.splice(to, 0, moved);
-                              setShowcaseBadges(items);
-                            }
-                          }}
-                          className="w-16 h-16 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-move transition-transform hover:scale-110 hover:shadow-2xl"
-                        >
-                          <span>{badge.icon}</span>
-                          <span className="text-xs text-timelingo-navy font-semibold mt-1">{badge.name}</span>
+                    <div className="mb-2 text-sm text-white/80">Your badges:</div>
+                    <div className="flex gap-4 flex-wrap">
+                      {badges.length > 0 ? badges.map((b) => (
+                        <div key={b.badge_id} className={`w-16 h-16 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group ${!b.date_earned ? 'grayscale opacity-60' : ''}`}>
+                          <img src={b.badge?.icon_url || '/default-badge.png'} alt={b.badge?.name} className="w-8 h-8 mb-1" />
+                          <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{b.badge?.name}</span>
                         </div>
-                      ))}
+                      )) : <div className="text-white/70 text-sm">No badges yet. Keep going to unlock some!</div>}
                     </div>
-                    <div className="mt-4 text-xs text-white/70">Click a badge below to add/remove from your showcase:</div>
-                    <div className="flex gap-2 flex-wrap mt-2">
-                      {ALL_BADGES.filter(b => !showcaseBadges.includes(b)).map(badge => (
-                        <button key={badge.name} className="px-3 py-1 rounded bg-white/10 text-white hover:bg-timelingo-gold/80 hover:text-timelingo-navy" onClick={() => setShowcaseBadges([...showcaseBadges, badge])}>{badge.icon} {badge.name}</button>
-                      ))}
-                      {showcaseBadges.length > 1 && showcaseBadges.map(badge => (
-                        <button key={badge.name + '-remove'} className="px-2 py-1 rounded bg-red-500/80 text-white hover:bg-red-700 ml-1" onClick={() => setShowcaseBadges(showcaseBadges.filter(b => b !== badge))}>Remove {badge.icon}</button>
-                      ))}
-                </div>
-              </div>
+                  </div>
                 )}
-                <DialogFooter className="mt-6">
-                  <DialogClose asChild>
-                    <button className="px-5 py-2 rounded-full bg-gray-200 text-timelingo-navy font-semibold shadow hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors">Cancel</button>
-                  </DialogClose>
-                  <button className="px-5 py-2 rounded-full bg-timelingo-gold text-timelingo-navy font-bold shadow hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors" onClick={() => { setShowProfileModal(false); setAvatarBase(selectedAvatar); /* Save featuredCourses and showcaseBadges to user profile here */ }}>Save</button>
-                </DialogFooter>
+                {profileTab !== 'courses' && (
+                  <DialogFooter className="mt-6">
+                    <DialogClose asChild>
+                      <button className="px-5 py-2 rounded-full bg-gray-200 text-timelingo-navy font-semibold shadow hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors">Cancel</button>
+                    </DialogClose>
+                    <button className="px-5 py-2 rounded-full bg-timelingo-gold text-timelingo-navy font-bold shadow hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors" onClick={() => { setShowProfileModal(false); setAvatarBase(selectedAvatar); /* Save featuredCourses and showcaseBadges to user profile here */ }}>Save</button>
+                  </DialogFooter>
+                )}
               </DialogContent>
             </Dialog>
           </div>
@@ -396,79 +565,185 @@ export default function UserStats(props) {
         {/* Featured Courses Row */}
         <div className="w-full max-w-5xl mb-8 px-10">
           <h3 className="text-xl font-bold text-white mb-3">Featured Courses</h3>
-          <div className="flex flex-row gap-6 overflow-x-auto pb-2">
-            {featuredCourses.map((course, idx) => (
-              <div key={course.title} className={`min-w-[220px] rounded-2xl bg-gradient-to-br ${course.color} p-5 shadow-xl flex flex-col items-center justify-center glass-card border border-white/20 transition-all duration-200 hover:scale-105 hover:shadow-2xl hover:border-timelingo-gold/60 cursor-pointer`}
-                onClick={() => alert(`Go to ${course.title} course!`)}
-              >
-                <span className="text-4xl mb-2 drop-shadow-lg">{course.emoji}</span>
-                <span className="text-lg font-bold text-white mb-1">{course.title}</span>
-                <button className="mt-2 px-4 py-1 rounded-full bg-timelingo-purple text-white font-semibold shadow hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-colors text-sm"
-                  onClick={e => { e.stopPropagation(); alert(`Go to ${course.title} course!`); }}
-                >Go to Course</button>
-      </div>
-            ))}
-          </div>
-        </div>
-        {/* Recent Activity Section */}
-        <div className="w-full max-w-5xl mb-8 px-10">
-          <h3 className="text-xl font-bold text-white mb-3">Recent Activity</h3>
-          <div className="flex flex-col gap-4">
-            {[{title: 'Completed: Ancient Egypt Quiz', date: 'Today', icon: '📜'}, {title: 'Studied: WWII Module 2', date: 'Yesterday', icon: '🌍'}, {title: 'Achievement: 7 Day Streak!', date: '2 days ago', icon: '🔥'}].map((activity, idx) => (
-              <div key={idx} className="rounded-xl bg-white/10 backdrop-blur-md p-4 flex items-center gap-4 shadow border border-white/10 transition-all duration-200 hover:scale-[1.03] hover:shadow-xl hover:border-timelingo-gold/40 cursor-pointer">
-                <span className="text-2xl drop-shadow-lg">{activity.icon}</span>
-                <div className="flex-1">
-                  <div className="text-white font-semibold">{activity.title}</div>
-                  <div className="text-xs text-white/60">{activity.date}</div>
-                </div>
+          {eraLoading && <div className="text-white/70">Loading...</div>}
+          {!eraLoading && featuredEraObjects.length === 0 && <div className="text-white/70">No featured courses selected. <button className='underline' onClick={() => { setShowProfileModal(true); setProfileTab('courses'); }}>Customize</button></div>}
+          <div className="flex flex-row gap-6 justify-center">
+            {featuredEraObjects.slice(0, 4).map((era) => (
+              <div key={era.code} className="min-w-[220px] rounded-2xl bg-gradient-to-br from-timelingo-purple to-timelingo-gold p-6 shadow-xl flex flex-col items-center justify-center glass-card border border-white/20 transition-all duration-200 hover:scale-105 hover:shadow-2xl hover:border-timelingo-gold/60 cursor-pointer">
+                <span className="text-5xl mb-3 drop-shadow-lg">{era.emoji}</span>
+                <span className="text-xl font-bold text-white mb-2">{getDisplayEraName(era)}</span>
+                <span className="text-xs text-gray-200 mb-4">{era.time_period}</span>
+                <button className="px-5 py-2 rounded-full bg-gradient-to-r from-timelingo-gold to-timelingo-purple text-white font-semibold shadow hover:bg-yellow-400/80 hover:text-timelingo-navy focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors text-base" onClick={() => navigate(`/home?era=${era.code}`)}>Go to Course</button>
               </div>
             ))}
           </div>
         </div>
-      </div>
-      {/* Sidebar (desktop) or below (mobile) */}
-      <aside className="w-full lg:w-[320px] flex-shrink-0 mt-10 lg:mt-0 lg:ml-8 px-6 lg:px-0 sticky top-10 z-10">
-        <div className="rounded-2xl bg-white/20 backdrop-blur-2xl shadow-2xl border border-timelingo-gold/30 p-6 flex flex-col gap-8 transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(255,215,0,0.10)]">
-          {/* Badges */}
+        {/* Achievements Section */}
+        {(!achievementsLoading && achievements.length > 0) && (
+        <div className="w-full max-w-5xl mb-8 px-10">
+          <h3 className="text-xl font-bold text-white mb-3">Achievements</h3>
+          <div className="flex flex-row gap-4 flex-wrap">
+            {achievements.map(a => (
+              <div key={a.achievement_id} className="flex flex-col items-center bg-white/10 rounded-xl p-4 shadow border border-white/10 min-w-[120px]">
+                <img src={a.achievement?.icon_url || '/default-badge.png'} alt={a.achievement?.name} className="w-10 h-10 mb-2" />
+                <span className="font-semibold text-white">{a.achievement?.name}</span>
+                <span className="text-xs text-white/70">{a.achievement?.description}</span>
+                <span className="text-xs text-yellow-300 mt-1">Earned: {a.date_earned ? new Date(a.date_earned).toLocaleDateString() : '-'}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        )}
+        {(!achievementsLoading && achievements.length === 0) && (
+          <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">No achievements yet. Start learning to earn some!</div>
+        )}
+        {achievementsLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading achievements...</div>}
+        {achievementsError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{achievementsError}</div>}
+        {/* Badges Section */}
+        {badgesLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading badges...</div>}
+        {badgesError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{badgesError}</div>}
+        {(!badgesLoading && badges?.length > 0) && (
           <div>
             <h4 className="text-lg font-bold text-white mb-3">Badges</h4>
             <div className="flex flex-wrap gap-3">
-              {showcaseBadges.map((badge, idx) => (
-                <div key={idx} className="w-14 h-14 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group">
-                  <span>{badge.icon}</span>
-                  <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{badge.name}</span>
+              {badges.map((b, idx) => (
+                <div key={b.badge_id} className={`w-14 h-14 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group ${!b.date_earned ? 'grayscale opacity-60' : ''}`}>
+                  <img src={b.badge?.icon_url || '/default-badge.png'} alt={b.badge?.name} className="w-8 h-8 mb-1" />
+                  <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{b.badge?.name}</span>
                 </div>
               ))}
             </div>
           </div>
+        )}
+        {(!badgesLoading && (!badges || badges.length === 0)) && (
+          <></>
+        )}
+        {/* Recent Activity Section */}
+        {activityLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading activity...</div>}
+        {activityError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{activityError}</div>}
+        {(!activityLoading && activity?.length > 0) && (
+          <div className="w-full max-w-5xl mb-8 px-10">
+            <h3 className="text-xl font-bold text-white mb-3">Recent Activity</h3>
+            <div className="flex flex-col gap-2">
+              {activity.map(a => (
+                <div key={a.id} className="flex flex-row items-center gap-4 bg-white/10 rounded-lg p-3 shadow border border-white/10">
+                  <span className="font-bold text-timelingo-gold">{a.type}</span>
+                  <span className="text-white/90">{a.description}</span>
+                  <span className="text-xs text-white/60 ml-auto">{new Date(a.date).toLocaleString()}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {(!activityLoading && (!activity || activity.length === 0)) && (
+          <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">No recent activity yet. Start learning to see your progress here!</div>
+        )}
+        {/* Friends Section */}
+        {friendsLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading friends...</div>}
+        {friendsError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{friendsError}</div>}
+        {(!friendsLoading && friends?.length > 0) && (
+          <div className="w-full max-w-5xl mb-8 px-10">
+            <h3 className="text-xl font-bold text-white mb-3">Friends</h3>
+            <div className="flex flex-col gap-2">
+              {friends.map((f, idx) => (
+                <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
+                  <img src={f.friend?.avatar_base ? AVATAR_OPTIONS.find(opt => opt.key === f.friend.avatar_base)?.src : AVATAR_OPTIONS[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
+                  <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
+                  <button className="ml-auto px-2 py-1 rounded bg-red-500 text-white text-xs" onClick={() => handleRemoveFriend(f.friend_id)}>Remove</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {(!friendsLoading && (!friends || friends.length === 0)) && (
+          <></>
+        )}
+      </div>
+      {/* Sidebar (desktop) or below (mobile) */}
+      <aside className="w-full lg:w-[320px] flex-shrink-0 mt-10 lg:mt-0 lg:ml-8 px-6 lg:px-0 sticky top-10 z-30">
+        <div className="rounded-2xl bg-white/20 backdrop-blur-2xl shadow-2xl border border-timelingo-gold/30 p-6 flex flex-col gap-8 transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(255,215,0,0.10)]">
+          {/* Badges */}
+          {badges.length > 0 ? (
+            <div>
+              <h4 className="text-lg font-bold text-white mb-3">Badges</h4>
+              <div className="flex flex-wrap gap-3">
+                {badges.map((b, idx) => (
+                  <div key={b.badge_id} className={`w-14 h-14 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group ${!b.date_earned ? 'grayscale opacity-60' : ''}`}>
+                    <img src={b.badge?.icon_url || '/default-badge.png'} alt={b.badge?.name} className="w-8 h-8 mb-1" />
+                    <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{b.badge?.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="text-white/70 text-sm">No badges yet. Keep going to unlock some!</div>
+          )}
           {/* Achievement Progress (replaces Groups) */}
-          <div>
-            <h4 className="text-lg font-bold text-white mb-3">Achievement Progress</h4>
-            <div className="flex flex-col gap-3">
-              {[{era: 'Christianity', percent: 75, color: 'from-yellow-200 to-timelingo-gold'}, {era: 'WWII', percent: 40, color: 'from-timelingo-teal to-teal-400'}, {era: 'Rome', percent: 90, color: 'from-purple-300 to-timelingo-purple'}].map((prog, idx) => (
-                <div key={idx} className="flex flex-col gap-0.5">
-                  <div className="flex justify-between items-center">
-                    <span className="text-white text-xs font-semibold">{prog.era}</span>
-                    <span className="text-white/80 text-xs font-mono">{prog.percent}%</span>
-                  </div>
-                  <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden relative">
-                    <div className={`h-full bg-gradient-to-r ${prog.color} rounded-full transition-all duration-700`} style={{ width: `${prog.percent}%` }}></div>
-                  </div>
-                </div>
-              ))}
+          {featuredEraObjects.length > 0 && (
+            <div>
+              <h4 className="text-lg font-bold text-white mb-3">Achievement Progress</h4>
+              <div className="flex flex-col gap-3">
+                {featuredEraObjects.map((era, idx) => {
+                  const prog = getEraProgress(era.code);
+                  return (
+                    <div key={era.code} className="flex flex-col gap-0.5">
+                      <div className="flex justify-between items-center">
+                        <span className="text-white text-xs font-semibold flex items-center gap-1">{era.emoji} {getDisplayEraName(era)}</span>
+                        <span className="text-white/80 text-xs font-mono">{prog.percent}%</span>
+                      </div>
+                      <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden relative">
+                        <div className="h-full bg-gradient-to-r from-timelingo-gold to-timelingo-purple rounded-full transition-all duration-700" style={{ width: `${prog.percent}%` }}></div>
+                      </div>
+                      <span className="text-xs text-white/60 mt-0.5">{prog.completed} / {prog.total} modules</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-          {/* Friends */}
+          )}
+          {/* Friends (NOW in sidebar) */}
           <div>
             <h4 className="text-lg font-bold text-white mb-3">Friends</h4>
             <div className="flex flex-col gap-2">
-              {[{name: 'Alex', avatar: '/images/avatars/goldfish_3.png'}, {name: 'Sam', avatar: '/images/avatars/goldfish_4.png'}].map((friend, idx) => (
+              {friends.length === 0 && (
+                <div className="text-white/70 text-xs">No friends yet.</div>
+              )}
+              {friends.map((f, idx) => (
                 <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
-                  <img src={friend.avatar} alt={friend.name} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
-                  <span className="text-white font-medium">{friend.name}</span>
-              </div>
+                  <img src={f.friend?.avatar_base ? AVATAR_OPTIONS.find(opt => opt.key === f.friend.avatar_base)?.src : AVATAR_OPTIONS[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
+                  <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
+                  <button className="ml-auto px-2 py-1 rounded bg-red-500 text-white text-xs" onClick={() => handleRemoveFriend(f.friend_id)}>Remove</button>
+                </div>
               ))}
+              {!showAddFriendModal && (
+                <button className="flex flex-row items-center justify-center bg-green-500/80 hover:bg-green-600 text-white rounded-lg px-3 py-2 mt-2 w-fit self-center" onClick={() => setShowAddFriendModal(true)}>
+                  <span className="text-lg mr-1">+</span>
+                  <span className="text-xs font-semibold">Add Friend</span>
+                </button>
+              )}
             </div>
+            {/* Add Friend Modal */}
+            <Dialog open={showAddFriendModal} onOpenChange={setShowAddFriendModal}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add a Friend</DialogTitle>
+                </DialogHeader>
+                <input
+                  ref={addFriendInputRef}
+                  type="text"
+                  className="w-full p-2 rounded border border-gray-300 mb-2"
+                  placeholder="Enter username or email"
+                  value={addFriendInput}
+                  onChange={e => setAddFriendInput(e.target.value)}
+                  autoFocus
+                />
+                {addFriendError && <div className="text-red-500 text-xs mb-2">{addFriendError}</div>}
+                <DialogFooter>
+                  <button className="px-4 py-2 rounded bg-gray-200 text-gray-800 mr-2" onClick={() => setShowAddFriendModal(false)}>Cancel</button>
+                  <button className="px-4 py-2 rounded bg-green-500 text-white" onClick={handleAddFriend}>Add Friend</button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
       </aside>

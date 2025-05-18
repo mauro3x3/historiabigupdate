@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { LearningSection, VideosSection, AchievementsSection } from './sections';
-import DailyChallengesTab from './sections/DailyChallengesTab';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Video, CalendarCheck, Trophy } from 'lucide-react';
 import { useDashboardData } from '@/hooks/useDashboardData';
@@ -134,7 +133,7 @@ const DashboardContent: React.FC = () => {
           </TabsContent>
 
           <TabsContent value="challenges">
-            <DailyChallengesTab />
+            {/* <DailyChallengesTab /> */}
           </TabsContent>
 
           <TabsContent value="achievements">

@@ -55,10 +55,6 @@ const Home = () => {
     navigate('/profile');
   };
   
-  const handleDailyChallenge = () => {
-    navigate('/daily-challenge');
-  };
-
   const handleEraSelection = async (era: string) => {
     if (era === 'onboarding') {
       navigate('/onboarding');
@@ -122,7 +118,6 @@ const Home = () => {
         />
         <FeatureBanner 
           handleViewLessons={handleViewLessons}
-          handleDailyChallenge={handleDailyChallenge}
         />
         {/* Main Duolingo-style Learning Path */}
         <h2 className="text-3xl font-extrabold text-center mb-8 mt-12 text-timelingo-navy drop-shadow-lg">Your Learning Journey</h2>

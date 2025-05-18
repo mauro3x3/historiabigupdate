@@ -71,14 +71,6 @@ const LearningStyleSelector = ({ selectedStyle, onSelect }: LearningStyleSelecto
       isNew: false
     },
     {
-      id: 'daily' as LearningStyle,
-      emoji: '📆',
-      icon: Calendar,
-      title: 'Daily Challenge',
-      description: 'Drop in daily to place events on a timeline',
-      isNew: false
-    },
-    {
       id: 'mystery' as LearningStyle,
       emoji: '🧩',
       icon: PuzzleIcon,

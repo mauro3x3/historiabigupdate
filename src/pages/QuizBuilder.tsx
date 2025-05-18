@@ -40,7 +40,6 @@ const QuizBuilder: React.FC = () => {
   const [questions, setQuestions] = useState([
     { text: '', options: ['', '', '', ''], answer: 0, type: 'mc' as 'mc' | 'tf' }
   ]);
-  const [quizName, setQuizName] = useState('');
   const [signature, setSignature] = useState('');
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
@@ -49,6 +48,7 @@ const QuizBuilder: React.FC = () => {
   const navigate = useNavigate();
   const aiPromptInputRef = useRef<HTMLInputElement>(null);
   const [inputHighlight, setInputHighlight] = useState(false);
+  const themeInputRef = useRef<HTMLInputElement>(null);
 
   const handleThemeSelect = (t: string) => {
     setTheme(t);
@@ -70,7 +70,7 @@ const QuizBuilder: React.FC = () => {
     setQuestions(qs => qs.filter((_, i) => i !== idx));
   };
 
-  const handleCreate = async () => {
+  const handleCreate = async (questionsForDb?: any[], topicArg?: string) => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({
@@ -80,14 +80,12 @@ const QuizBuilder: React.FC = () => {
       });
       return;
     }
-
     // First ensure user has a profile
     const { data: profile, error: profileError } = await supabase
       .from('user_profiles')
       .select('id')
       .eq('id', user.id)
       .single();
-
     if (profileError || !profile) {
       toast({
         title: 'Error',
@@ -96,29 +94,43 @@ const QuizBuilder: React.FC = () => {
       });
       return;
     }
-
-    // Ensure theme is set (fallback to aiPrompt or first question's topic)
-    let quizTheme = theme;
-    if (!quizTheme) {
-      quizTheme = aiPrompt || (questions[0]?.text?.split(' ')[0] || 'General');
-      setTheme(quizTheme);
+    // Always use topicArg || aiPrompt || theme for the title, never quizName
+    const topic = topicArg || aiPrompt || theme || '';
+    console.log('Topic value received in handleCreate:', topic);
+    function capitalizeWords(str: string) {
+      return str.replace(/\b\w/g, c => c.toUpperCase());
     }
-
+    let base = topic;
+    base = base.replace(/quiz$/i, '').trim();
+    let autoTitle = '';
+    if (!base || base.length === 1) {
+      autoTitle = 'Custom Quiz';
+    } else {
+      const capitalized = capitalizeWords(base);
+      autoTitle = capitalized + ' Quiz';
+    }
+    // Use the argument if provided, otherwise map from state
+    const questionsToSave = questionsForDb || questions.map(q => ({
+      question: q.text,
+      options: q.options,
+      correctAnswer: q.answer,
+      type: q.type
+    }));
     const quizData = {
       creator_id: user.id,
-      theme: quizTheme,
-      name: quizName,
+      theme: topic,
+      name: autoTitle,
       signature,
-      questions,
+      questions: questionsToSave,
       created_at: new Date().toISOString(),
     };
-
+    console.log('Questions to be saved:', questionsToSave);
+    console.log('Quiz data to be inserted:', quizData);
     const { data, error } = await supabase
       .from('quizzes')
       .insert([quizData])
       .select()
       .single();
-
     if (error) {
       console.error('Supabase insert error:', error);
       toast({
@@ -128,12 +140,10 @@ const QuizBuilder: React.FC = () => {
       });
       return;
     }
-
     toast({
       title: 'Success',
       description: 'Quiz created successfully!',
     });
-
     // Redirect to the quiz play page
     navigate(`/quiz/${data.id}`);
   };
@@ -148,15 +158,42 @@ const QuizBuilder: React.FC = () => {
         body: JSON.stringify({ topic: aiPrompt })
       });
       const data = await response.json();
-      if (data.questions) {
-        setQuestions(data.questions.map(q => ({
-          text: q.question,
-          options: q.options,
-          answer: q.answer,
-          type: 'mc',
-        })));
-        // Always set theme to the prompt/topic if not provided by AI
-        setTheme(data.theme || aiPrompt);
+      console.log('Full AI response:', data);
+      let aiQuestions = data.questions;
+      if (typeof aiQuestions === 'string') {
+        try {
+          aiQuestions = JSON.parse(aiQuestions);
+          console.log('Parsed AI questions from string:', aiQuestions);
+        } catch (e) {
+          setAiError('AI returned invalid questions format.');
+          return;
+        }
+      }
+      if (Array.isArray(aiQuestions)) {
+        // For display and saving to DB
+        const mappedQuestions = aiQuestions.map(q => ({
+          question: q.question || q.text || '',
+          options: q.options || q.answers || [],
+          correctAnswer: q.correctAnswer ?? q.answer ?? 0,
+          type: 'mc' as 'mc',
+        }));
+        console.log('Mapped questions:', mappedQuestions);
+        // Validate questions
+        if (!mappedQuestions.length || mappedQuestions.some(q => !q.question || !q.options.length)) {
+          setAiError('AI did not return valid questions. Try a different topic!');
+          return;
+        }
+        // For setQuestions (UI state)
+        const uiQuestions = aiQuestions.map(q => ({
+          text: q.question || q.text || '',
+          options: q.options || q.answers || [],
+          answer: q.correctAnswer ?? q.answer ?? 0,
+          type: 'mc' as 'mc',
+        }));
+        setQuestions(uiQuestions);
+        setTheme(aiPrompt); // Always use the full user input as the theme
+        // Automatically create the quiz after generation, passing mappedQuestions and the actual user input as topic
+        await handleCreate(mappedQuestions, aiPrompt);
       } else {
         setAiError('Could not generate quiz. Try a different topic!');
       }
@@ -262,7 +299,18 @@ const QuizBuilder: React.FC = () => {
                 {/* Show Create Quiz button if questions are present and not loading */}
                 {questions.length > 0 && !aiLoading && (
                   <Button
-                    onClick={handleCreate}
+                    onClick={() => {
+                      // Always use the full aiPrompt as the topic for AI quizzes
+                      handleCreate(
+                        questions.map(q => ({
+                          question: q.text,
+                          options: q.options,
+                          correctAnswer: q.answer,
+                          type: q.type
+                        })),
+                        aiPrompt
+                      );
+                    }}
                     className="w-full bg-timelingo-gold hover:bg-yellow-400 text-lg font-bold py-3 mt-4 rounded-xl shadow-lg"
                   >
                     Create Quiz

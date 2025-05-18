@@ -72,11 +72,12 @@ app.post('/api/generate-quiz', async (req, res) => {
       })
     });
     const data = await response.json();
-    console.log('OpenAI raw response:', data);
-    if (!data.choices || !data.choices[0] || !data.choices[0].message || !data.choices[0].message.content) {
+    console.log('OpenAI raw response:', JSON.stringify(data, null, 2));
+    const message = data.choices && data.choices[0] && data.choices[0].message;
+    const text = message && (message.content || message.text || JSON.stringify(message));
+    if (!text) {
       return res.status(500).json({ error: 'OpenAI did not return a valid response.', details: data });
     }
-    const text = data.choices[0].message.content;
     const jsonStart = text.indexOf('[');
     const jsonEnd = text.lastIndexOf(']');
     if (jsonStart === -1 || jsonEnd === -1) {

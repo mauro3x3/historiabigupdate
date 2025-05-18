@@ -12,7 +12,6 @@ import Lesson from "./pages/Lesson";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import AllLessons from "./pages/AllLessons";
-import DailyChallenge from "./pages/DailyChallenge";
 import HistoricalChat from "./pages/HistoricalChat";
 import HistoricalMap from "./pages/HistoricalMap";
 import HistoricalMapsList from "./pages/HistoricalMapsList";
@@ -33,6 +32,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { ThemeContextProvider } from '@/contexts/ThemeContext';
 import QuizLibrary from '@/pages/QuizLibrary';
 import LandingPage from "./pages/Index";
+import posthog from 'posthog-js';
 
 const queryClient = new QueryClient();
 
@@ -91,11 +91,6 @@ const AppRoutes = () => {
           <VideoPlayer />
         </ProtectedRoute>
       } />
-      <Route path="/daily-challenge" element={
-        <ProtectedRoute>
-          <DailyChallenge />
-        </ProtectedRoute>
-      } />
       <Route path="/historical-chat" element={
         <ProtectedRoute>
           <HistoricalChat />
@@ -135,7 +130,6 @@ const NAV_LINKS = [
   { label: 'All Lessons', href: '/all-lessons', icon: <BookOpen className="h-6 w-6" /> },
   { label: 'Maps', href: '/historical-map/list', icon: <Map className="h-6 w-6" /> },
   { label: 'Games', href: '/map-games', icon: <Gamepad2 className="h-6 w-6" />, subItems: [
-    { label: 'Daily Challenge', href: '/daily-challenge', icon: <Hourglass className="h-6 w-6" /> },
   ] },
   { label: 'Quiz Your Friends', href: '/quiz-builder', icon: <Sparkles className="h-6 w-6 text-yellow-400" /> },
   { label: 'Explore Eras', href: '/onboarding', icon: <Hourglass className="h-6 w-6" /> },
@@ -166,38 +160,16 @@ function GlobalFishbowlMenu() {
   };
 
   return (
-    <div className="fixed bottom-8 right-8 z-50 flex flex-col items-end">
-      {/* Speech bubble with tail - repositioned to be above and left of the bowl */}
-      {showBalloon && (
-        <div className={`transition-all duration-300 ${open ? 'opacity-0 scale-95' : 'opacity-100 scale-100'}`}
-          style={{ pointerEvents: open ? 'none' : 'auto', position: 'absolute', right: '110px', bottom: '110px' }}>
-          <div className="relative">
-            <div className="bg-white text-timelingo-navy px-5 py-2 rounded-2xl shadow-lg border border-gray-200 font-semibold text-base animate-fade-in flex items-center gap-2">
-              <span>Want to try other ways of learning?</span>
-              <button
-                className="ml-2 text-gray-400 hover:text-timelingo-purple focus:outline-none"
-                aria-label="Close balloon"
-                onClick={handleCloseBalloon}
-                style={{ fontSize: 18, lineHeight: 1, padding: 0, background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                ×
-              </button>
-            </div>
-            {/* Tail - now points more directly at the mascot */}
-            <svg width="32" height="16" viewBox="0 0 32 16" className="absolute left-[70%] -bottom-3 -translate-x-1/2">
-              <polygon points="16,0 32,16 0,16" fill="#fff" stroke="#e5e7eb" strokeWidth="1" />
-            </svg>
-          </div>
-        </div>
-      )}
-      {/* Menu */}
+    <div className="fixed bottom-8 right-8 z-20 flex flex-col items-end">
+      {/* White Popover Menu */}
       <div
-        className={`transition-all duration-300 mb-2 ${open ? 'opacity-100 translate-y-0' : 'opacity-0 pointer-events-none translate-y-4'}`}
+        className={`transition-all duration-300 mb-2 absolute ${open ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-4 pointer-events-none'} right-0 bottom-20`}
         aria-hidden={!open}
         id={menuId}
         role="menu"
+        style={{ zIndex: 40 }}
       >
-        <div className="bg-white rounded-2xl shadow-2xl p-4 flex flex-col gap-3 border border-gray-200 animate-fade-in min-w-[200px] relative">
+        <div className="bg-white rounded-2xl shadow-2xl p-4 flex flex-col gap-1 border border-gray-200 animate-fade-in min-w-[220px] relative">
           <button
             className="absolute top-2 right-2 text-gray-400 hover:text-timelingo-purple focus:outline-none"
             aria-label="Close menu"
@@ -209,25 +181,25 @@ function GlobalFishbowlMenu() {
             <React.Fragment key={link.href}>
               <button
                 type="button"
-                className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left"
+                className="flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg"
                 tabIndex={open ? 0 : -1}
                 role="menuitem"
                 aria-label={link.label}
                 onClick={() => { setOpen(false); navigate(link.href); }}
               >
-                <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold">
+                <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold text-2xl">
                   {link.icon}
                 </span>
                 {link.label}
               </button>
               {/* Render subItems if present (for Games) */}
               {link.subItems && (
-                <div className="ml-8 flex flex-col gap-1">
+                <div className="ml-10 flex flex-col gap-1">
                   {link.subItems.map(sub => (
                     <button
                       key={sub.href}
                       type="button"
-                      className="flex items-center gap-2 px-3 py-1 rounded hover:bg-timelingo-gold/10 text-timelingo-navy text-sm font-medium w-full text-left"
+                      className="flex items-center gap-2 px-3 py-2 rounded hover:bg-timelingo-gold/10 text-timelingo-navy text-base font-medium w-full text-left"
                       tabIndex={open ? 0 : -1}
                       role="menuitem"
                       aria-label={sub.label}
@@ -243,9 +215,9 @@ function GlobalFishbowlMenu() {
           ))}
         </div>
       </div>
-      {/* Fishbowl Button */}
+      {/* Orb Button */}
       <button
-        className={`rounded-full shadow-2xl bg-gradient-to-br from-blue-100 via-timelingo-gold to-purple-200 p-3 border-4 border-white transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${open ? 'ring-4 ring-timelingo-gold' : ''}`}
+        className={`rounded-full shadow-2xl bg-gradient-to-br from-blue-100 via-timelingo-gold to-purple-200 p-3 border-4 border-white transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${open ? 'ring-4 ring-timelingo-gold scale-105' : ''}`}
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -303,6 +275,11 @@ function RouterWithFishbowl() {
 }
 
 const App: React.FC = () => {
+  React.useEffect(() => {
+    posthog.init('phc_qJrMSxZ8mLABCLxtgCbXvwHWe67ZrmJFd9r8Og5iHJJ', { api_host: 'https://eu.posthog.com' });
+    posthog.capture('test_event', { test: true });
+  }, []);
+
   return (
     <ThemeContextProvider>
       <ThemeProvider>

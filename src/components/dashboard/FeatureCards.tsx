@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,33 +21,9 @@ const FeatureCards = () => {
   const handleMapGames = () => {
     navigate('/map-games');
   };
-  
-  const handleDailyChallenge = () => {
-    navigate('/daily-challenge');
-  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 mb-10">
-      {/* Daily Challenge Feature Card */}
-      <div className="lg:col-span-1">
-        <div className="bg-white p-6 rounded-xl shadow-sm flex items-start gap-4 h-full">
-          <div className="bg-green-100 rounded-full p-3">
-            <CalendarCheck className="h-6 w-6 text-green-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-timelingo-navy mb-2">Daily Challenge</h3>
-            <p className="text-sm text-gray-500 mb-4">Test your chronological history knowledge daily</p>
-            <Button 
-              onClick={handleDailyChallenge} 
-              variant="secondary"
-              className="w-full"
-            >
-              Take Challenge
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* All Lessons Card */}
       <div className="lg:col-span-1">
         <div className="bg-white p-6 rounded-xl shadow-sm flex items-start gap-4 h-full">
