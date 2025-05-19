@@ -58,7 +58,7 @@ const AppRoutes = () => {
   
   return (
     <Routes>
-      <Route path="/" element={<Onboarding />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/landingpage" element={<LandingPage />} />
       <Route path="/home" element={
         <ProtectedRoute>
