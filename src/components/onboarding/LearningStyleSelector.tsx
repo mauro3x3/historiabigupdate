@@ -108,7 +108,7 @@ const LearningStyleSelector = ({ selectedStyle, onSelect }: LearningStyleSelecto
               style={{ animationDelay: `${index * 75}ms` }}
               title={isLocked ? 'Coming soon!' : ''}
             >
-              <div className="flex-shrink-0 bg-purple-100 rounded-full p-3 text-purple-600">
+              <div className="flex-shrink-0 bg-purple-100 rounded-full p-3 text-purple-600 hover:animate-spin">
                 {style.icon ? <style.icon className="h-6 w-6" /> : <span className="text-2xl">{style.emoji}</span>}
               </div>
               <div className="flex-grow">

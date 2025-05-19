@@ -67,21 +67,21 @@ const Onboarding = () => {
           />
         )}
         {step === 2 && (
-          <SkillLevelSelector
-            selectedSkill={skillLevel}
-            onSelect={setSkillLevel}
-          />
-        )}
-        {step === 3 && (
           <EraSelector 
             selectedEra={era} 
             onSelect={setEra} 
           />
         )}
-        {step === 4 && (
+        {step === 3 && (
           <LearningStyleSelector 
             selectedStyle={learningStyle} 
             onSelect={setLearningStyle} 
+          />
+        )}
+        {step === 4 && (
+          <SkillLevelSelector
+            selectedSkill={skillLevel}
+            onSelect={setSkillLevel}
           />
         )}
         {step === 5 && (

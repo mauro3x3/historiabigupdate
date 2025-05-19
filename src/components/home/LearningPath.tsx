@@ -255,7 +255,7 @@ const LearningPath = (props) => {
                 </div>
               )}
               <div
-                className={`w-16 h-16 rounded-full flex items-center justify-center border-4 ${lesson.status === 'completed' ? 'bg-green-200 border-green-400 shadow-xl' : lesson.status === 'current' ? 'bg-yellow-100 border-yellow-400 shadow-2xl ring-4 ring-pink-400 animate-glow' : 'bg-gray-200 border-gray-300 opacity-60 shadow-lg'} ${lesson.status !== 'locked' ? 'cursor-pointer hover:scale-110 transition-transform' : 'cursor-not-allowed'}`}
+                className={`w-16 h-16 rounded-full flex items-center justify-center border-4 ${lesson.status === 'completed' ? 'bg-green-200 border-green-400 shadow-xl' : lesson.status === 'current' ? 'bg-yellow-100 border-yellow-400 shadow-2xl ring-4 ring-pink-400 animate-glow' : 'bg-gray-200 border-gray-300 opacity-60 shadow-lg'} ${lesson.status !== 'locked' ? 'cursor-pointer hover:scale-110 hover:animate-slow-spin transition-transform' : 'cursor-not-allowed'}`}
                 style={{fontSize: 32, position: 'relative', zIndex: 2, pointerEvents: lesson.status !== 'locked' ? 'auto' : 'none'}}
                 onClick={() => lesson.status !== 'locked' && props.onLessonClick && props.onLessonClick(lesson)}
                 title={lesson.status === 'locked' ? 'Complete previous lessons to unlock!' : ''}
@@ -266,6 +266,22 @@ const LearningPath = (props) => {
           </div>
         ))}
       </div>
+      <style>{`
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 5px rgba(244, 114, 182, 0.5); }
+          50% { box-shadow: 0 0 20px rgba(244, 114, 182, 0.8); }
+        }
+        .animate-glow {
+          animation: glow 2s infinite;
+        }
+        @keyframes slow-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-slow-spin {
+          animation: slow-spin 3s linear infinite;
+        }
+      `}</style>
     </>
   );
 };

@@ -1,8 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { HistoryInterest } from '@/types';
 import { playSelectSound } from '@/utils/audioUtils';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Sword, ScrollText, Church, Globe } from 'lucide-react';
 
 interface InterestSelectorProps {
   selectedInterests: HistoryInterest[];
@@ -48,10 +47,10 @@ const InterestSelector = ({ selectedInterests, onSelect }: InterestSelectorProps
       <p className="text-center text-gray-500">Select all that apply</p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {[
-          { id: 'wars', emoji: '⚔️', title: 'Wars & Battles', description: 'Conflicts that shaped nations' },
-          { id: 'politics', emoji: '📜', title: 'Political History', description: 'Leaders and governance' },
-          { id: 'religious', emoji: '⛪', title: 'Religious History', description: 'Faith traditions and their impact' },
-          { id: 'world-map', emoji: '🌐', title: 'World Map History', description: 'Geographical changes over time' }
+          { id: 'wars', icon: '/images/icons/swords.png', title: 'Wars & Battles', description: 'Conflicts that shaped nations' },
+          { id: 'politics', icon: '/images/icons/scroll.png', title: 'Political History', description: 'Leaders and governance' },
+          { id: 'religious', icon: '/images/icons/church.png', title: 'Religious History', description: 'Faith traditions and their impact' },
+          { id: 'world-map', icon: '/images/icons/globe.png', title: 'World Map History', description: 'Geographical changes over time' }
         ].map((item, index) => (
           <div 
             key={item.id}
@@ -73,7 +72,9 @@ const InterestSelector = ({ selectedInterests, onSelect }: InterestSelectorProps
                 <CheckCircle size={20} />
               </div>
             )}
-            <div className="text-4xl mb-3">{item.emoji}</div>
+            <div className="flex justify-center mb-3">
+              <img src={item.icon} alt={item.title} className="inline w-20 h-20 hover:animate-spin" />
+            </div>
             <h3 className="font-semibold text-timelingo-navy text-lg mb-1">{item.title}</h3>
             <p className="text-sm text-gray-600">{item.description}</p>
             

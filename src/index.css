@@ -164,3 +164,13 @@
     @apply focus-visible:ring-timelingo-purple/40;
   }
 }
+
+@layer utilities {
+  @keyframes slow-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .slow-spin {
+    animation: slow-spin 1.5s linear infinite;
+  }
+}

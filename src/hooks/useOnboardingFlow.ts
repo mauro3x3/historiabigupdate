@@ -27,37 +27,30 @@ export const useOnboardingFlow = (
       toast.error('Please select at least one interest to continue');
       return;
     }
-    
-    if (step === 2 && !skillLevel) {
-      toast.error('Please select your skill level to continue');
-      return;
-    }
-    
-    if (step === 3 && !era) {
+    if (step === 2 && !era) {
       toast.error('Please select an era to continue');
       return;
     }
-    
-    if (step === 4 && !learningStyle) {
+    if (step === 3 && !learningStyle) {
       toast.error('Please select a learning style to continue');
       return;
     }
-
+    if (step === 4 && !skillLevel) {
+      toast.error('Please select your skill level to continue');
+      return;
+    }
     if (step === 5 && !learningTime) {
       toast.error('Please select a daily learning time to continue');
       return;
     }
-    
     if (step === 6 && !reminderMethod) {
       toast.error('Please select a reminder method to continue');
       return;
     }
-
     if (step === 6 && reminderMethod !== 'none' && !reminderTime) {
       toast.error('Please select a reminder time');
       return;
     }
-    
     if (step < totalSteps) {
       setStep(step + 1);
     } else {

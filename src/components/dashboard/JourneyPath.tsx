@@ -62,7 +62,7 @@ const JourneyPath: React.FC<JourneyPathProps> = ({ lessons, onLessonClick, theme
               onMouseLeave={() => setHoveredLesson(null)}
               className={`flex items-center w-full max-w-xs px-4 py-3 mb-2 rounded-2xl border-4 shadow-lg transition-all duration-300 relative z-10 focus:outline-none group
                 ${t.node[lesson.status]}
-                ${lesson.status !== 'locked' ? 'cursor-pointer hover:scale-105' : 'cursor-not-allowed'}
+                ${lesson.status !== 'locked' ? 'cursor-pointer hover:scale-105 hover:animate-slow-spin' : 'cursor-not-allowed'}
               `}
               style={{ minHeight: 64 }}
               tabIndex={lesson.status === 'locked' ? -1 : 0}
@@ -111,6 +111,13 @@ const JourneyPath: React.FC<JourneyPathProps> = ({ lessons, onLessonClick, theme
         }
         .animate-fade-in {
           animation: fade-in 0.2s;
+        }
+        @keyframes slow-spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-slow-spin {
+          animation: slow-spin 3s linear infinite;
         }
       `}</style>
     </div>

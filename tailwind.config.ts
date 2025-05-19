@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 export default {
@@ -116,6 +115,10 @@ export default {
 				'bounce-small': {
 					'0%, 100%': { transform: 'translateY(0)' },
 					'50%': { transform: 'translateY(-8px)' },
+				},
+				'slow-spin': {
+					from: { transform: 'rotate(0deg)' },
+					to: { transform: 'rotate(360deg)' }
 				}
 			},
 			animation: {
@@ -124,6 +127,7 @@ export default {
 				'fade-in': 'fade-in 0.4s ease-out',
 				'slide-in': 'slide-in 0.3s ease-out',
 				'bounce-small': 'bounce-small 1s ease-in-out infinite',
+				'slow-spin': 'slow-spin 1.5s linear infinite'
 			}
 		}
 	},

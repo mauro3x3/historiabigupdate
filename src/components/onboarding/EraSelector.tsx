@@ -19,6 +19,28 @@ interface EraSelectorProps {
   directNavigation?: boolean;
 }
 
+// Add a mapping from era code to icon image
+const eraIcons: Record<string, string> = {
+  christian: '/images/icons/church.png',
+  islamic: '/images/icons/islam.png',
+  jewish: '/images/icons/judaism.png',
+  russian: '/images/icons/russia.png',
+  chinese: '/images/icons/china.png',
+  'chinese history': '/images/icons/china.png',
+  'china': '/images/icons/china.png',
+  hindu: '/images/icons/hindu-history.png',
+  'hindu history': '/images/icons/hindu-history.png',
+  'hindu-history': '/images/icons/hindu-history.png',
+  german: '/images/icons/german-history.png',
+  'german history': '/images/icons/german-history.png',
+  'german-history': '/images/icons/german-history.png',
+  greece: '/images/icons/greek.png',
+  'ancient greece': '/images/icons/greek.png',
+  greek: '/images/icons/greek.png',
+  'greek history': '/images/icons/greek.png',
+  america: '/images/icons/america.png',
+};
+
 const EraSelector = ({ 
   selectedEra, 
   onSelect, 
@@ -155,7 +177,13 @@ const EraSelector = ({
               </Badge>
             )}
             
-            <div className="text-3xl mb-2">{era.emoji}</div>
+            <div className="flex justify-center mb-2">
+              {eraIcons[era.code.toLowerCase()] ? (
+                <img src={eraIcons[era.code.toLowerCase()]} alt={era.name} className="inline w-20 h-20 hover:animate-spin" />
+              ) : (
+                <span className="text-3xl">{era.emoji}</span>
+              )}
+            </div>
             <h3 className="font-semibold text-timelingo-navy text-lg mb-1">{era.name}</h3>
             <p className="text-xs text-gray-500">{era.time_period}</p>
             
