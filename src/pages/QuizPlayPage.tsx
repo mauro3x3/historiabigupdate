@@ -379,6 +379,35 @@ const QuizPlayPage: React.FC = () => {
     leaderboardRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
+  const downloadQuizAsCSV = async (quiz: Quiz) => {
+    try {
+      const response = await fetch('http://localhost:5001/api/quiz-to-csv', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          questions: quiz.questions.map(q => ({
+            question: q.question || q.text,
+            options: q.options,
+            answer: typeof q.correctAnswer === 'number' ? q.correctAnswer : q.answer
+          })),
+          quizTitle: quiz.name || quiz.title || 'quiz'
+        })
+      });
+      if (!response.ok) throw new Error('Failed to download CSV');
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${quiz.name || quiz.title || 'quiz'}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      toast.error('Could not download CSV.');
+    }
+  };
+
   // Helper for background style
   const backgroundStyle = {
     background: `linear-gradient(135deg, ${theme.colors.accent}10 0%, ${theme.colors.secondary}10 100%)`,
@@ -555,6 +584,12 @@ const QuizPlayPage: React.FC = () => {
             style={buttonAccentStyle}
           >
             Share Quiz
+          </Button>
+          <Button
+            onClick={() => quiz && downloadQuizAsCSV(quiz)}
+            style={buttonAccentStyle}
+          >
+            Download as CSV
           </Button>
         </div>
         <div className="w-full max-w-md mx-auto">

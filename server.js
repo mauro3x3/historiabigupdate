@@ -3,12 +3,17 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
+import { Parser } from 'json2csv';
 dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 5001;
 
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:8080',
+  methods: ['GET', 'POST'],
+  credentials: true
+}));
 app.use(bodyParser.json());
 
 console.log('OpenAI Key:', process.env.OPENAI_API_KEY ? 'Loaded' : 'NOT FOUND');
@@ -89,6 +94,34 @@ app.post('/api/generate-quiz', async (req, res) => {
   } catch (err) {
     console.error('Error from OpenAI or JSON parse:', err);
     res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/quiz-to-csv', (req, res) => {
+  const { questions, quizTitle = "quiz" } = req.body;
+  if (!questions || !Array.isArray(questions)) {
+    return res.status(400).json({ error: 'Missing or invalid questions array.' });
+  }
+
+  // Prepare data for CSV
+  const csvData = questions.map(q => ({
+    question: q.question,
+    optionA: q.options[0],
+    optionB: q.options[1],
+    optionC: q.options[2],
+    optionD: q.options[3],
+    answer: typeof q.answer === 'number' ? q.options[q.answer] : q.answer
+  }));
+
+  try {
+    const parser = new Parser({ fields: ['question', 'optionA', 'optionB', 'optionC', 'optionD', 'answer'] });
+    const csv = parser.parse(csvData);
+
+    res.header('Content-Type', 'text/csv');
+    res.attachment(`${quizTitle.replace(/\s+/g, '_')}.csv`);
+    return res.send(csv);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to generate CSV.' });
   }
 });
 

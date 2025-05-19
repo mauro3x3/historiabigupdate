@@ -33,6 +33,7 @@ import { ThemeContextProvider } from '@/contexts/ThemeContext';
 import QuizLibrary from '@/pages/QuizLibrary';
 import LandingPage from "./pages/Index";
 import posthog from 'posthog-js';
+import QuizEditPage from './pages/QuizEditPage';
 
 const queryClient = new QueryClient();
 
@@ -120,6 +121,7 @@ const AppRoutes = () => {
       <Route path="/quiz/:id" element={<QuizPlayPage />} />
       <Route path="/quiz-library" element={<QuizLibrary />} />
       <Route path="/achievements" element={<AllAchievements />} />
+      <Route path="/quiz-edit/:id" element={<QuizEditPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

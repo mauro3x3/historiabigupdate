@@ -181,6 +181,12 @@ const QuizLibrary: React.FC = () => {
                 <Calendar className="h-4 w-4 ml-2" /> {new Date(quiz.created_at).toLocaleDateString()}
               </div>
               <button
+                className="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl text-sm shadow flex items-center gap-2 self-end"
+                onClick={e => { e.stopPropagation(); navigate(`/quiz-edit/${quiz.id}`); }}
+              >
+                Edit
+              </button>
+              <button
                 className="mt-2 bg-timelingo-gold hover:bg-yellow-400 text-white font-bold py-2 px-4 rounded-xl text-sm shadow flex items-center gap-2 self-end"
                 onClick={e => { e.stopPropagation(); navigate(`/quiz/${quiz.id}`); }}
               >
