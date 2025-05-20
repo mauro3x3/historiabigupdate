@@ -1,4 +1,3 @@
-
 import { HistoryEra } from '@/types';
 import mapboxgl from 'mapbox-gl';
 
@@ -25,6 +24,8 @@ export const getEraMapConfig = (era: string): MapConfig => {
         initialZoom: 5,
         projection: { name: 'mercator' } as mapboxgl.ProjectionSpecification
       };
+    case 'ancient-greece':
+    case 'ancient-rome':
     case 'rome-greece':
       return {
         initialCenter: [12.5, 41.9], // Centered on Rome

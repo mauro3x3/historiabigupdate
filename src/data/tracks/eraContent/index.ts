@@ -1,4 +1,3 @@
-
 import { HistoryEra } from '@/types';
 import { ancientEgyptContent } from './ancientEgypt';
 import { romeGreeceContent } from './romeGreece';
@@ -29,6 +28,10 @@ export const getEraContent = (era: HistoryEra): EraContent => {
   switch (era) {
     case 'ancient-egypt':
       return ancientEgyptContent;
+    case 'ancient-greece':
+      return romeGreeceContent; // TODO: Replace with unique Greek content
+    case 'ancient-rome':
+      return romeGreeceContent; // TODO: Replace with unique Roman content
     case 'rome-greece':
       return romeGreeceContent;
     case 'medieval':

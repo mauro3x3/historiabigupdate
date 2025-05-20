@@ -1,9 +1,9 @@
-
 import { HistoryLesson, HistoryScenario } from '@/types';
 
 export const eras = [
   { code: 'ancient-egypt', name: 'Ancient Egypt' },
-  { code: 'rome-greece', name: 'Rome & Greece' },
+  { code: 'ancient-greece', name: 'Ancient Greece' },
+  { code: 'ancient-rome', name: 'Ancient Rome' },
   { code: 'medieval', name: 'Medieval Europe' },
   { code: 'modern', name: 'Modern Era' },
   { code: 'revolutions', name: 'Age of Revolutions' },

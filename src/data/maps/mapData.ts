@@ -49,6 +49,10 @@ export const getHistoricalMapData = (era: string): MapData => {
       return processMapData(jewishMapData);
     case 'ancient-egypt':
       return processMapData(ancientEgyptMapData);
+    case 'ancient-greece':
+      return processMapData(romeGreeceMapData);
+    case 'ancient-rome':
+      return processMapData(romeGreeceMapData);
     case 'rome-greece':
       return processMapData(romeGreeceMapData);
     case 'islamic':

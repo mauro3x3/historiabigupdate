@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface EraLabelProps {
@@ -7,7 +6,8 @@ interface EraLabelProps {
 
 const eraLabels: Record<string, string> = {
   'ancient-egypt': 'Ancient Egypt',
-  'rome-greece': 'Rome & Greece',
+  'ancient-greece': 'Ancient Greece',
+  'ancient-rome': 'Ancient Rome',
   'medieval': 'Medieval',
   'revolutions': 'Revolutions',
   'modern': 'Modern',

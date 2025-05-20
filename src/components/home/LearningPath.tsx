@@ -73,7 +73,8 @@ const LearningPath = (props) => {
   const defaultEraOptions = [
     { code: 'jewish', name: 'Jewish History', emoji: '✡️' },
     { code: 'ancient-egypt', name: 'Ancient Egypt', emoji: '🏺' },
-    { code: 'rome-greece', name: 'Rome & Greece', emoji: '🏛️' },
+    { code: 'ancient-greece', name: 'Ancient Greece', emoji: '��️' },
+    { code: 'ancient-rome', name: 'Ancient Rome', emoji: '🏺' },
     { code: 'medieval', name: 'Medieval', emoji: '🏰' },
     { code: 'revolutions', name: 'Revolutions', emoji: '⚔️' },
     { code: 'modern', name: 'Modern', emoji: '🌍' },

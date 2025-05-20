@@ -12,7 +12,8 @@ import LearningPath from '../components/home/LearningPath';
 
 const ERA_OPTIONS = [
   { code: 'jewish', name: 'Jewish History', emoji: '✡️' },
-  { code: 'rome-greece', name: 'Rome & Greece', emoji: '🏛️' },
+  { code: 'ancient-greece', name: 'Ancient Greece', emoji: '🏛️' },
+  { code: 'ancient-rome', name: 'Ancient Rome', emoji: '🏺' },
   { code: 'china', name: 'Chinese History', emoji: '🐲' },
   { code: 'islamic', name: 'Islamic History', emoji: '☪️' },
   { code: 'christian', name: 'Christian History', emoji: '✝️' },

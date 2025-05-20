@@ -38,14 +38,16 @@ export const getEraTheme = (preferredEra: string | null): EraThemeProps => {
         bgPattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M0 0h20v20H0V0zm10 17L5 7h10l-5 10zm30 0l-5-10h10l-5 10z\' fill=\'%23FBBF24\' fill-opacity=\'0.1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")]',
         name: 'Ancient Egypt'
       };
+    case 'ancient-greece':
+    case 'ancient-rome':
     case 'rome-greece':
       return {
         gradient: 'from-cyan-600 to-blue-500',
         bgGradient: 'from-cyan-50 to-blue-100',
         accent: 'cyan',
         icon: '🏛️',
-        bgPattern: 'bg-[url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M30 30h30v30H30V30zm0-30h30v30H30V0zM0 30h30v30H0V30zM0 0h30v30H0V0z\' fill=\'%230EA5E9\' fill-opacity=\'0.1\' fill-rule=\'evenodd\'/%3E%3C/svg%3E")]',
-        name: 'Rome & Greece'
+        bgPattern: 'bg-[url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 30h30v30H30V30zm0-30h30v30H30V0zM0 30h30v30H0V30zM0 0h30v30H0V0z' fill='%230EA5E9' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E")]',
+        name: 'Ancient Greece & Rome'
       };
     case 'medieval':
       return {

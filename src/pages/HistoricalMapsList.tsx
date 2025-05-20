@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 const availableMaps = [
   { id: 'jewish', name: 'Jewish History', description: 'Explore key events in Jewish historical timeline' },
   { id: 'ancient-egypt', name: 'Ancient Egypt', description: 'Discover the civilization of ancient Egypt' },
-  { id: 'rome-greece', name: 'Rome & Greece', description: 'Navigate through the classical civilizations' },
+  { id: 'ancient-greece', name: 'Ancient Greece', description: 'Navigate through the classical Greek civilization' },
+  { id: 'ancient-rome', name: 'Ancient Rome', description: 'Navigate through the Roman civilization' },
   { id: 'christian', name: 'Christian History', description: 'Explore the spread and development of Christianity' },
   { id: 'islamic', name: 'Islamic History', description: 'Learn about key events in Islamic civilization' }
 ];
@@ -64,7 +65,9 @@ const getMapColor = (mapId: string): string => {
       return 'purple';
     case 'ancient-egypt':
       return 'amber';
-    case 'rome-greece':
+    case 'ancient-greece':
+      return 'green';
+    case 'ancient-rome':
       return 'blue';
     case 'christian':
       return 'green';
