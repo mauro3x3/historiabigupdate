@@ -80,7 +80,8 @@ const UpvotingBoard = () => {
           className="rounded-full bg-[#5865F2] hover:bg-[#4752C4] text-white p-2 shadow transition-colors duration-150 flex items-center justify-center"
           style={{ width: 40, height: 40 }}
         >
-          { (FaDiscord as unknown as React.ComponentType<any>) && React.createElement(FaDiscord as unknown as React.ComponentType<any>, { size: 22 }) }
+          {/* @ts-expect-error react-icons JSX type issue */}
+          <FaDiscord size={22} />
         </a>
         <a
           href={TWITTER_URL}
@@ -90,7 +91,8 @@ const UpvotingBoard = () => {
           className="rounded-full bg-black hover:bg-gray-800 text-white p-2 shadow transition-colors duration-150 flex items-center justify-center"
           style={{ width: 40, height: 40 }}
         >
-          { (FaXTwitter as unknown as React.ComponentType<any>) && React.createElement(FaXTwitter as unknown as React.ComponentType<any>, { size: 22 }) }
+          {/* @ts-expect-error react-icons JSX type issue */}
+          <FaXTwitter size={22} />
         </a>
       </div>
       <h1 className="text-4xl font-bold mb-4 mt-12">Upvoting Board</h1>
