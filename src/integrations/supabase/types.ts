@@ -793,6 +793,27 @@ export type Database = {
           }
         ];
       },
+      wishes: {
+        Row: {
+          id: string;
+          text: string;
+          votes: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          text: string;
+          votes?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          text?: string;
+          votes?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      },
     }
     Views: {
       [_ in never]: never

@@ -34,6 +34,7 @@ import QuizLibrary from '@/pages/QuizLibrary';
 import LandingPage from "./pages/Index";
 import posthog from 'posthog-js';
 import QuizEditPage from './pages/QuizEditPage';
+import UpvotingBoard from "./pages/UpvotingBoard";
 
 const queryClient = new QueryClient();
 
@@ -122,6 +123,7 @@ const AppRoutes = () => {
       <Route path="/quiz-library" element={<QuizLibrary />} />
       <Route path="/achievements" element={<AllAchievements />} />
       <Route path="/quiz-edit/:id" element={<QuizEditPage />} />
+      <Route path="/upvoting-board" element={<UpvotingBoard />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -135,6 +137,7 @@ const NAV_LINKS = [
   { label: 'Games', href: '/map-games', icon: <Gamepad2 className="h-6 w-6" />, locked: true, subItems: [] },
   { label: 'Quiz Your Friends', href: '/quiz-builder', icon: <Sparkles className="h-6 w-6 text-yellow-400" /> },
   { label: 'Explore Eras', href: '/onboarding', icon: <Hourglass className="h-6 w-6" /> },
+  { label: 'Upvoting board', href: '/upvoting-board', icon: <span className="h-6 w-6">⬆️</span>, external: true },
   { label: 'Profile', href: '/profile', icon: <User className="h-6 w-6" /> },
 ];
 
@@ -181,22 +184,42 @@ function GlobalFishbowlMenu() {
           </button>
           {NAV_LINKS.map(link => (
             <React.Fragment key={link.href}>
-              <button
-                type="button"
-                className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg ${link.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
-                tabIndex={open ? 0 : -1}
-                role="menuitem"
-                aria-label={link.label}
-                onClick={() => { if (!link.locked) { setOpen(false); navigate(link.href); } }}
-                disabled={!!link.locked}
-              >
-                <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold text-2xl">
-                  {link.icon}
-                  {link.locked && <Lock className="h-5 w-5 ml-2 text-gray-400" />}
-                </span>
-                {link.label}
-                {link.locked && <span className="ml-2 text-gray-400 text-sm">Locked</span>}
-              </button>
+              {link.external ? (
+                <a
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg ${link.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  tabIndex={open ? 0 : -1}
+                  role="menuitem"
+                  aria-label={link.label}
+                  onClick={() => setOpen(false)}
+                >
+                  <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold text-2xl">
+                    {link.icon}
+                    {link.locked && <Lock className="h-5 w-5 ml-2 text-gray-400" />}
+                  </span>
+                  {link.label}
+                  {link.locked && <span className="ml-2 text-gray-400 text-sm">Locked</span>}
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg ${link.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  tabIndex={open ? 0 : -1}
+                  role="menuitem"
+                  aria-label={link.label}
+                  onClick={() => { if (!link.locked) { setOpen(false); navigate(link.href); } }}
+                  disabled={!!link.locked}
+                >
+                  <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold text-2xl">
+                    {link.icon}
+                    {link.locked && <Lock className="h-5 w-5 ml-2 text-gray-400" />}
+                  </span>
+                  {link.label}
+                  {link.locked && <span className="ml-2 text-gray-400 text-sm">Locked</span>}
+                </button>
+              )}
               {/* Render subItems if present (for Games) */}
               {link.subItems && (
                 <div className="ml-10 flex flex-col gap-1">
