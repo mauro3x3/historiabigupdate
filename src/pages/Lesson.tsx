@@ -457,6 +457,9 @@ const LessonPage = () => {
                onClick={() => setModalImageUrl(mainImage)}
              />
            )}
+          <div className="flex justify-center w-full mb-4">
+            <ReadAloudButton text={lesson.story_content || lesson.description || ''} />
+          </div>
           <div
             ref={storyRef}
             className="w-full prose prose-lg max-w-none mb-8 min-h-[200px] text-center text-gray-800 relative"

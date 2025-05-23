@@ -1,5 +1,10 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/" }
-  ]
+  ],
+  "functions": {
+    "api/functions/v1/create-checkout-session.js": {
+      "runtime": "nodejs18.x"
+    }
+  }
 } 
