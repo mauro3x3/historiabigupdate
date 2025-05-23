@@ -148,6 +148,13 @@ const QuizBuilder: React.FC = () => {
     navigate(`/quiz/${data.id}`);
   };
 
+  // Dolphin sound effect
+  function playDolphinSound() {
+    const audio = new Audio('/sounds/dolphin.mp3');
+    audio.volume = 0.2;
+    audio.play();
+  }
+
   const handleAIGenerate = async () => {
     setAiLoading(true);
     setAiError('');
@@ -192,6 +199,7 @@ const QuizBuilder: React.FC = () => {
         }));
         setQuestions(uiQuestions);
         setTheme(aiPrompt); // Always use the full user input as the theme
+        playDolphinSound();
         // Automatically create the quiz after generation, passing mappedQuestions and the actual user input as topic
         await handleCreate(mappedQuestions, aiPrompt);
       } else {

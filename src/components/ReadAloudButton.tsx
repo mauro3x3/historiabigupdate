@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 // import your TTS utility here
 // import { getDavidSuchetAudio } from '@/utils/tts';
+import PaywallModal from '@/components/paywall/PaywallModal';
 
 interface ReadAloudButtonProps {
   text: string;
   buttonClassName?: string;
+  isPro?: boolean;
 }
 
 // In-memory cache for audio URLs by text
@@ -43,12 +45,17 @@ const getElevenLabsAudio = async (text: string): Promise<string> => {
   return audioUrl;
 };
 
-const ReadAloudButton: React.FC<ReadAloudButtonProps> = ({ text, buttonClassName }) => {
+const ReadAloudButton: React.FC<ReadAloudButtonProps> = ({ text, buttonClassName, isPro }) => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paywallOpen, setPaywallOpen] = useState(false);
 
   const handleReadAloud = async () => {
+    if (!isPro) {
+      setPaywallOpen(true);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -66,7 +73,6 @@ const ReadAloudButton: React.FC<ReadAloudButtonProps> = ({ text, buttonClassName
         className={buttonClassName}
         onClick={handleReadAloud}
         disabled={loading}
-        style={{ display: 'none' }}
         aria-label="Read Out Loud"
       >
         Read Out Loud
@@ -75,6 +81,7 @@ const ReadAloudButton: React.FC<ReadAloudButtonProps> = ({ text, buttonClassName
       {audioUrl && (
         <audio src={audioUrl} controls autoPlay style={{ marginTop: 12, width: '100%' }} />
       )}
+      <PaywallModal open={paywallOpen} onClose={() => setPaywallOpen(false)} />
     </div>
   );
 };

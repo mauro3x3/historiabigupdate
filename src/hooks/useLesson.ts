@@ -13,10 +13,12 @@ export const useLesson = (lessonId: string | undefined, navigate: (path: string)
   const [correctAnswers, setCorrectAnswers] = useState(0);
   const [loading, setLoading] = useState(true);
   const [lessonCompleted, setLessonCompleted] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchLessonData = async () => {
       setLoading(true);
+      setError(null);
       let foundLesson = null;
       try {
         // Always fetch from modules
@@ -31,31 +33,7 @@ export const useLesson = (lessonId: string | undefined, navigate: (path: string)
           console.error("Error fetching module as lesson:", moduleError);
         }
         if (moduleData) {
-          // Fetch module_content for this module
-          let story_content = '';
-          let image_urls = '';
-          try {
-            const contentResponse = await supabase
-              .from('module_content')
-              .select('*')
-              .eq('module_id', moduleData.id)
-              .maybeSingle();
-            const contentData = contentResponse.data;
-            if (contentData) {
-              story_content = contentData.story_text || '';
-              image_urls = Array.isArray(contentData.image_urls) ? contentData.image_urls.join(',') : (contentData.image_urls || '');
-            }
-          } catch (err) {
-            console.error('Error fetching module_content:', err);
-          }
-          // Fallback: if story_content is still empty, use moduleData.story_content if available
-          if (!story_content && moduleData.story_content) {
-            story_content = moduleData.story_content;
-          }
-          // Fallback: if image_urls is still empty, use moduleData.image_url if available
-          if (!image_urls && moduleData.image_url) {
-            image_urls = moduleData.image_url;
-          }
+          // Only use story_content from modules table
           foundLesson = {
             id: String(moduleData.id),
             title: moduleData.title || '',
@@ -69,9 +47,9 @@ export const useLesson = (lessonId: string | undefined, navigate: (path: string)
             lesson_type: moduleData.content_type || 'standard',
             prompt: '',
             character: '',
-            story_content,
+            story_content: moduleData.story_content || '',
             transition_question: '', // default value
-            image_urls,
+            image_urls: moduleData.image_url || '',
             journey_id: moduleData.journey_id
           };
         }
@@ -79,8 +57,9 @@ export const useLesson = (lessonId: string | undefined, navigate: (path: string)
         console.error("Error fetching lesson/module from database:", error);
       }
       if (!foundLesson) {
-        toast.error("Lesson not found");
-        navigate('/dashboard');
+        setError("Lesson not found");
+        setLesson(null);
+        setLoading(false);
         return;
       }
       setLesson(foundLesson);
@@ -100,13 +79,22 @@ export const useLesson = (lessonId: string | undefined, navigate: (path: string)
         }
         if (questionData && questionData.length > 0) {
           // Transform DB data to match our QuizQuestion interface
-          const formattedQuestions: QuizQuestion[] = questionData.map(q => ({
-            question: q.question,
-            options: Array.isArray(q.options) ? q.options.map(opt => String(opt)) : [],
-            correctAnswer: q.correct_answer,
-            explanation: q.explanation || '',
-            lesson_id: foundLesson.id
-          }));
+          const formattedQuestions: QuizQuestion[] = questionData.map(q => {
+            let options: string[] = [];
+            if (Array.isArray(q.options) && q.options.length > 0) {
+              options = q.options.map(opt => String(opt));
+            } else if (q.optionA || q.optionB || q.optionC || q.optionD) {
+              options = [q.optionA, q.optionB, q.optionC, q.optionD].filter(Boolean);
+            }
+            return {
+              question: q.question,
+              options,
+              correctAnswer: q.correct_answer,
+              answer: q.answer,
+              explanation: q.explanation || '',
+              lesson_id: foundLesson.id
+            };
+          });
           setQuestions(formattedQuestions);
         } else {
           // If no questions found, create some dummy ones
@@ -115,12 +103,14 @@ export const useLesson = (lessonId: string | undefined, navigate: (path: string)
               question: 'What is the capital of Ancient Egypt?',
               options: ['Memphis', 'Thebes', 'Alexandria', 'Cairo'],
               correctAnswer: 0,
+              answer: '',
               explanation: 'Memphis was the ancient capital of Aneb-Hetch, the first nome of Lower Egypt.'
             },
             {
               question: 'Who built the Great Pyramid of Giza?',
               options: ['Tutankhamun', 'Khufu', 'Cleopatra', 'Ramesses II'],
               correctAnswer: 1,
+              answer: '',
               explanation: 'The Great Pyramid was built as a tomb for the pharaoh Khufu (also known as Cheops).'
             }
           ]);
@@ -147,6 +137,7 @@ export const useLesson = (lessonId: string | undefined, navigate: (path: string)
     setSelectedAnswer,
     setIsAnswerCorrect,
     setCorrectAnswers,
-    setLessonCompleted
+    setLessonCompleted,
+    error
   };
 };

@@ -54,7 +54,9 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader />
-      <UserStats learningTrack={learningTrack} />
+      <div className="flex flex-col items-center">
+        <UserStats learningTrack={learningTrack} />
+      </div>
     </div>
   );
 };

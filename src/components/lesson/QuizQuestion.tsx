@@ -9,6 +9,7 @@ interface QuizQuestionProps {
   selectedAnswer: number | null;
   isAnswerCorrect: boolean | null;
   correctAnswer: number;
+  answer?: string;
   explanation?: string;
   onAnswerSelect: (answerIndex: number) => void;
 }
@@ -19,6 +20,7 @@ const QuizQuestion = ({
   selectedAnswer,
   isAnswerCorrect,
   correctAnswer,
+  answer,
   explanation,
   onAnswerSelect,
 }: QuizQuestionProps) => {
@@ -49,7 +51,13 @@ const QuizQuestion = ({
           <div className="w-full flex flex-col gap-5">
             {options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = isAnswerCorrect && correctAnswer === index;
+              // Support both old (index) and new (text) answer logic
+              let isCorrect = false;
+              if (isAnswerCorrect && isSelected) {
+                isCorrect = true;
+              } else if (isAnswerCorrect && typeof correctAnswer === 'number' && correctAnswer === index) {
+                isCorrect = true;
+              }
               const isWrong = isAnswerCorrect === false && isSelected;
               return (
                 <button
@@ -83,11 +91,23 @@ const QuizQuestion = ({
           </div>
 
           {/* Feedback/Explanation */}
-          {isAnswerCorrect !== null && explanation && (
+          {isAnswerCorrect !== null && (
             <Alert className={`mt-8 w-full max-w-lg mx-auto rounded-2xl border-2 ${isAnswerCorrect ? 'bg-green-50 border-green-300' : 'bg-yellow-50 border-yellow-300'}`} style={{ fontSize: 18 }}>
               <AlertDescription>
                 <div className="font-bold mb-1">{isAnswerCorrect ? '🎉 Correct!' : '💡 Explanation:'}</div>
-                <div>{explanation}</div>
+                {explanation ? (
+                  <div>{explanation}</div>
+                ) : (
+                  isAnswerCorrect ? (
+                    <div>Great job! You got it right.</div>
+                  ) : null
+                )}
+                {/* Show correct answer if user was wrong */}
+                {isAnswerCorrect === false && (
+                  <div className="mt-3 text-base font-semibold text-green-700">
+                    Correct answer: {answer ? answer : (typeof correctAnswer === 'number' && options[correctAnswer] ? options[correctAnswer] : '')}
+                  </div>
+                )}
               </AlertDescription>
             </Alert>
           )}

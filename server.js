@@ -125,6 +125,75 @@ app.post('/api/quiz-to-csv', (req, res) => {
   }
 });
 
+app.post('/api/explain-term', async (req, res) => {
+  const { term, context } = req.body;
+  if (!term) return res.status(400).json({ error: 'Missing term' });
+  const prompt = `Explain the term "${term}" in 10-15 simple words for a history student. Context: ${context}`;
+  try {
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: 'gpt-3.5-turbo',
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+    const data = await response.json();
+    const message = data.choices && data.choices[0] && data.choices[0].message;
+    const explanation = message && (message.content || message.text || '').trim();
+    if (!explanation) {
+      return res.status(500).json({ error: 'No explanation returned from AI.' });
+    }
+    res.json({ explanation });
+  } catch (err) {
+    res.status(500).json({ error: 'AI error' });
+  }
+});
+
+app.post('/api/add-friend', async (req, res) => {
+  const { senderId, receiverUsername } = req.body;
+  if (!senderId || !receiverUsername) return res.status(400).json({ error: 'Missing info' });
+
+  // Find receiver by username
+  const userRes = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/user_profiles?username=eq.${encodeURIComponent(receiverUsername)}`,
+    {
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+    }
+  );
+  const arr = await userRes.json();
+  const receiver = arr[0];
+  if (!receiver) return res.status(404).json({ error: 'User not found' });
+
+  // Insert friend request
+  const insertRes = await fetch(
+    `${process.env.SUPABASE_URL}/rest/v1/friend_requests`,
+    {
+      method: 'POST',
+      headers: {
+        apikey: process.env.SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${process.env.SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify({
+        sender_id: senderId,
+        receiver_id: receiver.id,
+        status: 'pending'
+      })
+    }
+  );
+  if (!insertRes.ok) return res.status(500).json({ error: 'Could not send request' });
+
+  res.json({ success: true });
+});
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 }); 

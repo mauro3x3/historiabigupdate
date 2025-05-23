@@ -141,6 +141,46 @@ const STREAK_KEY = 'historia_streak';
 const STREAK_DATE_KEY = 'historia_streak_date';
 const STREAK_REWARD_MILESTONE = 5;
 
+// Simple Tooltip component
+const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }) => {
+  const [visible, setVisible] = useState(false);
+  return (
+    <span
+      className="relative inline-block cursor-help"
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+      onTouchStart={e => { e.preventDefault(); setVisible(v => !v); }}
+      tabIndex={0}
+      onFocus={() => setVisible(true)}
+      onBlur={() => setVisible(false)}
+    >
+      {children}
+      {visible && (
+        <span className="absolute left-1/2 -translate-x-1/2 -top-10 z-50 px-3 py-1 bg-gray-900 text-white text-xs rounded shadow-lg whitespace-nowrap pointer-events-none animate-fade-in" style={{ minWidth: 120 }}>
+          {text}
+        </span>
+      )}
+    </span>
+  );
+};
+
+// Utility to get the bounding rect of the current selection
+function getSelectionRect() {
+  const selection = window.getSelection();
+  if (!selection || selection.rangeCount === 0) return null;
+  const range = selection.getRangeAt(0).cloneRange();
+  if (range.collapsed) return null;
+  const rect = range.getBoundingClientRect();
+  return rect;
+}
+
+// Dolphin sound
+function playDolphinSound() {
+  const audio = new Audio('/sounds/dolphin.mp3');
+  audio.volume = 0.2;
+  audio.play();
+}
+
 const LessonPage = () => {
   const { lessonId } = useParams();
   const navigate = useNavigate();
@@ -154,6 +194,10 @@ const LessonPage = () => {
   const [streak, setStreak] = useState(0);
   const [showStreakReward, setShowStreakReward] = useState(false);
   const [nextModuleLoading, setNextModuleLoading] = useState(false);
+  const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
+  const [dolphinButton, setDolphinButton] = useState<{ x: number; y: number; text: string } | null>(null);
+  const [dolphinTooltip, setDolphinTooltip] = useState<{ x: number; y: number; text: string; loading: boolean; answer?: string } | null>(null);
+  const storyRef = useRef<HTMLDivElement>(null);
   
   const {
     lesson,
@@ -168,7 +212,8 @@ const LessonPage = () => {
     setSelectedAnswer,
     setIsAnswerCorrect,
     setCorrectAnswers,
-    setLessonCompleted
+    setLessonCompleted,
+    error
   } = useLesson(lessonId, navigate);
   
   const { 
@@ -289,7 +334,70 @@ const LessonPage = () => {
     setIsAnswerCorrect(null);
     setCorrectAnswers(0);
     setLessonCompleted(false);
-  }, [lessonId]);
+    // If the new lesson has no story, skip story phase
+    if (lesson && !lesson.story_content && !lesson.description) {
+      setShowStoryPhase(false);
+    }
+  }, [lessonId, lesson]);
+
+  // Listen for text selection in the story
+  useEffect(() => {
+    const handleMouseUp = (e: MouseEvent) => {
+      const selection = window.getSelection();
+      if (!selection || selection.rangeCount === 0) {
+        setDolphinButton(null);
+        return;
+      }
+      const text = selection.toString().trim();
+      if (!text || !storyRef.current || !storyRef.current.contains(selection.anchorNode)) {
+        setDolphinButton(null);
+        return;
+      }
+      const rect = getSelectionRect();
+      if (rect) {
+        setDolphinButton({ x: rect.left + rect.width / 2, y: rect.top - 8, text });
+      } else {
+        setDolphinButton(null);
+      }
+    };
+    document.addEventListener('mouseup', handleMouseUp);
+    return () => document.removeEventListener('mouseup', handleMouseUp);
+  }, []);
+
+  // Handler for "Ask the Dolphin"
+  const handleAskDolphin = async () => {
+    if (!dolphinButton) return;
+    setDolphinTooltip({ x: dolphinButton.x, y: dolphinButton.y, text: dolphinButton.text, loading: true });
+    setDolphinButton(null);
+    try {
+      const res = await fetch('/api/explain-term', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          term: dolphinButton.text,
+          context: lesson.story_content || lesson.description || ''
+        })
+      });
+      const data = await res.json();
+      setDolphinTooltip(tt => {
+        if (tt) {
+          playDolphinSound();
+          return { ...tt, loading: false, answer: data.explanation || `No explanation found.` };
+        }
+        return null;
+      });
+    } catch (err) {
+      setDolphinTooltip(tt => tt ? { ...tt, loading: false, answer: 'Sorry, Dolphin is having trouble right now.' } : null);
+    }
+  };
+
+  // Hide tooltip on click elsewhere
+  useEffect(() => {
+    if (!dolphinTooltip) return;
+    const hide = () => setDolphinTooltip(null);
+    document.addEventListener('mousedown', hide);
+    return () => document.removeEventListener('mousedown', hide);
+  }, [dolphinTooltip]);
 
   const moveToNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -312,71 +420,125 @@ const LessonPage = () => {
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-xl text-timelingo-purple">Loading lesson...</div>;
   }
+  if (error) {
+    return <div className="min-h-screen flex items-center justify-center text-xl text-red-500">{error}. Please check your link or try again later.</div>;
+  }
   if (!lesson) {
     return <div className="min-h-screen flex items-center justify-center text-xl text-red-500">Lesson not found. Please check your link or try again later.</div>;
   }
 
-  // Show story phase first (Duolingo-style, now with image and animated text)
+  // Debug logs to verify lesson data
+  console.log('--- STORY PHASE DEBUG ---');
+  console.log('lesson:', lesson);
+  console.log('lesson.story_content:', lesson?.story_content);
+  console.log('lesson.description:', lesson?.description);
+  let mainImage = '';
+  if (lesson.image_urls && lesson.image_urls.split(',').filter(url => url.trim())[0]) {
+    mainImage = lesson.image_urls.split(',').filter(url => url.trim())[0];
+  }
+
+  let storyPhaseContent = null;
   if (showStoryPhase) {
-    let mainImage = '';
-    if (lesson.image_urls && lesson.image_urls.split(',').filter(url => url.trim())[0]) {
-      mainImage = lesson.image_urls.split(',').filter(url => url.trim())[0];
-    }
-    // Debug log for lesson object
-    console.log('Lesson in story phase:', lesson);
-    // Fallback logic for story content
-    const storyText = lesson.story_content || lesson.description || '';
-    return (
+    storyPhaseContent = (
       <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-white to-blue-100 flex flex-col items-center justify-center relative">
         {/* Step badge */}
         <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10">
           <span className="inline-block bg-green-100 text-green-800 text-sm font-semibold px-4 py-1 rounded-full shadow border border-green-200">Step 1 of 2: Story</span>
         </div>
         <div
-          className={`max-w-xl w-full mx-auto p-8 bg-white/90 rounded-3xl shadow-2xl flex flex-col items-center border border-blue-100 backdrop-blur-md${storyFading ? ' fade-out' : ''}`}
+          className="max-w-xl w-full mx-auto p-8 bg-white/90 rounded-3xl shadow-2xl flex flex-col items-center border border-blue-100 backdrop-blur-md"
           style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #e0e7ff 10%, transparent 80%)' }}
         >
           {mainImage && (
-            <img src={mainImage} alt="Story visual" className="w-56 h-56 object-cover rounded-full border-4 border-blue-200 shadow-lg mb-6" />
-          )}
-          {/* Improved Read Out Loud section */}
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            marginBottom: 16,
-            background: '#f5f3ff',
-            borderRadius: 12,
-            padding: 12,
-            boxShadow: '0 2px 8px 0 #e0e7ff'
-          }}>
-            <button style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '6px 16px',
-              borderRadius: 6,
-              background: '#6c47ff',
-              color: 'white',
-              fontWeight: 600,
-              fontSize: 16,
-              marginBottom: 8,
-              cursor: 'pointer',
-              border: 'none',
-              transition: 'transform 0.1s',
-            }}
-            onClick={() => document.querySelector('.read-aloud-btn')?.dispatchEvent(new Event('click', { bubbles: true }))}
-            >
-              <Volume2 size={20} style={{ marginRight: 4 }} />
-              Read Out Loud
-            </button>
-            <div style={{ width: '100%' }}>
-              <ReadAloudButton text={storyText} buttonClassName="read-aloud-btn" />
-            </div>
-          </div>
-          <div className="w-full prose prose-lg max-w-none mb-8 min-h-[200px] text-center text-gray-800" style={{ fontSize: 20, lineHeight: 1.7 }}>
-            <span style={{ whiteSpace: 'pre-line', fontFamily: 'inherit' }}>{animatedStory || storyText || <em>No story or description available for this lesson.</em>}</span>
+             <img
+               src={mainImage}
+               alt="Story visual"
+               className="w-56 h-56 object-cover rounded-full border-4 border-blue-200 shadow-lg mb-6 cursor-pointer hover:scale-105 transition-transform"
+               onClick={() => setModalImageUrl(mainImage)}
+             />
+           )}
+          <div
+            ref={storyRef}
+            className="w-full prose prose-lg max-w-none mb-8 min-h-[200px] text-center text-gray-800 relative"
+            style={{ fontSize: 20, lineHeight: 1.7 }}
+          >
+            {(() => {
+              // Parse the HTML and replace .explain spans with Tooltip
+              const html = lesson.story_content || lesson.description || '<em>No story available.</em>';
+              const parser = new DOMParser();
+              const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+              function renderNode(node: ChildNode, i: number): React.ReactNode {
+                if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+                if (node.nodeType !== Node.ELEMENT_NODE) return null;
+                const el = node as HTMLElement;
+                if (el.classList.contains('explain') && el.dataset.explain) {
+                  return <Tooltip key={i} text={el.dataset.explain}>{el.textContent}</Tooltip>;
+                }
+                // Recursively render children
+                return React.createElement(
+                  el.tagName.toLowerCase(),
+                  { key: i, ...Array.from(el.attributes).reduce((acc, attr) => { acc[attr.name] = attr.value; return acc; }, {}) },
+                  ...Array.from(el.childNodes).map((child, j) => renderNode(child, j))
+                );
+              }
+              return Array.from(doc.body.firstChild?.childNodes || []).map((node, i) => renderNode(node, i));
+            })()}
+            {/* Dolphin button */}
+            {dolphinButton && (
+              <button
+                style={{
+                  position: 'fixed',
+                  left: dolphinButton.x,
+                  top: dolphinButton.y - 48, // place above selection
+                  zIndex: 10000,
+                  transform: 'translate(-50%, -100%)',
+                  minWidth: 120
+                }}
+                className="bg-sky-400 text-white px-5 py-3 rounded-full shadow-2xl border-4 border-white font-bold text-base hover:bg-sky-500 transition flex items-center gap-2 animate-bounce-dolphin"
+                onClick={handleAskDolphin}
+              >
+                <span className="text-2xl">🐬</span>
+                <span className="font-bold">Ask the Dolphin</span>
+              </button>
+            )}
+            <style>{`
+              @keyframes bounce-dolphin {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-10px); }
+              }
+              .animate-bounce-dolphin {
+                animation: bounce-dolphin 1s infinite;
+              }
+            `}</style>
+            {/* Dolphin tooltip */}
+            {dolphinTooltip && (
+              <div
+                style={{
+                  position: 'fixed',
+                  left: dolphinTooltip.x,
+                  top: dolphinTooltip.y - 120, // above selection
+                  zIndex: 10001,
+                  transform: 'translate(-50%, -100%)',
+                  minWidth: 200,
+                  pointerEvents: 'auto',
+                }}
+                className="bg-white border-2 border-sky-400 rounded-2xl shadow-2xl px-6 py-4 text-gray-900 text-base max-w-xs animate-fade-in flex flex-col items-center"
+              >
+                <div className="font-bold mb-2 flex items-center gap-2 text-sky-600 text-lg">
+                  <span className="text-2xl">🐬</span> Dolphin says
+                </div>
+                {/* Placeholder for dolphin animation */}
+                <div className="mb-2">
+                  {/* You can replace this with an animated SVG or GIF */}
+                  <span className="text-3xl">🌊</span>
+                </div>
+                {dolphinTooltip.loading ? (
+                  <span className="italic text-sky-500">Loading...</span>
+                ) : (
+                  <span>{dolphinTooltip.answer}</span>
+                )}
+              </div>
+            )}
           </div>
           <Button
             className="mt-2 px-10 py-3 text-lg bg-green-500 hover:bg-green-600 rounded-full shadow-lg font-bold tracking-wide"
@@ -388,14 +550,6 @@ const LessonPage = () => {
             Continue
           </Button>
         </div>
-        <style>{`
-          .fade-out {
-            animation: fadeOutStory 0.4s forwards;
-          }
-          @keyframes fadeOutStory {
-            to { opacity: 0; transform: scale(0.97) translateY(24px); }
-          }
-        `}</style>
       </div>
     );
   }
@@ -417,100 +571,123 @@ const LessonPage = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <LessonHeader title={lesson?.title || 'Loading...'} />
-      
-      <main className="container mx-auto py-8 px-4">
-        {/* Show lives and streak in a compact status bar */}
-        {!lessonCompleted && (
-          <div className="flex justify-center mb-8">
-            <div className="flex items-center gap-4 px-6 py-2 rounded-full shadow bg-white/80 border border-gray-200" style={{ minWidth: 220 }}>
-              <div className="flex items-center gap-1">
-                {[...Array(MAX_LIVES)].map((_, i) => (
-                  <Heart key={i} className={`w-6 h-6 ${i < lives ? 'text-red-500 fill-red-400' : 'text-gray-300'}`} fill={i < lives ? '#f87171' : 'none'} />
-                ))}
+      {/* Story phase content, if active */}
+      {showStoryPhase ? (
+        storyPhaseContent
+      ) : (
+        <main className="container mx-auto py-8 px-4">
+          {/* Show lives and streak in a compact status bar */}
+          {!lessonCompleted && (
+            <div className="flex justify-center mb-8">
+              <div className="flex items-center gap-4 px-6 py-2 rounded-full shadow bg-white/80 border border-gray-200" style={{ minWidth: 220 }}>
+                <div className="flex items-center gap-1">
+                  {[...Array(MAX_LIVES)].map((_, i) => (
+                    <Heart key={i} className={`w-6 h-6 ${i < lives ? 'text-red-500 fill-red-400' : 'text-gray-300'}`} fill={i < lives ? '#f87171' : 'none'} />
+                  ))}
+                </div>
+                <div className="flex items-center gap-1 text-orange-500 font-bold text-base">
+                  <Flame className="w-5 h-5" />
+                  <span>{streak} day streak</span>
+                </div>
               </div>
-              <div className="flex items-center gap-1 text-orange-500 font-bold text-base">
-                <Flame className="w-5 h-5" />
-                <span>{streak} day streak</span>
-              </div>
+              {showStreakReward && (
+                <div className="ml-4 text-green-600 font-bold animate-bounce">🔥 Streak reward! Bonus XP!</div>
+              )}
             </div>
-            {showStreakReward && (
-              <div className="ml-4 text-green-600 font-bold animate-bounce">🔥 Streak reward! Bonus XP!</div>
-            )}
-          </div>
-        )}
-        {(!lessonCompleted) ? (
-          <>
-            <LessonProgress 
-              currentQuestionIndex={currentQuestionIndex}
-              totalQuestions={questions.length}
-              correctAnswers={correctAnswers}
-            />
-            {questions.length > 0 && questions[currentQuestionIndex] ? (
-              <QuizQuestion
-                question={questions[currentQuestionIndex].question}
-                options={questions[currentQuestionIndex].options}
-                selectedAnswer={selectedAnswer}
-                isAnswerCorrect={isAnswerCorrect}
-                correctAnswer={questions[currentQuestionIndex].correctAnswer}
-                explanation={questions[currentQuestionIndex].explanation}
-                onAnswerSelect={handleAnswerSelect}
+          )}
+          {(!lessonCompleted) ? (
+            <>
+              <LessonProgress 
+                currentQuestionIndex={currentQuestionIndex}
+                totalQuestions={questions.length}
+                correctAnswers={correctAnswers}
               />
-            ) : (
-              <div className="text-red-500 text-center my-8">
-                No quiz questions found for this lesson.
-              </div>
-            )}
-            {questions.length > 0 && (
-              <div className="flex justify-center">
-                <Button 
-                  className="bg-timelingo-purple hover:bg-purple-700"
-                  disabled={selectedAnswer === null || isAnswerCorrect !== null}
-                  onClick={checkAnswer}
-                >
-                  Check Answer
-                </Button>
-              </div>
-            )}
-          </>
-        ) : (
-          // Only show the completion modal when nextModuleLoading is false
-          nextModuleLoading ? (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100/80 via-yellow-50/80 to-purple-100/80 backdrop-blur animate-aurora-fade-in">
-              <div className="bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col items-center max-w-lg w-full border-4 border-yellow-200">
-                <span className="text-2xl font-bold text-timelingo-purple mb-2">Loading next module...</span>
-              </div>
-            </div>
+              {questions.length > 0 && questions[currentQuestionIndex] ? (
+                <QuizQuestion
+                  question={questions[currentQuestionIndex].question}
+                  options={questions[currentQuestionIndex].options}
+                  selectedAnswer={selectedAnswer}
+                  isAnswerCorrect={isAnswerCorrect}
+                  correctAnswer={questions[currentQuestionIndex].correctAnswer}
+                  answer={questions[currentQuestionIndex].answer}
+                  explanation={questions[currentQuestionIndex].explanation}
+                  onAnswerSelect={handleAnswerSelect}
+                />
+              ) : (
+                <div className="text-red-500 text-center my-8">
+                  No quiz questions found for this lesson.
+                </div>
+              )}
+              {questions.length > 0 && (
+                <div className="flex justify-center">
+                  <Button 
+                    className="bg-timelingo-purple hover:bg-purple-700"
+                    disabled={selectedAnswer === null || isAnswerCorrect !== null}
+                    onClick={checkAnswer}
+                  >
+                    Check Answer
+                  </Button>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100/80 via-yellow-50/80 to-purple-100/80 backdrop-blur animate-aurora-fade-in">
-              <div className="bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col items-center max-w-lg w-full border-4 border-yellow-200">
-                <span className="text-4xl font-extrabold text-timelingo-purple mb-2">🎉 Module Completed!</span>
-                <h2 className="text-2xl font-bold mb-4 text-center">{lesson?.title}</h2>
-                <p className="text-lg text-gray-700 mb-6 text-center">
-                  {lesson?.description || "Great job finishing this module!"}
-                </p>
-                <div className="flex gap-4 mt-2 w-full justify-center">
-                  {nextModule ? (
+            // Only show the completion modal when nextModuleLoading is false
+            nextModuleLoading ? (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100/80 via-yellow-50/80 to-purple-100/80 backdrop-blur animate-aurora-fade-in">
+                <div className="bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col items-center max-w-lg w-full border-4 border-yellow-200">
+                  <span className="text-2xl font-bold text-timelingo-purple mb-2">Loading next module...</span>
+                </div>
+              </div>
+            ) : (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100/80 via-yellow-50/80 to-purple-100/80 backdrop-blur animate-aurora-fade-in">
+                <div className="bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col items-center max-w-lg w-full border-4 border-yellow-200">
+                  <span className="text-4xl font-extrabold text-timelingo-purple mb-2">🎉 Module Completed!</span>
+                  <h2 className="text-2xl font-bold mb-4 text-center">{lesson?.title}</h2>
+                  <p className="text-lg text-gray-700 mb-6 text-center">
+                    {lesson?.description || "Great job finishing this module!"}
+                  </p>
+                  <div className="flex gap-4 mt-2 w-full justify-center">
                     <Button
                       className="px-8 py-3 text-lg bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white rounded-full shadow-lg font-bold tracking-wide"
-                      onClick={() => navigate(`/lesson/${nextModule.id}`)}
+                      onClick={() => nextModule && nextModule.id && navigate(`/lesson/${nextModule.id}`)}
+                      disabled={!nextModule || !nextModule.id}
                     >
                       Next Module
                     </Button>
-                  ) : (
-                    <span className="text-sm text-gray-400 mt-2">No next module found. (Check journey_id and level in Supabase)</span>
-                  )}
-                  <Button
-                    className="px-8 py-3 text-lg bg-timelingo-purple hover:bg-purple-700 text-white rounded-full shadow-lg font-bold tracking-wide"
-                    onClick={() => navigate('/dashboard')}
-                  >
-                    Return to Profile
-                  </Button>
+                    <Button
+                      className="px-8 py-3 text-lg bg-timelingo-purple hover:bg-purple-700 text-white rounded-full shadow-lg font-bold tracking-wide"
+                      onClick={() => navigate('/dashboard')}
+                    >
+                      Return to Profile
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-        )}
-      </main>
+            )
+          )}
+        </main>
+      )}
+      {/* Image Modal (always available) */}
+      {modalImageUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm"
+          onClick={() => setModalImageUrl(null)}
+        >
+          <img
+            src={modalImageUrl}
+            alt="Full story visual"
+            className="max-w-3xl max-h-[80vh] rounded-2xl shadow-2xl border-4 border-blue-200 bg-white"
+            onClick={e => e.stopPropagation()}
+          />
+          <button
+            className="absolute top-8 right-8 text-white text-3xl font-bold bg-black/40 rounded-full px-4 py-2 hover:bg-black/70 transition"
+            onClick={() => setModalImageUrl(null)}
+            aria-label="Close image modal"
+          >
+            ×
+          </button>
+        </div>
+      )}
     </div>
   );
 };

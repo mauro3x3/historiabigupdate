@@ -79,6 +79,83 @@ interface FeaturedCourse {
   emoji: string;
 }
 
+function ChangeUsername({ user, onUsernameChange }) {
+  const [username, setUsername] = useState(user?.username || '');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [editing, setEditing] = useState(false);
+  useEffect(() => {
+    setUsername(user?.username || '');
+  }, [user]);
+  const handleSave = async () => {
+    setError('');
+    if (!username.trim()) return;
+    setLoading(true);
+    const { error } = await supabase
+      .from('user_profiles')
+      .update({ username })
+      .eq('id', user.id);
+    setLoading(false);
+    if (!error) {
+      toast.success('Username updated!');
+      onUsernameChange?.(username);
+      setEditing(false);
+    } else if (error.code === '23505' || (error.message && error.message.includes('unique'))) {
+      setError('That username is already taken.');
+    } else {
+      setError('Failed to update username.');
+    }
+  };
+  const handleCancel = () => {
+    setUsername(user?.username || '');
+    setError('');
+    setEditing(false);
+  };
+  if (!editing) {
+    return (
+      <div className="mb-4 flex items-center gap-3 w-full">
+        <span className="text-lg font-semibold text-timelingo-navy">{user?.username || 'No username set'}</span>
+        <button
+          className="px-3 py-1 rounded bg-timelingo-gold text-timelingo-navy font-bold shadow hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors text-sm"
+          onClick={() => setEditing(true)}
+        >
+          Change Username
+        </button>
+      </div>
+    );
+  }
+  return (
+    <div className="mb-4 flex flex-col items-start gap-2 w-full animate-fade-in">
+      <label className="text-sm font-semibold text-timelingo-navy mb-1">Username</label>
+      <div className="flex gap-2 w-full">
+        <input
+          type="text"
+          value={username}
+          onChange={e => setUsername(e.target.value)}
+          className="rounded border px-2 py-1 flex-1"
+          placeholder="Enter new username"
+        />
+        <button
+          onClick={handleSave}
+          disabled={loading}
+          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+        >
+          {loading ? 'Saving...' : 'Save'}
+        </button>
+        <button
+          onClick={handleCancel}
+          className="text-gray-500 underline text-sm hover:text-gray-700 focus:outline-none"
+          type="button"
+        >
+          Cancel
+        </button>
+      </div>
+      {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
+      <style>{`.animate-fade-in { animation: fadeIn 0.3s; } @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: none; } }`}</style>
+    </div>
+  );
+}
+
 export default function UserStats(props) {
   const { user, xp, streak, signOut, completedEras, preferredEra, setPreferredEra } = useUser();
   const navigate = useNavigate();
@@ -93,7 +170,7 @@ export default function UserStats(props) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const profileUrl = `${window.location.origin}/profile/${user?.id}`;
-  const [featuredCourses, setFeaturedCourses] = useState<FeaturedCourse[]>(ALL_COURSES.slice(0, 3));
+  const [featuredCourses, setFeaturedCourses] = useState<FeaturedCourse[]>(ALL_COURSES.slice(0, 4));
   const { handleDragEnd: handleCourseDragEnd } = useFeaturedCourses(featuredCourses, setFeaturedCourses);
   const [profileTab, setProfileTab] = useState('avatar');
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
@@ -438,6 +515,7 @@ export default function UserStats(props) {
                   <button className={`px-3 py-1 rounded ${profileTab === 'avatar' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-white/10 text-white'}`} onClick={() => setProfileTab('avatar')}>Avatar</button>
                   <button className={`px-3 py-1 rounded ${profileTab === 'courses' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-white/10 text-white'}`} onClick={() => setProfileTab('courses')}>Featured Courses</button>
                   <button className={`px-3 py-1 rounded ${profileTab === 'badges' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-white/10 text-white'}`} onClick={() => setProfileTab('badges')}>Badges</button>
+                  <button className={`px-3 py-1 rounded ${profileTab === 'username' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-white/10 text-white'}`} onClick={() => setProfileTab('username')}>Change Username</button>
                 </div>
                 {/* Avatar Tab */}
                 {profileTab === 'avatar' && (
@@ -516,6 +594,9 @@ export default function UserStats(props) {
                       )) : <div className="text-white/70 text-sm">No badges yet. Keep going to unlock some!</div>}
                     </div>
                   </div>
+                )}
+                {profileTab === 'username' && (
+                  <ChangeUsername user={user} onUsernameChange={setDisplayName} />
                 )}
                 {profileTab !== 'courses' && (
                   <DialogFooter className="mt-6">

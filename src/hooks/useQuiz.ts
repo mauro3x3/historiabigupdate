@@ -30,8 +30,20 @@ export const useQuiz = (
     
     const currentQuestion = questions[currentQuestionIndex];
     if (!currentQuestion) return;
-    
-    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+
+    let isCorrect = false;
+    if (typeof currentQuestion.correctAnswer === 'number' && currentQuestion.options[currentQuestion.correctAnswer] !== undefined) {
+      // Old format: index
+      isCorrect = (selectedAnswer === currentQuestion.correctAnswer);
+    } else if (currentQuestion.answer) {
+      // New format: text, ultra-robust comparison
+      const selectedOption = (currentQuestion.options[selectedAnswer ?? -1] || '').trim().toLowerCase();
+      const correctAnswer = currentQuestion.answer.trim().toLowerCase();
+      const stripPrefix = (str: string) => str.replace(/^[A-D]\.[ ]*/, '');
+      const normalize = (str: string) => stripPrefix(str).replace(/[^a-z0-9]/gi, '');
+      isCorrect = (normalize(selectedOption) === normalize(correctAnswer));
+    }
+
     setIsAnswerCorrect(isCorrect);
     
     // Just update correct answers (sound is handled in QuizQuestion component)
