@@ -603,7 +603,7 @@ export default function UserStats(props) {
                     <DialogClose asChild>
                       <button className="px-5 py-2 rounded-full bg-gray-200 text-timelingo-navy font-semibold shadow hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors">Cancel</button>
                     </DialogClose>
-                    <button className="px-5 py-2 rounded-full bg-timelingo-gold text-timelingo-navy font-bold shadow hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors" onClick={() => { setShowProfileModal(false); setAvatarBase(selectedAvatar); /* Save featuredCourses and showcaseBadges to user profile here */ }}>Save</button>
+                    <button className="px-5 py-2 rounded-full bg-timelingo-gold text-timelingo-navy font-bold shadow hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors" onClick={handleAvatarSave} disabled={isSaving}>Save</button>
                   </DialogFooter>
                 )}
               </DialogContent>
@@ -708,26 +708,6 @@ export default function UserStats(props) {
         )}
         {(!badgesLoading && (!badges || badges.length === 0)) && (
           <></>
-        )}
-        {/* Recent Activity Section */}
-        {activityLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading activity...</div>}
-        {activityError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{activityError}</div>}
-        {(!activityLoading && activity?.length > 0) && (
-          <div className="w-full max-w-5xl mb-8 px-10">
-            <h3 className="text-xl font-bold text-white mb-3">Recent Activity</h3>
-            <div className="flex flex-col gap-2">
-              {activity.map(a => (
-                <div key={a.id} className="flex flex-row items-center gap-4 bg-white/10 rounded-lg p-3 shadow border border-white/10">
-                  <span className="font-bold text-timelingo-gold">{a.type}</span>
-                  <span className="text-white/90">{a.description}</span>
-                  <span className="text-xs text-white/60 ml-auto">{new Date(a.date).toLocaleString()}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {(!activityLoading && (!activity || activity.length === 0)) && (
-          <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">No recent activity yet. Start learning to see your progress here!</div>
         )}
         {/* Friends Section */}
         {friendsLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading friends...</div>}
