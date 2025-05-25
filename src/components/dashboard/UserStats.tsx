@@ -16,6 +16,8 @@ import { useUserBadges } from '@/hooks/useUserBadges';
 import { useUserFriends } from '@/hooks/useUserFriends';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useFeaturedCourses } from '@/hooks/useFeaturedCourses';
+import LeaderboardPage from "@/components/leaderboard/LeaderboardPage";
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 const MOTIVATIONAL_QUOTES = [
   "Keep going! Every day is progress.",
@@ -159,16 +161,34 @@ function ChangeUsername({ user, onUsernameChange }) {
   );
 }
 
-export default function UserStats(props) {
-  const { user, xp, streak, signOut, completedEras, preferredEra, setPreferredEra } = useUser();
+export interface UserStatsProps {
+  userId?: string;
+  learningTrack?: any;
+}
+
+export default function UserStats(props: UserStatsProps) {
+  const { userId, learningTrack } = props;
+  const isPublic = !!userId;
+  const { user, xp: myXp, streak: myStreak, completedEras: myCompletedEras, preferredEra: myPreferredEra, setPreferredEra: setMyPreferredEra } = useUser();
+  const { xp, streak, completedEras, preferredEra, username, avatar_base, featured_eras, badges, achievements, created_at } = useUserProfile(userId || user?.id);
+  // Use the correct data depending on view
+  const displayXp = isPublic ? xp : myXp;
+  const displayStreak = isPublic ? streak : myStreak;
+  const displayCompletedEras = isPublic ? completedEras : myCompletedEras;
+  const displayPreferredEra = isPublic ? preferredEra : myPreferredEra;
+  const displayUsername = isPublic ? username : (user?.username || user?.email?.split('@')[0] || 'Historian');
+  const displayAvatar = isPublic ? avatar_base : (user?.user_metadata?.avatar_base || 'mascot');
+  const displayFeaturedEras = (isPublic ? featured_eras : undefined) || [];
+  const displayBadges = (isPublic ? badges : undefined) || [];
+  const displayAchievements = (isPublic ? achievements : undefined) || [];
+  const displayCreatedAt = isPublic ? created_at : user?.created_at;
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [displayName, setDisplayName] = useState(user?.email?.split('@')[0] || "Historian");
   const [showEraSelector, setShowEraSelector] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [avatarBase, setAvatarBase] = useState(user?.user_metadata?.avatar_base || 'mascot');
-  const [selectedAvatar, setSelectedAvatar] = useState(avatarBase);
+  const [selectedAvatar, setSelectedAvatar] = useState(displayAvatar);
   const [isSaving, setIsSaving] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -186,6 +206,8 @@ export default function UserStats(props) {
   const [savingFeaturedEras, setSavingFeaturedEras] = useState(false);
   const [selectedFeaturedEras, setSelectedFeaturedEras] = useState<string[]>([]);
   const [eraProgressData, setEraProgressData] = useState([]);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardType, setLeaderboardType] = useState<'xp' | 'streak'>('xp');
   
   // Load the username and avatar from the database when the component mounts
   useEffect(() => {
@@ -202,7 +224,7 @@ export default function UserStats(props) {
           setDisplayName(data.username);
         }
         if (data && data.avatar_base) {
-          setAvatarBase(data.avatar_base);
+          setSelectedAvatar(data.avatar_base);
         }
       } catch (error) {
         console.error('Error loading user profile:', error);
@@ -221,8 +243,8 @@ export default function UserStats(props) {
   
   // Placeholder XP progress calculation
   const xpForNextLevel = 500;
-  const level = Math.floor(xp / xpForNextLevel) + 1;
-  const xpPercent = Math.min(100, Math.round((xp % xpForNextLevel) / xpForNextLevel * 100));
+  const level = Math.floor(displayXp / xpForNextLevel) + 1;
+  const xpPercent = Math.min(100, Math.round((displayXp % xpForNextLevel) / xpForNextLevel * 100));
   
   // Dummy values for journey progress (replace with real data if available)
   const totalModules = props.totalModules || 12;
@@ -231,7 +253,7 @@ export default function UserStats(props) {
   
   // Open modal and reset selection
   const openAvatarModal = () => {
-    setSelectedAvatar(avatarBase);
+    setSelectedAvatar(displayAvatar);
     setShowAvatarModal(true);
   };
 
@@ -248,9 +270,9 @@ export default function UserStats(props) {
           .eq('id', user.id)
           .single();
         if (!error && data && data.avatar_base) {
-          setAvatarBase(data.avatar_base);
+          setSelectedAvatar(data.avatar_base);
         } else {
-          setAvatarBase(selectedAvatar); // fallback
+          setSelectedAvatar(selectedAvatar); // fallback
         }
         // Unlock Profile Pro achievement
         await unlockAchievement(user.id, 'customize_avatar');
@@ -295,7 +317,7 @@ export default function UserStats(props) {
   };
 
   // Add this before the return statement
-  const allLessons = props.learningTrack ? props.learningTrack.flatMap(level => level.lessons || []) : [];
+  const allLessons = learningTrack ? learningTrack.flatMap(level => level.lessons || []) : [];
   let currentModuleTitle = 'None';
   if (allLessons.length > 0) {
     const firstIncomplete = allLessons.find(lesson => !lesson.progress?.completed);
@@ -307,10 +329,8 @@ export default function UserStats(props) {
   }
 
   // Fetch dynamic data from Supabase
-  const { badges, loading: badgesLoading, error: badgesError } = useUserBadges(user?.id);
   const { friends, loading: friendsLoading, error: friendsError } = useUserFriends(user?.id);
   const { activity, loading: activityLoading, error: activityError } = useUserActivity(user?.id);
-  const achievements = useUserAchievements(user?.id);
 
   // Remove the old loading and error states since they're now handled by the hooks
   const [achievementsLoading, setAchievementsLoading] = useState(true);
@@ -480,6 +500,12 @@ export default function UserStats(props) {
     return { percent, completed: prog.completed_modules, total: prog.total_modules };
   }
 
+  // Leaderboard modal state
+  const openLeaderboard = (type: 'xp' | 'streak') => {
+    setLeaderboardType(type);
+    setShowLeaderboard(true);
+  };
+
   return (
     <div className="min-h-screen w-full bg-gradient-to-br from-timelingo-navy/95 to-purple-900/90 flex flex-col lg:flex-row items-start justify-start py-10 relative overflow-x-hidden">
       {/* Animated/Blurred Background Shapes */}
@@ -493,7 +519,7 @@ export default function UserStats(props) {
           <div className="flex flex-col items-center md:items-start gap-4 min-w-[180px]">
             <div className="relative">
                   <img
-                    src={AVATAR_OPTIONS.find(opt => opt.key === avatarBase)?.src || AVATAR_OPTIONS[0].src}
+                    src={AVATAR_OPTIONS.find(opt => opt.key === selectedAvatar)?.src || AVATAR_OPTIONS[0].src}
                     alt={displayName + "'s avatar"}
                 className="w-32 h-32 object-contain drop-shadow-xl rounded-full border-4 border-timelingo-gold bg-gradient-to-br from-yellow-200 via-timelingo-gold to-purple-200"
               />
@@ -589,7 +615,7 @@ export default function UserStats(props) {
                   <div>
                     <div className="mb-2 text-sm text-white/80">Your badges:</div>
                     <div className="flex gap-4 flex-wrap">
-                      {badges.length > 0 ? badges.map((b) => (
+                      {displayBadges?.length > 0 ? displayBadges.map((b) => (
                         <div key={b.badge_id} className={`w-16 h-16 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group ${!b.date_earned ? 'grayscale opacity-60' : ''}`}>
                           <img src={b.badge?.icon_url || '/default-badge.png'} alt={b.badge?.name} className="w-8 h-8 mb-1" />
                           <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{b.badge?.name}</span>
@@ -616,15 +642,15 @@ export default function UserStats(props) {
           <div className="flex-1 flex flex-col items-center md:items-start gap-2">
             <div className="flex items-center gap-3">
               <h2 className="text-3xl font-extrabold text-white drop-shadow-sm">{displayName}</h2>
-              <span className="bg-timelingo-teal/80 text-white px-3 py-1 rounded-full text-xs font-semibold shadow border border-white/10">{user?.created_at ? `${Math.max(1, new Date().getFullYear() - new Date(user.created_at).getFullYear())} Years of Service` : 'New Scholar'}</span>
+              <span className="bg-timelingo-teal/80 text-white px-3 py-1 rounded-full text-xs font-semibold shadow border border-white/10">{displayCreatedAt ? `${Math.max(1, new Date().getFullYear() - new Date(displayCreatedAt).getFullYear())} Years of Service` : 'New Scholar'}</span>
             </div>
-            <div className="text-sm text-white/80 mt-1">Historian since {user?.created_at ? new Date(user.created_at).getFullYear() : '2024'}</div>
+            <div className="text-sm text-white/80 mt-1">Historian since {displayCreatedAt ? new Date(displayCreatedAt).getFullYear() : '2024'}</div>
             {/* XP Progress Bar */}
             <div className="w-full max-w-md mt-4">
             <div className="flex justify-between items-center text-xs mb-1 w-full">
               <span className="font-semibold text-white/90">XP</span>
               <span className="font-semibold text-yellow-300">Level {level}</span>
-              <span className="text-white/80">{xp % xpForNextLevel} / {xpForNextLevel} XP</span>
+              <span className="text-white/80">{displayXp % xpForNextLevel} / {xpForNextLevel} XP</span>
             </div>
             <div className="w-full h-3 bg-white/30 rounded-full overflow-hidden relative">
               <div
@@ -640,20 +666,21 @@ export default function UserStats(props) {
             {/* Compact Stats Row */}
             <div className="w-full max-w-md mt-4 flex flex-row justify-between items-center gap-0 rounded-xl bg-gradient-to-br from-white/10 to-timelingo-navy/20 shadow border border-white/10 backdrop-blur-xl overflow-hidden">
               {[
-                { value: streak, label: 'Streak', color: 'text-timelingo-teal' },
-                { value: completedEras.length, label: 'Eras', color: 'text-timelingo-gold' },
-                { value: '-', label: 'Achv.', color: 'text-timelingo-purple' },
-                { value: xp, label: 'XP', color: 'text-white' },
+                { value: displayStreak, label: 'Streak', color: 'text-timelingo-teal', type: 'streak' as 'xp' | 'streak' },
+                { value: displayCompletedEras.length, label: 'Eras', color: 'text-timelingo-gold', type: 'xp' as 'xp' | 'streak' },
+                { value: '-', label: 'Achv.', color: 'text-timelingo-purple', type: 'xp' as 'xp' | 'streak' },
+                { value: displayXp, label: 'XP', color: 'text-white', type: 'xp' as 'xp' | 'streak' },
               ].map((stat, idx, arr) => (
                 <div
                   key={stat.label}
                   className={`flex-1 flex flex-col items-center justify-center py-2 transition-all duration-200 cursor-pointer group text-xs ${idx < arr.length - 1 ? 'border-r border-white/10' : ''}`}
+                  onClick={() => openLeaderboard(stat.type)}
                 >
                   <span className={`text-xl font-extrabold drop-shadow ${stat.color} group-hover:scale-110 group-hover:text-yellow-300 transition-all`}>{stat.value}</span>
                   <span className="text-xs text-white/80 font-semibold mt-1 tracking-wide group-hover:text-white transition-all">{stat.label}</span>
-          </div>
+                </div>
               ))}
-          </div>
+            </div>
           </div>
         </div>
         {/* Featured Courses Row */}
@@ -673,11 +700,11 @@ export default function UserStats(props) {
           </div>
         </div>
         {/* Achievements Section */}
-        {(!achievementsLoading && achievements.length > 0) && (
+        {(!achievementsLoading && displayAchievements?.length > 0) && (
         <div className="w-full max-w-5xl mb-8 px-10">
           <h3 className="text-xl font-bold text-white mb-3">Achievements</h3>
           <div className="flex flex-row gap-4 flex-wrap">
-            {achievements.map(a => (
+            {displayAchievements.map(a => (
               <div key={a.achievement_id} className="flex flex-col items-center bg-white/10 rounded-xl p-4 shadow border border-white/10 min-w-[120px]">
                 <img src={a.achievement?.icon_url || '/default-badge.png'} alt={a.achievement?.name} className="w-10 h-10 mb-2" />
                 <span className="font-semibold text-white">{a.achievement?.name}</span>
@@ -688,40 +715,23 @@ export default function UserStats(props) {
           </div>
         </div>
         )}
-        {(!achievementsLoading && achievements.length === 0) && (
+        {(!achievementsLoading && displayAchievements?.length === 0) && (
           <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">No achievements yet. Start learning to earn some!</div>
         )}
         {achievementsLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading achievements...</div>}
         {achievementsError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{achievementsError}</div>}
         {/* Badges Section */}
-        {badgesLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading badges...</div>}
-        {badgesError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{badgesError}</div>}
-        {(!badgesLoading && badges?.length > 0) && (
-          <div>
-            <h4 className="text-lg font-bold text-white mb-3">Badges</h4>
-            <div className="flex flex-wrap gap-3">
-              {badges.map((b, idx) => (
-                <div key={b.badge_id} className={`w-14 h-14 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group ${!b.date_earned ? 'grayscale opacity-60' : ''}`}>
-                  <img src={b.badge?.icon_url || '/default-badge.png'} alt={b.badge?.name} className="w-8 h-8 mb-1" />
-                  <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{b.badge?.name}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        {(!badgesLoading && (!badges || badges.length === 0)) && (
-          <></>
-        )}
+        {/* Removed bottom badges section from profile page. Only show badges in the sidebar/right section. */}
         {/* Friends Section */}
         {friendsLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading friends...</div>}
         {friendsError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{friendsError}</div>}
-        {(!friendsLoading && friends?.length > 0) && (
+        {(!friendsLoading && displayBadges?.length > 0) && (
           <div className="w-full max-w-5xl mb-8 px-10">
             <h3 className="text-xl font-bold text-white mb-3">Friends</h3>
             <div className="flex flex-col gap-2">
-              {friends.map((f, idx) => (
+              {displayBadges.map((f, idx) => (
                 <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
-                  <img src={f.friend?.avatar_base ? AVATAR_OPTIONS.find(opt => opt.key === f.friend.avatar_base)?.src : AVATAR_OPTIONS[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
+                  <img src={AVATAR_OPTIONS.find(opt => opt.key === f.friend?.avatar_base)?.src || AVATAR_OPTIONS[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
                   <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
                   <button className="ml-auto px-2 py-1 rounded bg-red-500 text-white text-xs" onClick={() => handleRemoveFriend(f.friend_id)}>Remove</button>
                 </div>
@@ -729,7 +739,7 @@ export default function UserStats(props) {
             </div>
           </div>
         )}
-        {(!friendsLoading && (!friends || friends.length === 0)) && (
+        {(!friendsLoading && (!displayBadges || displayBadges.length === 0)) && (
           <></>
         )}
       </div>
@@ -737,11 +747,11 @@ export default function UserStats(props) {
       <aside className="w-full lg:w-[320px] flex-shrink-0 mt-10 lg:mt-0 lg:ml-8 px-6 lg:px-0 sticky top-10 z-30">
         <div className="rounded-2xl bg-white/20 backdrop-blur-2xl shadow-2xl border border-timelingo-gold/30 p-6 flex flex-col gap-8 transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(255,215,0,0.10)]">
           {/* Badges */}
-          {badges.length > 0 ? (
+          {displayBadges?.length > 0 ? (
             <div>
               <h4 className="text-lg font-bold text-white mb-3">Badges</h4>
               <div className="flex flex-wrap gap-3">
-                {badges.map((b, idx) => (
+                {displayBadges.map((b, idx) => (
                   <div key={b.badge_id} className={`w-14 h-14 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group ${!b.date_earned ? 'grayscale opacity-60' : ''}`}>
                     <img src={b.badge?.icon_url || '/default-badge.png'} alt={b.badge?.name} className="w-8 h-8 mb-1" />
                     <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{b.badge?.name}</span>
@@ -779,12 +789,12 @@ export default function UserStats(props) {
           <div>
             <h4 className="text-lg font-bold text-white mb-3">Friends</h4>
             <div className="flex flex-col gap-2">
-              {friends.length === 0 && (
+              {displayBadges?.length === 0 && (
                 <div className="text-white/70 text-xs">No friends yet.</div>
               )}
-              {friends.map((f, idx) => (
+              {displayBadges?.map((f, idx) => (
                 <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
-                  <img src={f.friend?.avatar_base ? AVATAR_OPTIONS.find(opt => opt.key === f.friend.avatar_base)?.src : AVATAR_OPTIONS[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
+                  <img src={AVATAR_OPTIONS.find(opt => opt.key === f.friend?.avatar_base)?.src || AVATAR_OPTIONS[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
                   <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
                   <button className="ml-auto px-2 py-1 rounded bg-red-500 text-white text-xs" onClick={() => handleRemoveFriend(f.friend_id)}>Remove</button>
                 </div>
@@ -844,6 +854,11 @@ export default function UserStats(props) {
           background-image: repeating-linear-gradient(135deg,rgba(255,255,255,0.02) 0 8px,transparent 8px 16px);
           }
         `}</style>
+      <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
+        <DialogContent className="max-w-3xl w-full">
+          <LeaderboardPage initialType={leaderboardType} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

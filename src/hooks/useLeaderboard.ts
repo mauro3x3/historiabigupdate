@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -44,7 +43,6 @@ export function useLeaderboard(type: 'xp' | 'streak') {
       
       console.log(`Found ${data.length} users for leaderboard`);
       
-      // Transform and add rank
       return data.map((profile, index) => ({
         id: profile.id,
         username: profile.username || profile.email?.split('@')[0] || 'Anonymous User',

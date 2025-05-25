@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { HistoryEra } from '@/types';
@@ -9,6 +8,9 @@ export const useUserProfile = (userId: string | undefined) => {
   const [streak, setStreak] = useState(0);
   const [completedEras, setCompletedEras] = useState<string[]>([]);
   const [preferredEra, setPreferredEra] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>('');
+  const [avatarBase, setAvatarBase] = useState<string>('mascot');
+  const [createdAt, setCreatedAt] = useState<string | null>(null);
 
   const fetchUserProfile = async (userId: string) => {
     try {
@@ -27,8 +29,10 @@ export const useUserProfile = (userId: string | undefined) => {
         setStreak(profileData.streak || 0);
         setCompletedEras(profileData.completed_eras || []);
         setPreferredEra(profileData.preferred_era || null);
+        setUsername(profileData.username || '');
+        setAvatarBase(profileData.avatar_base || 'mascot');
+        setCreatedAt(profileData.created_at || null);
       }
-
       return profileData;
     } catch (error) {
       console.error('Error fetching user profile:', error);
@@ -140,6 +144,12 @@ export const useUserProfile = (userId: string | undefined) => {
     streak,
     completedEras,
     preferredEra,
+    username,
+    avatar_base: avatarBase,
+    featured_eras: [],
+    badges: [],
+    achievements: [],
+    created_at: createdAt,
     fetchUserProfile,
     addXp,
     incrementStreak,

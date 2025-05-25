@@ -35,6 +35,7 @@ import posthog from 'posthog-js';
 import QuizEditPage from './pages/QuizEditPage';
 import UpvotingBoard from "./pages/UpvotingBoard";
 import AiWhale from "./pages/AiWhale";
+import ProfilePublic from './pages/ProfilePublic';
 
 const queryClient = new QueryClient();
 
@@ -73,6 +74,7 @@ const AppRoutes = () => {
           <Profile />
         </ProtectedRoute>
       } />
+      <Route path="/profile/:id" element={<ProfilePublic />} />
       <Route path="/leaderboard" element={
         <ProtectedRoute>
           <Leaderboard />
