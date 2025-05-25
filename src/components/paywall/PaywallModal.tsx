@@ -29,7 +29,7 @@ const PaywallModal: React.FC<PaywallModalProps> = ({ open, onClose }) => {
       return;
     }
     try {
-      const res = await fetch('/functions/v1/create-checkout-session', {
+      const res = await fetch('/api/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id, email }),
