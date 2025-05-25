@@ -35,6 +35,7 @@ import LandingPage from "./pages/Index";
 import posthog from 'posthog-js';
 import QuizEditPage from './pages/QuizEditPage';
 import UpvotingBoard from "./pages/UpvotingBoard";
+import AiWhale from "./pages/AiWhale";
 
 const queryClient = new QueryClient();
 
@@ -78,11 +79,6 @@ const AppRoutes = () => {
           <Leaderboard />
         </ProtectedRoute>
       } />
-      <Route path="/all-lessons" element={
-        <ProtectedRoute>
-          <AllLessons />
-        </ProtectedRoute>
-      } />
       <Route path="/lesson/:lessonId" element={
         <ProtectedRoute>
           <Lesson />
@@ -124,6 +120,7 @@ const AppRoutes = () => {
       <Route path="/achievements" element={<AllAchievements />} />
       <Route path="/quiz-edit/:id" element={<QuizEditPage />} />
       <Route path="/upvoting-board" element={<UpvotingBoard />} />
+      <Route path="/ai-whale" element={<AiWhale />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
@@ -131,14 +128,11 @@ const AppRoutes = () => {
 
 const NAV_LINKS = [
   { label: 'Home', href: '/home', icon: <HomeIcon className="h-6 w-6" /> },
-  { label: 'Videos', href: '/videos', icon: <Film className="h-6 w-6" /> },
-  { label: 'All Lessons', href: '/all-lessons', icon: <BookOpen className="h-6 w-6" />, locked: true },
-  { label: 'Maps', href: '/historical-map/list', icon: <Map className="h-6 w-6" />, locked: true },
-  { label: 'Games', href: '/map-games', icon: <Gamepad2 className="h-6 w-6" />, locked: true, subItems: [] },
   { label: 'Quiz Your Friends', href: '/quiz-builder', icon: <Sparkles className="h-6 w-6 text-yellow-400" /> },
   { label: 'Explore Eras', href: '/onboarding', icon: <Hourglass className="h-6 w-6" /> },
   { label: 'Upvoting board', href: '/upvoting-board', icon: <span className="h-6 w-6">⬆️</span>, external: true },
   { label: 'Profile', href: '/profile', icon: <User className="h-6 w-6" /> },
+  { label: 'AI Whale', href: '/ai-whale', icon: <span className="h-6 w-6">🐋</span> },
 ];
 
 function GlobalFishbowlMenu() {

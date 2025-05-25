@@ -67,3 +67,27 @@ Simply open [Lovable](https://lovable.dev/projects/6c0e4019-ae81-4d05-a388-6c457
 ## I want to use a custom domain - is that possible?
 
 We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+
+## AI Whale: Wikipedia-to-Learning-Journey Generator
+
+### How to Use
+
+1. Install dependencies:
+   ```bash
+   npm install
+   ```
+2. Set your OpenAI API key in a `.env` file:
+   ```env
+   OPENAI_API_KEY=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
+   ```
+3. Start the server:
+   ```bash
+   node ai-whale.js
+   ```
+4. Make a POST request to `http://localhost:3001/api/ai-whale/generate` with a JSON body:
+   ```json
+   { "wikipediaUrl": "https://en.wikipedia.org/wiki/Roman_Empire" }
+   ```
+5. The response will contain a structured learning journey (lessons, summaries, quizzes) generated from the Wikipedia article.
+
+---

@@ -8,6 +8,9 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8080,
+    proxy: {
+      '/api/ai-whale': 'http://localhost:3001',
+    },
   },
   plugins: [
     react(),
