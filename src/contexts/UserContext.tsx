@@ -3,6 +3,7 @@ import { HistoryEra, UserPreferences } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { unlockAchievement } from '@/integrations/supabase/achievements';
+import { toast } from 'sonner';
 
 interface UserContextType {
   user: User | null;
@@ -103,23 +104,67 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
   
-  const incrementStreak = () => {
-    setStreak(prevStreak => {
-      const newStreak = prevStreak + 1;
-      updateUserProfile({ streak: newStreak });
-      // Unlock streak achievements
-      if (user?.id) {
-        if (newStreak >= 3) unlockAchievement(user.id, 'streak_3');
-        if (newStreak >= 7) unlockAchievement(user.id, 'streak_7');
-        if (newStreak >= 30) unlockAchievement(user.id, 'streak_30');
+  const incrementStreak = async () => {
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: { user: supaUser } } = await supabase.auth.getUser();
+      currentUser = supaUser;
+      if (!currentUser) {
+        toast.error('No user found for updating streak');
+        return;
       }
-      return newStreak;
-    });
+    }
+    const newStreak = (typeof streak === 'number' ? streak : 0) + 1;
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ streak: newStreak })
+        .eq('id', currentUser.id);
+      if (error) {
+        toast.error('Error updating streak: ' + error.message);
+        console.error('Error updating streak:', error);
+        return;
+      }
+      setStreak(newStreak);
+      toast.success(`🔥 Streak increased! You're on a ${newStreak}-day streak!`);
+      // Unlock streak achievements
+      if (currentUser.id) {
+        if (newStreak >= 3) unlockAchievement(currentUser.id, 'streak_3');
+        if (newStreak >= 7) unlockAchievement(currentUser.id, 'streak_7');
+        if (newStreak >= 30) unlockAchievement(currentUser.id, 'streak_30');
+      }
+    } catch (error) {
+      toast.error('Error updating streak');
+      console.error('Error updating streak:', error);
+    }
   };
   
-  const resetStreak = () => {
-    setStreak(0);
-    updateUserProfile({ streak: 0 });
+  const resetStreak = async () => {
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: { user: supaUser } } = await supabase.auth.getUser();
+      currentUser = supaUser;
+      if (!currentUser) {
+        toast.error('No user found for resetting streak');
+        return;
+      }
+    }
+    try {
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ streak: 0 })
+        .eq('id', currentUser.id);
+      if (error) {
+        toast.error('Error resetting streak: ' + error.message);
+        console.error('Error resetting streak:', error);
+        return;
+      }
+      setStreak(0);
+      toast('Streak reset. Start again tomorrow!');
+    } catch (error) {
+      toast.error('Error resetting streak');
+      console.error('Error resetting streak:', error);
+    }
   };
   
   const setCompletedEra = (era: string) => {
@@ -170,6 +215,29 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     } catch (error) {
       console.error("Error updating user profile:", error);
+    }
+  };
+
+  const updateUserProfileWithFallback = async (updates: any) => {
+    let currentUser = user;
+    if (!currentUser) {
+      const { data: { user: supaUser } } = await supabase.auth.getUser();
+      currentUser = supaUser;
+      if (!currentUser) {
+        console.error('No user found for updating profile');
+        return;
+      }
+    }
+    try {
+      console.log('Updating user_profiles for', currentUser.id, 'with', updates);
+      const { error } = await supabase
+        .from('user_profiles')
+        .upsert({ id: currentUser.id, ...updates }, { onConflict: 'id' });
+      if (error) {
+        console.error('Error updating user profile:', error);
+      }
+    } catch (error) {
+      console.error('Error updating user profile:', error);
     }
   };
 

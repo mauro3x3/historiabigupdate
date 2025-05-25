@@ -1,3 +1,16 @@
+@import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Crimson+Pro:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Literata:wght@400;700&family=Alegreya:wght@400;700&family=Lora:wght@400;700&family=Bitter:wght@400;700&family=Inter:wght@400;700&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
+
+.font-ebgaramond { font-family: 'EB Garamond', serif !important; }
+.font-crimsonpro { font-family: 'Crimson Pro', serif !important; }
+.font-cormorant { font-family: 'Cormorant Garamond', serif !important; }
+.font-literata { font-family: 'Literata', serif !important; }
+.font-alegreya { font-family: 'Alegreya', serif !important; }
+.font-lora { font-family: 'Lora', serif !important; }
+.font-bitter { font-family: 'Bitter', serif !important; }
+.font-inter { font-family: 'Inter', sans-serif !important; }
+.font-merriweather { font-family: 'Merriweather', serif !important; }
+.font-playfair { font-family: 'Playfair Display', serif !important; }
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

@@ -1,5 +1,4 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster, toast } from "sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
@@ -183,7 +182,7 @@ function GlobalFishbowlMenu() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg ${link.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg`}
                   tabIndex={open ? 0 : -1}
                   role="menuitem"
                   aria-label={link.label}
@@ -191,47 +190,24 @@ function GlobalFishbowlMenu() {
                 >
                   <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold text-2xl">
                     {link.icon}
-                    {link.locked && <Lock className="h-5 w-5 ml-2 text-gray-400" />}
                   </span>
                   {link.label}
-                  {link.locked && <span className="ml-2 text-gray-400 text-sm">Locked</span>}
                 </a>
               ) : (
                 <button
                   type="button"
-                  className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg ${link.locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg hover:bg-timelingo-gold/20 focus:bg-timelingo-gold/30 text-timelingo-navy font-semibold transition-all group focus:outline-none w-full text-left text-lg`}
                   tabIndex={open ? 0 : -1}
                   role="menuitem"
                   aria-label={link.label}
-                  onClick={() => { if (!link.locked) { setOpen(false); navigate(link.href); } }}
-                  disabled={!!link.locked}
+                  onClick={() => { setOpen(false); navigate(link.href); }}
+                  disabled={false}
                 >
                   <span className="transition-transform duration-150 group-hover:scale-110 group-focus:scale-110 group-hover:text-timelingo-gold group-focus:text-timelingo-gold text-2xl">
                     {link.icon}
-                    {link.locked && <Lock className="h-5 w-5 ml-2 text-gray-400" />}
                   </span>
                   {link.label}
-                  {link.locked && <span className="ml-2 text-gray-400 text-sm">Locked</span>}
                 </button>
-              )}
-              {/* Render subItems if present (for Games) */}
-              {link.subItems && (
-                <div className="ml-10 flex flex-col gap-1">
-                  {link.subItems.map(sub => (
-                    <button
-                      key={sub.href}
-                      type="button"
-                      className="flex items-center gap-2 px-3 py-2 rounded hover:bg-timelingo-gold/10 text-timelingo-navy text-base font-medium w-full text-left"
-                      tabIndex={open ? 0 : -1}
-                      role="menuitem"
-                      aria-label={sub.label}
-                      onClick={() => { setOpen(false); navigate(sub.href); }}
-                    >
-                      <span>{sub.icon}</span>
-                      {sub.label}
-                    </button>
-                  ))}
-                </div>
               )}
             </React.Fragment>
           ))}
@@ -309,7 +285,6 @@ const App: React.FC = () => {
           <UserProvider>
             <TooltipProvider>
               <Toaster />
-              <Sonner />
               <BrowserRouter>
                 <RouterWithFishbowl />
               </BrowserRouter>

@@ -184,20 +184,21 @@ function playDolphinSound() {
 const LessonPage = () => {
   const { lessonId } = useParams();
   const navigate = useNavigate();
-  const { addXp } = useUser();
+  const { addXp, incrementStreak, resetStreak, streak } = useUser();
   const [showStoryPhase, setShowStoryPhase] = useState(true);
   const [storyFading, setStoryFading] = useState(false);
   const [animatedStory, setAnimatedStory] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
   const [nextModule, setNextModule] = useState<any | null>(null);
   const [lives, setLives] = useState(MAX_LIVES);
   const [outOfLives, setOutOfLives] = useState(false);
-  const [streak, setStreak] = useState(0);
   const [showStreakReward, setShowStreakReward] = useState(false);
   const [nextModuleLoading, setNextModuleLoading] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
   const [dolphinButton, setDolphinButton] = useState<{ x: number; y: number; text: string } | null>(null);
   const [dolphinTooltip, setDolphinTooltip] = useState<{ x: number; y: number; text: string; loading: boolean; answer?: string } | null>(null);
   const storyRef = useRef<HTMLDivElement>(null);
+  const [storyFont, setStoryFont] = useState<string>(() => localStorage.getItem('lessonFont') || 'serif');
   
   const {
     lesson,
@@ -238,15 +239,18 @@ const LessonPage = () => {
   useEffect(() => {
     const storyText = lesson?.story_content || lesson?.description || '';
     if (showStoryPhase && storyText) {
-      preloadSounds();
+      setIsTyping(true);
       let i = 0;
       setAnimatedStory('');
       const plainText = storyText.replace(/<[^>]+>/g, ''); // Remove HTML tags for animation
       const interval = setInterval(() => {
         setAnimatedStory(plainText.slice(0, i + 1));
         i++;
-        if (i >= plainText.length) clearInterval(interval);
-      }, 8);
+        if (i >= plainText.length) {
+          clearInterval(interval);
+          setIsTyping(false);
+        }
+      }, 12);
       return () => clearInterval(interval);
     }
   }, [showStoryPhase, lesson]);
@@ -262,37 +266,25 @@ const LessonPage = () => {
     }
   }, [isAnswerCorrect]);
 
-  // Streak logic: track in localStorage, increment on daily completion, reset if missed
-  useEffect(() => {
-    // On mount, load streak
-    const streakVal = parseInt(localStorage.getItem(STREAK_KEY) || '0', 10);
-    setStreak(streakVal);
-  }, []);
-
   useEffect(() => {
     if (lessonCompleted) {
-      const today = new Date().toISOString().slice(0, 10);
-      const lastDate = localStorage.getItem(STREAK_DATE_KEY);
-      let newStreak = streak;
-      if (lastDate) {
-        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+      const updateStreak = async () => {
+        const today = new Date().toISOString().slice(0, 10);
+        const lastDate = localStorage.getItem('historia_streak_date');
         if (lastDate === today) {
-          // Already completed today, do nothing
-        } else if (lastDate === yesterday) {
-          newStreak = streak + 1;
-        } else {
-          newStreak = 1;
+          // Already counted today, do nothing
+          return;
         }
-      } else {
-        newStreak = 1;
-      }
-      localStorage.setItem(STREAK_KEY, String(newStreak));
-      localStorage.setItem(STREAK_DATE_KEY, today);
-      setStreak(newStreak);
-      if (newStreak > 0 && newStreak % STREAK_REWARD_MILESTONE === 0) {
-        setShowStreakReward(true);
-        setTimeout(() => setShowStreakReward(false), 2500);
-      }
+        const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+        if (lastDate === yesterday) {
+          await incrementStreak();
+        } else {
+          await resetStreak();
+          await incrementStreak();
+        }
+        localStorage.setItem('historia_streak_date', today);
+      };
+      updateStreak();
     }
   }, [lessonCompleted]);
 
@@ -458,34 +450,50 @@ const LessonPage = () => {
              />
            )}
           <div className="flex justify-center w-full mb-4">
-            <ReadAloudButton text={lesson.story_content || lesson.description || ''} />
+            <ReadAloudButton text={lesson.story_content || lesson.description || ''} onFontChange={setStoryFont} />
           </div>
           <div
             ref={storyRef}
-            className="w-full prose prose-lg max-w-none mb-8 min-h-[200px] text-center text-gray-800 relative"
+            className={`w-full prose prose-lg max-w-none mb-8 min-h-[200px] text-center text-gray-800 relative ${storyFont === 'serif' ? 'font-serif' : storyFont === 'sans-serif' ? 'font-sans' : storyFont === 'opendyslexic' ? 'font-opendyslexic' : storyFont ? `font-${storyFont}` : ''}`}
             style={{ fontSize: 20, lineHeight: 1.7 }}
           >
-            {(() => {
-              // Parse the HTML and replace .explain spans with Tooltip
-              const html = lesson.story_content || lesson.description || '<em>No story available.</em>';
-              const parser = new DOMParser();
-              const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
-              function renderNode(node: ChildNode, i: number): React.ReactNode {
-                if (node.nodeType === Node.TEXT_NODE) return node.textContent;
-                if (node.nodeType !== Node.ELEMENT_NODE) return null;
-                const el = node as HTMLElement;
-                if (el.classList.contains('explain') && el.dataset.explain) {
-                  return <Tooltip key={i} text={el.dataset.explain}>{el.textContent}</Tooltip>;
+            {isTyping ? (
+              <span>{animatedStory}<span className="type-cursor">|</span></span>
+            ) : (
+              (() => {
+                const html = lesson.story_content || lesson.description || '<em>No story available.</em>';
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(`<div>${html}</div>`, 'text/html');
+                function renderNode(node: ChildNode, i: number): React.ReactNode {
+                  if (node.nodeType === Node.TEXT_NODE) return node.textContent;
+                  if (node.nodeType !== Node.ELEMENT_NODE) return null;
+                  const el = node as HTMLElement;
+                  if (el.classList.contains('explain') && el.dataset.explain) {
+                    return <Tooltip key={i} text={el.dataset.explain}>{el.textContent}</Tooltip>;
+                  }
+                  // Recursively render children
+                  return React.createElement(
+                    el.tagName.toLowerCase(),
+                    { key: i, ...Array.from(el.attributes).reduce((acc, attr) => { acc[attr.name] = attr.value; return acc; }, {}) },
+                    ...Array.from(el.childNodes).map((child, j) => renderNode(child, j))
+                  );
                 }
-                // Recursively render children
-                return React.createElement(
-                  el.tagName.toLowerCase(),
-                  { key: i, ...Array.from(el.attributes).reduce((acc, attr) => { acc[attr.name] = attr.value; return acc; }, {}) },
-                  ...Array.from(el.childNodes).map((child, j) => renderNode(child, j))
-                );
+                return Array.from(doc.body.firstChild?.childNodes || []).map((node, i) => renderNode(node, i));
+              })()
+            )}
+            <style>{`
+              .type-cursor {
+                display: inline-block;
+                width: 1ch;
+                animation: blink 1s steps(1) infinite;
+                color: #888;
+                font-weight: bold;
               }
-              return Array.from(doc.body.firstChild?.childNodes || []).map((node, i) => renderNode(node, i));
-            })()}
+              @keyframes blink {
+                0%, 50% { opacity: 1; }
+                51%, 100% { opacity: 0; }
+              }
+            `}</style>
             {/* Dolphin button */}
             {dolphinButton && (
               <button
