@@ -9,7 +9,9 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     proxy: {
-      '/api/ai-whale': 'http://localhost:3001',
+      '/api/ai-whale': process.env.AI_WHALE_API_URL || 'http://localhost:3001',
+      '/api/generate-quiz': process.env.AI_DOLPHIN_API_URL || 'http://localhost:5001',
+      '/api/explain-term': process.env.AI_DOLPHIN_API_URL || 'http://localhost:5001'
     },
   },
   plugins: [

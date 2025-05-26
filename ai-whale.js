@@ -157,4 +157,7 @@ app.post('/api/ai-whale/generate', async (req, res) => {
   }
 });
 
-app.listen(3001, () => console.log('AI Whale running on http://localhost:3001')); 
+const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || 'localhost';
+
+app.listen(PORT, HOST, () => console.log(`AI Whale running on http://${HOST}:${PORT}`)); 

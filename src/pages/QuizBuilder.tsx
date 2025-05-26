@@ -159,7 +159,7 @@ const QuizBuilder: React.FC = () => {
     setAiLoading(true);
     setAiError('');
     try {
-      const response = await fetch('http://localhost:5001/api/generate-quiz', {
+      const response = await fetch('/api/generate-quiz', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic: aiPrompt })
