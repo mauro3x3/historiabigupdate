@@ -34,8 +34,16 @@ const PaywallModal: React.FC<PaywallModalProps> = ({ open, onClose }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ user_id, email }),
       });
-      const { url } = await res.json();
-      window.location.href = url;
+      const data = await res.json();
+      // Log the response for debugging
+      console.log('Stripe checkout response:', data);
+      // Show an alert if there's an error or no URL
+      if (!data.url) {
+        alert('Stripe error: ' + (data.error || 'No URL returned'));
+        setLoading(false);
+        return;
+      }
+      window.location.href = data.url;
     } catch (err) {
       alert('Failed to start checkout. Please try again.');
       setLoading(false);
