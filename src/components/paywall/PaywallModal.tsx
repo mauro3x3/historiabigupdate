@@ -43,7 +43,9 @@ const PaywallModal: React.FC<PaywallModalProps> = ({ open, onClose }) => {
         setLoading(false);
         return;
       }
-      window.location.href = data.url;
+      // window.location.href = data.url; // TEMPORARILY DISABLED FOR DEBUGGING
+      alert('Stripe session created! URL: ' + data.url); // Show the URL in an alert for easy copy
+      setLoading(false);
     } catch (err) {
       alert('Failed to start checkout. Please try again.');
       setLoading(false);
