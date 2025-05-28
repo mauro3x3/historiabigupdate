@@ -47,12 +47,6 @@ const DashboardHeader = () => {
           >
             Logout
           </button>
-          <Avatar className="h-12 w-12 border-2 border-timelingo-gold shadow-lg bg-white/80 hover:scale-105 transition-transform">
-            <AvatarImage src={avatarSrc} alt="Profile avatar" />
-            <AvatarFallback>
-              <User size={24} />
-            </AvatarFallback>
-          </Avatar>
         </div>
       </div>
     </header>

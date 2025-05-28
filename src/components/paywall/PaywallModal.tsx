@@ -11,7 +11,7 @@ const proFeatures = [
   'Custom background wallpapers on your profile',
   'Offline mode',
   'Skip modules (10 skips/month)',
-  'Audio for modules (ElevenLabs)',
+  'Unlimited Voice Mode',
   'Special badge for early supporters',
 ];
 

@@ -29,6 +29,7 @@ export default async function handler(req, res) {
       mode: 'subscription',
       success_url: `${req.headers.origin || 'https://www.heyhistoria.com'}/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.origin || 'https://www.heyhistoria.com'}/cancel`,
+      metadata: { user_id: req.body.user_id },
     });
     return res.status(200).json({ id: session.id, url: session.url });
   } catch (error) {
