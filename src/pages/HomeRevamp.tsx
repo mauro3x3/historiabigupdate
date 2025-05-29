@@ -118,10 +118,19 @@ const HomeRevamp = () => {
       setIsLoading(true);
       if (!selectedEra) return;
       try {
-        if (user) await getLessonProgress(user.id);
+        let progressMap = {};
+        if (user) progressMap = await getLessonProgress(user.id);
         const track = await generateTrackForEra(selectedEra as HistoryEra);
-        if ((track.levels || []).some(lvl => (lvl.lessons || []).length > 0)) {
-          setLearningTrack(track.levels);
+        // Attach progress to each lesson
+        const trackWithProgress = track.levels.map(level => ({
+          ...level,
+          lessons: (level.lessons || []).map(lesson => ({
+            ...lesson,
+            progress: progressMap[String(lesson.id)] || undefined,
+          })),
+        }));
+        if ((trackWithProgress || []).some(lvl => (lvl.lessons || []).length > 0)) {
+          setLearningTrack(trackWithProgress);
           setFallbackEra(null);
         } else {
           // Find first era with lessons
@@ -154,13 +163,26 @@ const HomeRevamp = () => {
   // Compute chapters for LearningPath
   let chapters = [];
   if (learningTrack && learningTrack.length > 0) {
+    // Sequential unlock logic: only one 'current', rest locked
+    let foundFirstIncomplete = false;
     chapters = learningTrack.map((level) => {
       const lessons = (level.lessons || []).map((lesson) => {
+        // Debug: log lesson id and progress
+        if (typeof window !== 'undefined') {
+          console.log('[Timeline] Lesson:', lesson.id, 'Progress:', lesson.progress, 'Type:', typeof lesson.id);
+        }
+        // Use String(lesson.id) for progress lookup
+        const progress = lesson.progress;
         let status = 'locked';
-        if (lesson.progress?.completed) {
+        if (progress?.completed) {
           status = 'completed';
-        } else {
-          status = 'current'; // Unlock all lessons
+        } else if (!foundFirstIncomplete) {
+          status = 'current';
+          foundFirstIncomplete = true;
+        }
+        // Debug: log computed status
+        if (typeof window !== 'undefined') {
+          console.log('[Timeline] Computed status for lesson', lesson.id, ':', status);
         }
         return {
           id: lesson.id,
@@ -169,8 +191,8 @@ const HomeRevamp = () => {
           status,
           description: lesson.description,
           emoji: '📖',
-          progress: lesson.progress,
-          year: lesson.year,
+          progress,
+          year: (lesson as any).year,
         };
       });
       return {
@@ -179,6 +201,11 @@ const HomeRevamp = () => {
         lessons,
       };
     });
+    // Debug: log all progress keys
+    if (typeof window !== 'undefined' && learningTrack[0]?.lessons) {
+      const allProgressKeys = learningTrack[0].lessons.map(l => l.progress && l.progress.completed !== undefined ? l.id : null).filter(Boolean);
+      console.log('[Timeline] All lesson IDs with progress:', allProgressKeys);
+    }
   }
   const chaptersWithLessons = Array.isArray(chapters) ? chapters.filter(ch => Array.isArray(ch.lessons) && ch.lessons.length > 0) : [];
   // Find mascot node idx

@@ -66,12 +66,7 @@ const LearningJourney = ({ currentEra, learningTrack, isLoading }: LearningJourn
           </Button>
         </div>
         <div className="w-full h-[70vh] md:h-[80vh] overflow-y-auto pr-2">
-          <LearningTrack 
-            levels={learningTrack.map(level => ({ 
-              ...level, 
-              isUnlocked: true // Default to unlocked for better user experience
-            }))}
-          />
+          <LearningTrack levels={learningTrack} />
         </div>
       </div>
     </div>

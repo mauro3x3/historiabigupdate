@@ -58,6 +58,7 @@ export interface HistoryLesson {
   prompt?: string;
   character?: string;
   journey_id?: number;
+  isUnlocked?: boolean;
 }
 
 export interface LessonProgress {

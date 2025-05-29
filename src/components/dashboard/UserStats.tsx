@@ -28,20 +28,19 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 const AVATAR_OPTIONS = [
-  { key: 'mascot', src: '/images/avatars/Johan.png', minLevel: 1 },
-  { key: 'goldfish_3', src: '/images/avatars/goldfish_3.png', minLevel: 1 },
-  { key: 'goldfish_4', src: '/images/avatars/goldfish_4.png', minLevel: 1 },
-  { key: 'goldfish_5', src: '/images/avatars/goldfish_5.png', minLevel: 1 },
-  { key: 'goldfish_30', src: '/images/avatars/goldfish_30.png', minLevel: 1 },
-  { key: 'goldfish_31', src: '/images/avatars/goldfish_31.png', minLevel: 1 },
-  { key: 'goldfish_666', src: '/images/avatars/goldfish_666.png', minLevel: 1 },
-  { key: 'goldfish_38', src: '/images/avatars/goldfish_38.png', minLevel: 1 },
-  { key: 'goldfish_84', src: '/images/avatars/goldfish_84.png', minLevel: 1 },
-  { key: 'goldfish_1000', src: '/images/avatars/goldfish_1000.png', minLevel: 5 },
-  { key: 'goldfish_1001', src: '/images/avatars/goldfish_1001.png', minLevel: 5 },
-  { key: 'goldfish_539', src: '/images/avatars/goldfish_539.png', minLevel: 5 },
-  { key: 'goldfish_540', src: '/images/avatars/goldfish_540.png', minLevel: 5 },
-  { key: 'goldfish_1002', src: '/images/avatars/goldfish_1002.png', minLevel: 5 },
+  { key: 'goldfish_666', src: '/images/avatars/goldfish_666.png' },
+  { key: 'goldfish_539', src: '/images/avatars/goldfish_539.png' },
+  { key: 'goldfish_540', src: '/images/avatars/goldfish_540.png' },
+  { key: 'goldfish_1000', src: '/images/avatars/goldfish_1000.png' },
+  { key: 'goldfish_1001', src: '/images/avatars/goldfish_1001.png' },
+  { key: 'goldfish_1002', src: '/images/avatars/goldfish_1002.png' },
+  { key: 'goldfish_84', src: '/images/avatars/goldfish_84.png' },
+  { key: 'goldfish_31', src: '/images/avatars/goldfish_31.png' },
+  { key: 'goldfish_30', src: '/images/avatars/goldfish_30.png' },
+  { key: 'goldfish_5', src: '/images/avatars/goldfish_5.png' },
+  { key: 'goldfish_4', src: '/images/avatars/goldfish_4.png' },
+  { key: 'goldfish_288', src: '/images/avatars/goldfish_288.png' },
+  { key: 'goldfish_4000', src: '/images/avatars/goldfish_4000.png' },
 ];
 
 const ALL_AVATARS = AVATAR_OPTIONS;
@@ -177,7 +176,7 @@ export default function UserStats(props: UserStatsProps) {
   const displayCompletedEras = isPublic ? completedEras : myCompletedEras;
   const displayPreferredEra = isPublic ? preferredEra : myPreferredEra;
   const displayUsername = isPublic ? username : (user?.username || user?.email?.split('@')[0] || 'Historian');
-  const displayAvatar = isPublic ? avatar_base : (user?.user_metadata?.avatar_base || 'mascot');
+  const displayAvatar = isPublic ? avatar_base : (user?.user_metadata?.avatar_base || 'goldfish_666');
   const displayFeaturedEras = (isPublic ? featured_eras : undefined) || [];
   const displayBadges = (isPublic ? badges : undefined) || [];
   const displayAchievements = (isPublic ? achievements : undefined) || [];

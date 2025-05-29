@@ -132,8 +132,8 @@ const NAV_LINKS = [
   { label: 'Quiz Your Friends', href: '/quiz-builder', icon: <Sparkles className="h-6 w-6 text-yellow-400" /> },
   { label: 'Explore Eras', href: '/onboarding', icon: <Hourglass className="h-6 w-6" /> },
   { label: 'Upvoting board', href: '/upvoting-board', icon: <span className="h-6 w-6">⬆️</span>, external: true },
-  { label: 'Profile', href: '/profile', icon: <User className="h-6 w-6" /> },
   { label: 'AI Whale', href: '/ai-whale', icon: <span className="h-6 w-6">🐋</span> },
+  { label: 'Profile', href: '/profile', icon: <User className="h-6 w-6" /> },
 ];
 
 function GlobalFishbowlMenu() {

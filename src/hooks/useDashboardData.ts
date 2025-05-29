@@ -48,29 +48,37 @@ export const useDashboardData = () => {
         // If user is logged in, fetch progress data
         if (user) {
           const progressMap = await getLessonProgress(user.id);
-          
-          // Add progress data to lessons and dynamically set isUnlocked
+          console.log('User lesson progress map:', progressMap);
+
+          // Sequential unlock logic: set status for each lesson
+          let foundFirstIncomplete = false;
           const levelsWithProgress = track.levels.map(level => {
-            // A level is unlocked if any lesson in it is present in progressMap
-            const isUnlocked = true; // Always unlock the level
-
-            const lessonsWithProgress = level.lessons.map(lesson => ({
-              ...lesson,
-              progress: progressMap[lesson.id] || { 
-                completed: false, 
-                stars: 0, 
-                xp_earned: 0 
-              },
-              isUnlocked: true // Always unlock the lesson
-            }));
-
+            let lessonsWithProgress = level.lessons.map(lesson => {
+              let status = 'locked';
+              if (progressMap[String(lesson.id)]?.completed) {
+                status = 'completed';
+              } else if (!foundFirstIncomplete) {
+                status = 'current';
+                foundFirstIncomplete = true;
+              }
+              return {
+                ...lesson,
+                progress: progressMap[String(lesson.id)] || {
+                  completed: false,
+                  stars: 0,
+                  xp_earned: 0
+                },
+                isUnlocked: status !== 'locked',
+                status // <-- for JourneyPath/LearningPath
+              };
+            });
             return {
               ...level,
               lessons: lessonsWithProgress,
-              isUnlocked
+              isUnlocked: lessonsWithProgress.some(l => l.status !== 'locked')
             };
           });
-          
+
           setLearningTrack(levelsWithProgress);
         } else {
           setLearningTrack(track.levels);

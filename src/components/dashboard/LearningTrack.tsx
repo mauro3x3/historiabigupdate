@@ -71,106 +71,124 @@ const LearningTrack: React.FC<LearningTrackProps> = ({ levels, themeColor = 'tim
             
             {/* Level lessons */}
             <div className="ml-6 pl-10 space-y-5 relative">
-              {level.lessons && level.lessons.length > 0 ? level.lessons.map((lesson, lessonIndex) => {
-                if (!lesson) {
-                  console.warn("Null lesson found in level", level.title);
-                  return null;
-                }
-                
-                const isCompleted = lesson.progress?.completed ?? false;
-                const isLast = lessonIndex === level.lessons.length - 1;
-                const isFirst = lessonIndex === 0;
-                // Default all levels to unlocked if no specific unlock flag is set
-                const isLevelUnlocked = level.isUnlocked !== false; 
-                const progressPercentage = lesson.progress?.completed ? 100 : 0;
-                
-                return (
-                  <div key={lesson.id} className="relative">
-                    {/* Connector line to next lesson with progress indicator */}
-                    {!isLast && (
-                      <div className="absolute left-6 top-12 h-full">
-                        <div className="w-0.5 h-full bg-gray-200 absolute"></div>
-                        <div 
-                          className={`w-0.5 bg-green-500 absolute transition-all duration-500`} 
-                          style={{ height: `${progressPercentage}%` }}
-                        ></div>
-                        <div className="absolute top-full left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-                          <ArrowDown size={16} className="text-gray-400" />
-                        </div>
+              {level.lessons && level.lessons.length > 0 ? (() => {
+                console.log('Rendering lessons for level', level.level, level.lessons);
+                return level.lessons.map((lesson, lessonIndex) => {
+                  if (!lesson) {
+                    console.warn("Null lesson found in level", level.title);
+                    return null;
+                  }
+                  
+                  const isCompleted = lesson.progress?.completed ?? false;
+                  const isLast = lessonIndex === level.lessons.length - 1;
+                  const isFirst = lessonIndex === 0;
+                  const isLevelUnlocked = lesson.isUnlocked !== false;
+                  const progressPercentage = lesson.progress?.completed ? 100 : 0;
+                  
+                  return (
+                    <div key={lesson.id} className="relative group">
+                      {/* Visual debug badge for isUnlocked */}
+                      <div style={{position: 'absolute', top: 0, right: 0, background: 'yellow', color: 'black', fontSize: 10, zIndex: 1000}}>
+                        {String(lesson.isUnlocked)}
                       </div>
-                    )}
-                    
-                    <div 
-                      className={`flex items-center gap-4 p-4 rounded-xl transition-all relative
-                        ${isLevelUnlocked 
-                          ? isCompleted 
-                            ? 'bg-gradient-to-r from-green-50 to-green-100 border border-green-200' 
-                            : 'bg-white shadow-sm hover:shadow-md cursor-pointer border border-gray-100 hover:border-purple-200' 
-                          : 'bg-gray-100 opacity-60 cursor-not-allowed'}`}
-                      onClick={() => handleStartLesson(lesson.id)}
-                    >
-                      {/* Pulsing animation for active lesson */}
-                      {isLevelUnlocked && !isCompleted && (
-                        <div className="absolute inset-0 rounded-xl border-2 border-purple-300 opacity-50 animate-pulse pointer-events-none"></div>
+                      {/* Connector line to next lesson with progress indicator */}
+                      {!isLast && (
+                        <div className="absolute left-6 top-12 h-full">
+                          <div className="w-0.5 h-full bg-gray-200 absolute"></div>
+                          <div 
+                            className={`w-0.5 bg-green-500 absolute transition-all duration-500`} 
+                            style={{ height: `${progressPercentage}%` }}
+                          ></div>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+                            <ArrowDown size={16} className="text-gray-400" />
+                          </div>
+                        </div>
                       )}
                       
-                      {/* Lesson node/circle */}
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 shadow-sm
-                        ${isCompleted 
-                          ? 'bg-gradient-to-r from-green-400 to-green-500 text-white' 
-                          : isLevelUnlocked 
-                            ? `bg-gradient-to-r from-${themeColor}-400 to-${themeColor}-500 text-white` 
-                            : 'bg-gray-300 text-gray-500'}`}>
-                        {isCompleted 
-                          ? <CheckCircle size={20} /> 
-                          : <Book size={20} />}
-                      </div>
-                      
-                      <div className="flex-1">
-                        <h4 className="font-medium">{lesson.title}</h4>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-gray-500">{lesson.duration} min</p>
-                          
-                          {/* XP reward badge */}
-                          <div className={`bg-${themeColor}-100 text-${themeColor}-700 text-xs px-2 py-1 rounded-full flex items-center`}>
-                            <Star className={`w-3 h-3 mr-1 text-${themeColor}-500`} />
-                            {lesson.xp_reward} XP
+                      <div
+                        className={`flex items-center gap-4 p-4 rounded-xl transition-all relative
+                          ${isLevelUnlocked 
+                            ? isCompleted 
+                              ? 'bg-gradient-to-r from-green-50 to-green-100 border border-green-200 cursor-pointer' 
+                              : 'bg-white shadow-sm hover:shadow-md border border-gray-100 hover:border-purple-200 cursor-pointer' 
+                            : 'bg-gray-100 opacity-60 cursor-not-allowed pointer-events-none'}`}
+                        onClick={() => isLevelUnlocked && handleStartLesson(lesson.id)}
+                        tabIndex={isLevelUnlocked ? 0 : -1}
+                        aria-disabled={!isLevelUnlocked}
+                        title={isLevelUnlocked ? '' : 'Complete previous lessons to unlock this module!'}
+                      >
+                        {/* Pulsing animation for active lesson */}
+                        {isLevelUnlocked && !isCompleted && (
+                          <div className="absolute inset-0 rounded-xl border-2 border-purple-300 opacity-50 animate-pulse pointer-events-none"></div>
+                        )}
+                        
+                        {/* Lesson node/circle */}
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center z-10 shadow-sm
+                          ${isCompleted 
+                            ? 'bg-gradient-to-r from-green-400 to-green-500 text-white' 
+                            : isLevelUnlocked 
+                              ? `bg-gradient-to-r from-${themeColor}-400 to-${themeColor}-500 text-white` 
+                              : 'bg-gray-300 text-gray-500'}`}>
+                          {isCompleted 
+                            ? <CheckCircle size={20} /> 
+                            : isLevelUnlocked 
+                              ? <Book size={20} />
+                              : <Lock size={20} />}
+                        </div>
+                        
+                        <div className="flex-1">
+                          <h4 className="font-medium">{lesson.title}</h4>
+                          <div className="flex items-center justify-between">
+                            <p className="text-xs text-gray-500">{lesson.duration} min</p>
+                            
+                            {/* XP reward badge */}
+                            <div className={`bg-${themeColor}-100 text-${themeColor}-700 text-xs px-2 py-1 rounded-full flex items-center`}>
+                              <Star className={`w-3 h-3 mr-1 text-${themeColor}-500`} />
+                              {lesson.xp_reward} XP
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      
-                      {/* Completion stars or start button */}
-                      <div className="flex items-center">
-                        {isCompleted ? (
-                          <div className="flex">
-                            {[...Array(3)].map((_, i) => (
-                              <span 
-                                key={i} 
-                                className={`text-lg ${i < (lesson.progress?.stars || 0) ? 'text-amber-400' : 'text-gray-300'}`}
+                        
+                        {/* Completion stars or start button */}
+                        <div className="flex items-center">
+                          {isCompleted ? (
+                            <div className="flex">
+                              {[...Array(3)].map((_, i) => (
+                                <span 
+                                  key={i} 
+                                  className={`text-lg ${i < (lesson.progress?.stars || 0) ? 'text-amber-400' : 'text-gray-300'}`}
+                                >
+                                  ★
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            isLevelUnlocked && (
+                              <Button 
+                                size="sm" 
+                                className={`bg-${themeColor}-600 hover:bg-${themeColor}-700 text-white text-xs whitespace-nowrap`}
+                                onClick={e => {
+                                  e.stopPropagation();
+                                  handleStartLesson(lesson.id);
+                                }}
                               >
-                                ★
-                              </span>
-                            ))}
+                                {isFirst && levelIndex === 0 ? 'Start' : 'Continue'}
+                              </Button>
+                            )
+                          )}
+                        </div>
+                        {/* Tooltip for locked lessons */}
+                        {!isLevelUnlocked && (
+                          <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-white border border-gray-300 rounded-lg shadow-lg p-2 z-50 w-56 text-sm hidden group-hover:block">
+                            <span className="font-semibold text-gray-700">Locked</span>
+                            <div className="text-gray-500 mt-1">Complete previous lessons to unlock this module!</div>
                           </div>
-                        ) : (
-                          isLevelUnlocked && (
-                            <Button 
-                              size="sm" 
-                              className={`bg-${themeColor}-600 hover:bg-${themeColor}-700 text-white text-xs whitespace-nowrap`}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleStartLesson(lesson.id);
-                              }}
-                            >
-                              {isFirst && levelIndex === 0 ? 'Start' : 'Continue'}
-                            </Button>
-                          )
                         )}
                       </div>
                     </div>
-                  </div>
-                );
-              }) : (
+                  );
+                });
+              })() : (
                 <div className="text-center py-6">
                   <p className="text-gray-500">No lessons available for this level</p>
                 </div>

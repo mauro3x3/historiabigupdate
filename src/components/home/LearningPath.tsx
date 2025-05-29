@@ -68,6 +68,8 @@ const LearningPath = (props) => {
   const nodeRefs = useRef([]);
   const [currentYear, setCurrentYear] = useState(null);
   const lessonRefs = useRef([]);
+  // Tooltip state for locked lesson
+  const [lockedTooltipIdx, setLockedTooltipIdx] = useState<number | null>(null);
 
   // Fallback emoji-rich era options
   const defaultEraOptions = [
@@ -239,13 +241,27 @@ const LearningPath = (props) => {
             {/* Lesson card above the node, with clear margin */}
             <div
               className={`z-20 mb-4 w-full flex justify-center ${lesson.status !== 'locked' ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'opacity-60 cursor-not-allowed'}`}
-              onClick={() => lesson.status !== 'locked' && props.onLessonClick && props.onLessonClick(lesson)}
-              style={{ pointerEvents: lesson.status !== 'locked' ? 'auto' : 'none' }}
+              onClick={() => {
+                if (lesson.status !== 'locked' && props.onLessonClick) {
+                  props.onLessonClick(lesson);
+                } else if (lesson.status === 'locked') {
+                  setLockedTooltipIdx(idx);
+                  setTimeout(() => setLockedTooltipIdx(null), 1800);
+                }
+              }}
+              style={{ pointerEvents: lesson.status !== 'locked' ? 'auto' : 'auto' }}
             >
               <div className="bg-white rounded-xl shadow-xl px-6 py-4 max-w-lg w-full flex flex-col items-start border border-gray-200" style={{ minHeight: 80 }}>
                 <div className="font-bold text-lg mb-1">{lesson.title}</div>
                 {lesson.description && <div className="text-gray-600 text-base mb-1">{lesson.description}</div>}
               </div>
+              {/* Locked tooltip */}
+              {lockedTooltipIdx === idx && lesson.status === 'locked' && (
+                <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full bg-yellow-300 border-2 border-yellow-600 text-yellow-900 px-6 py-3 rounded-2xl shadow-2xl text-base font-bold z-50 animate-fade-in flex items-center gap-2" style={{letterSpacing: 0.2}}>
+                  <svg xmlns='http://www.w3.org/2000/svg' className='w-5 h-5 text-yellow-700 mr-2' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z' /></svg>
+                  Complete all levels above to unlock this!
+                </div>
+              )}
             </div>
             {/* Node (circle) on the timeline, with year label to the left */}
             <div className="z-20 flex flex-row items-center justify-center" style={{marginBottom: 0}}>
