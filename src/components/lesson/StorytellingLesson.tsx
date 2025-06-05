@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { useStorytellingLesson } from '@/hooks/useStorytellingLesson';
 import ReactMarkdown from 'react-markdown';
@@ -26,6 +26,22 @@ const StorytellingLesson: React.FC<StorytellingLessonProps> = ({
   // Split content by paragraphs and filter out empty ones
   const paragraphs = storyContent.split('\n').filter(para => para.trim() !== '');
   
+  // Keyboard shortcut: Enter triggers Continue when transition is visible
+  useEffect(() => {
+    if (!isTransitionVisible) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+        // Use the data-testid attribute for robust selection
+        const btn = document.querySelector('button[data-testid="story-continue-btn"]');
+        if (btn) (btn as HTMLButtonElement).click();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isTransitionVisible]);
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white overflow-y-auto">
       <div className="container mx-auto py-16 px-4 max-w-3xl space-y-20">
@@ -69,8 +85,9 @@ const StorytellingLesson: React.FC<StorytellingLessonProps> = ({
             <Button 
               onClick={handleContinueToQuiz}
               className="bg-timelingo-purple hover:bg-purple-700 text-white py-2 px-6 rounded-full text-lg"
+              data-testid="story-continue-btn"
             >
-              Continue to Quiz
+              Continue
             </Button>
           </div>
         )}

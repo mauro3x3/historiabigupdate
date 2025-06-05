@@ -6,7 +6,7 @@ import { getLessonProgress } from '@/services/progressService';
 import { generateTrackForEra } from '@/data/trackData';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { BookOpen, ChevronDown, Map, Check, Lock } from 'lucide-react';
+import { BookOpen, ChevronDown, Map, Check, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import LearningPath from '../components/home/LearningPath';
 
@@ -217,6 +217,41 @@ const HomeRevamp = () => {
     });
   });
 
+  // Helper: get index and next/prev era
+  const eraList = ERA_OPTIONS.map(e => e.code);
+  const currentEraIdx = selectedEra ? eraList.indexOf(selectedEra) : 0;
+  const prevEra = eraList[(currentEraIdx - 1 + eraList.length) % eraList.length];
+  const nextEra = eraList[(currentEraIdx + 1) % eraList.length];
+
+  // Keyboard navigation for era
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowLeft') {
+        handleEraChange(prevEra);
+      } else if (e.key === 'ArrowRight') {
+        handleEraChange(nextEra);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [prevEra, nextEra]);
+
+  // Helper: background by era
+  const eraBg = (era: string | null) => {
+    switch (era) {
+      case 'jewish': return 'from-yellow-100 to-blue-100';
+      case 'islamic': return 'from-yellow-200 to-orange-100';
+      case 'christian': return 'from-purple-100 to-blue-50';
+      case 'chinese': return 'from-green-100 to-yellow-50';
+      case 'ancient-greece': return 'from-blue-100 to-white';
+      case 'ancient-rome': return 'from-red-100 to-yellow-100';
+      default: return 'from-gray-50 to-purple-50';
+    }
+  };
+
   // Era change handler
   const handleEraChange = async (era) => {
     setSelectedEra(era);
@@ -241,7 +276,7 @@ const HomeRevamp = () => {
   };
 
   return (
-    <div style={{position: 'relative', zIndex: 1, minHeight: '100vh'}}>
+    <div style={{position: 'relative', zIndex: 1, minHeight: '100vh'}} className={`bg-gradient-to-b ${eraBg(selectedEra)}`}>
       <FullscreenBackground />
       <div className="fixed top-8 right-10 z-40 flex items-center gap-4">
         <div className="flex gap-2 px-5 py-3 rounded-2xl shadow-2xl bg-gradient-to-br from-white/80 to-purple-100/80 backdrop-blur-md border border-purple-200/60">
@@ -264,7 +299,25 @@ const HomeRevamp = () => {
           <EraPicker era={selectedEra} onChange={handleEraChange} disabled={isLoading} />
         </div>
       </div>
-      <main className="container mx-auto py-8 px-4">
+      <main className="container mx-auto py-8 px-4 relative">
+        {/* Left Arrow Button */}
+        <button
+          className="fixed left-8 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-50 hover:bg-purple-100 transition"
+          style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
+          onClick={() => handleEraChange(prevEra)}
+          aria-label="Previous Era"
+        >
+          <ChevronLeft className="w-10 h-10" />
+        </button>
+        {/* Right Arrow Button */}
+        <button
+          className="fixed right-8 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-50 hover:bg-purple-100 transition"
+          style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
+          onClick={() => handleEraChange(nextEra)}
+          aria-label="Next Era"
+        >
+          <ChevronRight className="w-10 h-10" />
+        </button>
         {!user ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <img src={AVATAR} alt="Mascot" className="w-40 h-40 rounded-full border-4 border-pink-400 shadow-2xl bg-white object-cover mb-6" />

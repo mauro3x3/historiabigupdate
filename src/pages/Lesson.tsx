@@ -408,6 +408,35 @@ const LessonPage = () => {
   // Debug log for lessonId and lesson
   console.log('LessonPage loaded for lessonId:', lessonId);
 
+  // Add Enter key handler for story phase Continue button
+  useEffect(() => {
+    if (!showStoryPhase) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter') {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+        const btn = document.querySelector('button[data-testid="story-continue-btn"]');
+        if (btn) (btn as HTMLButtonElement).click();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showStoryPhase]);
+
+  // Add ArrowLeft key handler for Back button
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowLeft') {
+        const active = document.activeElement;
+        if (active && (active.tagName === 'INPUT' || active.tagName === 'TEXTAREA')) return;
+        const btn = document.querySelector('button[data-testid="lesson-back-btn"]');
+        if (btn) (btn as HTMLButtonElement).click();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
   // Add robust error handling for loading and missing lesson
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center text-xl text-timelingo-purple">Loading lesson...</div>;
@@ -557,6 +586,7 @@ const LessonPage = () => {
               setStoryFading(true);
               setTimeout(() => setShowStoryPhase(false), 400);
             }}
+            data-testid="story-continue-btn"
           >
             Continue
           </Button>
@@ -581,6 +611,14 @@ const LessonPage = () => {
   
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Add data-testid to Back button, always rendered */}
+      <button
+        className="absolute top-6 left-6 bg-white rounded-full px-6 py-2 shadow-md text-timelingo-purple font-bold text-lg flex items-center gap-2 hover:bg-purple-50 transition z-20"
+        onClick={() => navigate(-1)}
+        data-testid="lesson-back-btn"
+      >
+        <span className="mr-2">&larr;</span> Back
+      </button>
       <LessonHeader title={lesson?.title || 'Loading...'} />
       {/* Story phase content, if active */}
       {showStoryPhase ? (

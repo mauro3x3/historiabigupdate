@@ -38,6 +38,33 @@ const QuizQuestion = ({
     }
   }, [isAnswerCorrect]);
 
+  // Keyboard navigation for answer selection and submit
+  useEffect(() => {
+    if (isAnswerCorrect !== null) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (['ArrowDown', 'ArrowUp', 'Enter'].includes(e.key)) {
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowDown') {
+        const next = selectedAnswer === null ? 0 : (selectedAnswer + 1) % options.length;
+        onAnswerSelect(next);
+      } else if (e.key === 'ArrowUp') {
+        const prev = selectedAnswer === null ? options.length - 1 : (selectedAnswer - 1 + options.length) % options.length;
+        onAnswerSelect(prev);
+      } else if (e.key === 'Enter') {
+        if (selectedAnswer !== null) {
+          // Let parent handle submit/check
+          const checkBtn = document.querySelector('button.bg-timelingo-purple');
+          if (checkBtn) (checkBtn as HTMLButtonElement).click();
+        } else {
+          onAnswerSelect(0);
+        }
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [selectedAnswer, options.length, isAnswerCorrect, onAnswerSelect]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] w-full px-2">
       <Card className="w-full max-w-2xl mx-auto mb-8 rounded-3xl shadow-2xl border-0 bg-gradient-to-br from-white via-blue-50 to-purple-50">

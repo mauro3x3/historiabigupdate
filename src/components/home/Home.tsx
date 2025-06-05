@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import LearningPath from './LearningPath';
 import { eraOptions } from './hero/EraOptions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -20,6 +21,12 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEra, setSelectedEra] = useState<string | null>(preferredEra);
   const [showTrackModal, setShowTrackModal] = useState(true);
+
+  // Helper: get index and next/prev era
+  const eraList = eraOptions.map(e => e.code);
+  const currentEraIdx = selectedEra ? eraList.indexOf(selectedEra) : 0;
+  const prevEra = eraList[(currentEraIdx - 1 + eraList.length) % eraList.length];
+  const nextEra = eraList[(currentEraIdx + 1) % eraList.length];
 
   useEffect(() => {
     setSelectedEra(preferredEra);
@@ -46,6 +53,35 @@ const Home = () => {
     };
     loadLearningTrack();
   }, [user, selectedEra]);
+
+  // Keyboard navigation for era
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+        e.preventDefault();
+      }
+      if (e.key === 'ArrowLeft') {
+        handleEraSelection(prevEra);
+      } else if (e.key === 'ArrowRight') {
+        handleEraSelection(nextEra);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [prevEra, nextEra]);
+
+  // Helper: background by era
+  const eraBg = (era: string | null) => {
+    switch (era) {
+      case 'jewish': return 'from-yellow-100 to-blue-100';
+      case 'islamic': return 'from-yellow-200 to-orange-100';
+      case 'christian': return 'from-purple-100 to-blue-50';
+      case 'chinese': return 'from-green-100 to-yellow-50';
+      case 'ancient-greece': return 'from-blue-100 to-white';
+      case 'ancient-rome': return 'from-red-100 to-yellow-100';
+      default: return 'from-gray-50 to-purple-50';
+    }
+  };
 
   const handleViewLessons = () => {
     navigate('/all-lessons');
@@ -74,7 +110,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-purple-50">
+    <div className={`min-h-screen bg-gradient-to-b ${eraBg(selectedEra)}`}>
       {/* Stay on track modal */}
       <Dialog open={showTrackModal} onOpenChange={setShowTrackModal}>
         <DialogContent>
@@ -107,7 +143,25 @@ const Home = () => {
         user={user} 
         handleToDashboard={handleToProfile} 
       />
-      <main className="container mx-auto py-8 px-4">
+      <main className="container mx-auto py-8 px-4 relative">
+        {/* Left Arrow Button */}
+        <button
+          className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-30 hover:bg-purple-100 transition"
+          style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
+          onClick={() => handleEraSelection(prevEra)}
+          aria-label="Previous Era"
+        >
+          <ChevronLeft className="w-10 h-10" />
+        </button>
+        {/* Right Arrow Button */}
+        <button
+          className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-30 hover:bg-purple-100 transition"
+          style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
+          onClick={() => handleEraSelection(nextEra)}
+          aria-label="Next Era"
+        >
+          <ChevronRight className="w-10 h-10" />
+        </button>
         <HeroSection 
           user={user}
           preferredEra={selectedEra}
