@@ -5,20 +5,8 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/contexts/UserContext';
 import { useNavigate } from 'react-router-dom';
 
-const AVATAR_OPTIONS = [
-  { key: 'mascot_default', src: '/images/avatars/Johan.png' },
-  { key: 'goldfish_1', src: '/images/avatars/goldfish_1.png' },
-  { key: 'goldfish_2', src: '/images/avatars/goldfish_2.png' },
-  { key: 'goldfish_3', src: '/images/avatars/goldfish_3.png' },
-  { key: 'goldfish_4', src: '/images/avatars/goldfish_4.png' },
-  { key: 'goldfish_5', src: '/images/avatars/goldfish_5.png' },
-  { key: 'goldfish_6', src: '/images/avatars/goldfish_6.png' },
-];
-
 const DashboardHeader = () => {
   const { user, signOut } = useUser();
-  const avatarBase = user?.user_metadata?.avatar_base || 'mascot_default';
-  const avatarSrc = AVATAR_OPTIONS.find(opt => opt.key === avatarBase)?.src || AVATAR_OPTIONS[0].src;
   const navigate = useNavigate();
   const handleLogout = async () => {
     await signOut();

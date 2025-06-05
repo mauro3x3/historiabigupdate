@@ -4,15 +4,11 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Chrome } from 'lucide-react';
 import {
   Form,
   FormControl,
   FormField,
   FormItem,
-  FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -120,18 +116,52 @@ const LoginForm = ({ setActiveTab }: LoginFormProps) => {
   };
 
   return (
-    <div className="w-full flex items-center justify-center bg-white">
+    <div className="w-full flex items-center justify-center bg-white font-inter">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-sm flex flex-col gap-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="w-full max-w-sm flex flex-col gap-7">
+          <h2 className="text-3xl font-extrabold text-center text-black mb-1 tracking-tight">Log In</h2>
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            className="w-full flex items-center justify-center gap-3 border border-black rounded-xl py-0 px-6 text-base font-medium text-black bg-white hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-black cursor-pointer h-14 mb-3"
+            disabled={isGoogleLoading}
+            style={{ fontFamily: 'Inter, sans-serif' }}
+          >
+            <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+              <img src="/google.svg" alt="Google" className="w-5 h-5" />
+            </span>
+            <span className="flex-1 text-center">{isGoogleLoading ? 'Loading...' : 'Continue with Google'}</span>
+          </button>
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-3 border border-black rounded-xl py-0 px-6 text-base font-medium text-black bg-white hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-black cursor-pointer h-14 mb-6"
+            style={{ fontFamily: 'Inter, sans-serif' }}
+            disabled
+          >
+            <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+              <img src="/apple.svg" alt="Apple" className="w-5 h-5" />
+            </span>
+            <span className="flex-1 text-center">Continue with Apple</span>
+          </button>
+          <div className="flex items-center gap-2 my-1">
+            <div className="flex-1 h-px bg-gray-200" />
+            <span className="text-xs text-gray-400 font-medium">or</span>
+            <div className="flex-1 h-px bg-gray-200" />
+          </div>
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input placeholder="Email" {...field} className="rounded-md px-4 py-3 border border-gray-200 focus:border-timelingo-purple bg-white text-black placeholder-gray-400 w-full shadow-sm mb-4" style={{ fontFamily: 'DM Sans, Inter, sans-serif' }} />
+                  <Input
+                    placeholder="Email"
+                    {...field}
+                    className="rounded-xl px-4 py-4 border border-gray-300 focus:border-black bg-white text-black placeholder-gray-300 w-full text-base font-normal focus:outline-none focus:ring-2 focus:ring-black h-14"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  />
                 </FormControl>
-                <FormMessage className="text-red-500 font-semibold" />
+                <FormMessage className="text-xs text-red-500 font-normal mt-1" />
               </FormItem>
             )}
           />
@@ -141,82 +171,82 @@ const LoginForm = ({ setActiveTab }: LoginFormProps) => {
             render={({ field }) => (
               <FormItem>
                 <FormControl>
-                  <Input type="password" placeholder="Password" {...field} className="rounded-md px-4 py-3 border border-gray-200 focus:border-timelingo-purple bg-white text-black placeholder-gray-400 w-full shadow-sm mb-6" style={{ fontFamily: 'DM Sans, Inter, sans-serif' }} />
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    {...field}
+                    className="rounded-xl px-4 py-4 border border-gray-300 focus:border-black bg-white text-black placeholder-gray-300 w-full text-base font-normal focus:outline-none focus:ring-2 focus:ring-black h-14"
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  />
                 </FormControl>
-                <FormMessage className="text-red-500 font-semibold" />
+                <FormMessage className="text-xs text-red-500 font-normal mt-1" />
               </FormItem>
             )}
           />
-          <Button 
-            type="submit" 
-            className="w-full bg-gradient-to-br from-timelingo-purple via-purple-400 to-yellow-300 text-white font-bold rounded-full py-3 text-lg shadow-lg transition-all duration-150 mt-2 tracking-widest uppercase"
-            style={{ fontFamily: 'DM Sans, sans-serif' }}
+          <button
+            type="submit"
+            className="w-full bg-black text-white font-bold rounded-xl py-4 text-base transition-all duration-150 text-center hover:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer h-14"
             disabled={isLoading}
+            style={{ fontFamily: 'Inter, sans-serif' }}
           >
             {isLoading ? "Logging in..." : "Log in"}
-          </Button>
-          {/* Prominent Sign Up button */}
-          <Button
+          </button>
+          <button
             type="button"
-            className="w-full bg-gradient-to-br from-yellow-300 via-purple-400 to-timelingo-purple text-white font-bold rounded-full py-3 text-lg shadow-lg transition-all duration-150 mt-2 tracking-widest uppercase border-2 border-timelingo-purple"
-            style={{ fontFamily: 'DM Sans, sans-serif' }}
+            className="w-full bg-white text-black font-normal rounded-xl py-4 text-base border border-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer h-14"
             onClick={() => setActiveTab('signup')}
+            style={{ fontFamily: 'Inter, sans-serif' }}
           >
             Sign up
-          </Button>
-          {/* Prominent Forgot Password button */}
-          <Button
+          </button>
+          <button
             type="button"
-            className="w-full bg-gradient-to-br from-gray-200 via-gray-300 to-gray-400 text-black font-bold rounded-full py-3 text-lg shadow-lg transition-all duration-150 mt-2 tracking-widest uppercase border-2 border-gray-400"
-            style={{ fontFamily: 'DM Sans, sans-serif' }}
+            className="w-full text-gray-400 font-normal rounded-xl py-2 text-xs hover:underline text-center mt-1 focus:outline-none cursor-pointer"
             onClick={() => setShowForgot(true)}
+            style={{ fontFamily: 'Inter, sans-serif' }}
           >
             Forgot password?
-          </Button>
-          {/* Error message for non-existent user */}
+          </button>
           {loginError && (
-            <div className="mt-4 text-center text-red-600 font-semibold">
+            <div className="mt-1 text-center text-red-500 text-xs font-normal">
               {loginError}
               {loginError.includes('No account found') && (
                 <div className="mt-2">
-                  <Button
+                  <button
                     type="button"
-                    className="w-full bg-yellow-400 text-white font-bold rounded-full py-2 text-base shadow"
-                    onClick={() => {
-                      setActiveTab('signup');
-                    }}
+                    className="w-full bg-white text-black font-normal rounded-xl py-3 text-base border border-black hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer h-14"
+                    onClick={() => setActiveTab('signup')}
+                    style={{ fontFamily: 'Inter, sans-serif' }}
                   >
                     Go to Sign Up
-                  </Button>
+                  </button>
                 </div>
               )}
             </div>
           )}
-          {/* Forgot password form modal */}
           {showForgot && (
             <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md relative flex flex-col items-center">
-                <button className="absolute top-4 right-4 text-gray-500 text-2xl font-bold" onClick={() => setShowForgot(false)}>✕</button>
-                <h2 className="text-xl font-bold mb-4">Reset your password</h2>
-                <form onSubmit={handleForgotPassword} className="space-y-6 w-full flex flex-col items-center">
-                  <div className="w-full">
-                    <label htmlFor="forgot-email" className="block text-gray-700 font-bold mb-2 text-base">Enter your email</label>
-                    <Input
-                      id="forgot-email"
-                      type="email"
-                      placeholder="your.email@example.com"
-                      value={forgotEmail}
-                      onChange={e => setForgotEmail(e.target.value)}
-                      className="rounded-md px-4 py-3 border border-gray-300 focus:border-black w-full bg-white text-base"
-                      required
-                    />
-                  </div>
-                  <div className="flex gap-4 w-full">
-                    <Button type="button" variant="outline" className="w-1/2 rounded-full py-3 text-base" onClick={() => setShowForgot(false)} disabled={forgotLoading}>Cancel</Button>
-                    <Button type="submit" className="w-1/2 bg-black text-white rounded-full py-3 text-base shadow" disabled={forgotLoading}>
-                      {forgotLoading ? 'Sending...' : 'Send Reset Email'}
-                    </Button>
-                  </div>
+              <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md relative flex flex-col items-center border border-gray-200">
+                <button className="absolute top-4 right-4 text-gray-400 text-2xl font-bold focus:outline-none cursor-pointer" onClick={() => setShowForgot(false)} style={{ fontFamily: 'Inter, sans-serif' }}>✕</button>
+                <h2 className="text-xl font-bold mb-4 text-black text-center" style={{ fontFamily: 'Inter, sans-serif' }}>Reset your password</h2>
+                <form onSubmit={handleForgotPassword} className="w-full flex flex-col gap-3">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={forgotEmail}
+                    onChange={e => setForgotEmail(e.target.value)}
+                    className="rounded-xl px-4 py-4 border border-gray-300 focus:border-black bg-white text-black placeholder-gray-300 w-full text-base font-normal focus:outline-none focus:ring-2 focus:ring-black h-14"
+                    required
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  />
+                  <button
+                    type="submit"
+                    className="w-full bg-black text-white font-bold rounded-xl py-4 text-base mt-2 focus:outline-none focus:ring-2 focus:ring-black cursor-pointer h-14"
+                    disabled={forgotLoading}
+                    style={{ fontFamily: 'Inter, sans-serif' }}
+                  >
+                    {forgotLoading ? 'Sending...' : 'Send reset email'}
+                  </button>
                 </form>
               </div>
             </div>

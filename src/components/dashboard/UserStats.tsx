@@ -27,23 +27,6 @@ const MOTIVATIONAL_QUOTES = [
   "Every lesson brings you closer to mastery."
 ];
 
-const AVATAR_OPTIONS = [
-  { key: 'goldfish_666', src: '/images/avatars/goldfish_666.png' },
-  { key: 'goldfish_539', src: '/images/avatars/goldfish_539.png' },
-  { key: 'goldfish_540', src: '/images/avatars/goldfish_540.png' },
-  { key: 'goldfish_1000', src: '/images/avatars/goldfish_1000.png' },
-  { key: 'goldfish_1001', src: '/images/avatars/goldfish_1001.png' },
-  { key: 'goldfish_1002', src: '/images/avatars/goldfish_1002.png' },
-  { key: 'goldfish_84', src: '/images/avatars/goldfish_84.png' },
-  { key: 'goldfish_31', src: '/images/avatars/goldfish_31.png' },
-  { key: 'goldfish_30', src: '/images/avatars/goldfish_30.png' },
-  { key: 'goldfish_5', src: '/images/avatars/goldfish_5.png' },
-  { key: 'goldfish_4', src: '/images/avatars/goldfish_4.png' },
-  { key: 'goldfish_288', src: '/images/avatars/goldfish_288.png' },
-  { key: 'goldfish_4000', src: '/images/avatars/goldfish_4000.png' },
-];
-
-const ALL_AVATARS = AVATAR_OPTIONS;
 const ALL_COURSES = [
   { title: 'Christianity', emoji: '✝️' },
   { title: 'WWII', emoji: '🌍' },
@@ -59,6 +42,18 @@ const COURSE_COLORS = {
   'Ancient Egypt': 'from-yellow-100 to-yellow-400',
   Medieval: 'from-gray-300 to-gray-600',
 };
+
+const AVATAR_OPTIONS = [
+  { key: 'goldfish_539', src: '/images/avatars/goldfish_539.png' },
+  { key: 'goldfish_540', src: '/images/avatars/goldfish_540.png' },
+  { key: 'goldfish_666', src: '/images/avatars/goldfish_666.png' },
+  { key: 'goldfish_1000', src: '/images/avatars/goldfish_1000.png' },
+  { key: 'goldfish_1001', src: '/images/avatars/goldfish_1001.png' },
+  { key: 'goldfish_1002', src: '/images/avatars/goldfish_1002.png' },
+];
+
+// Set goldfish_666 as the default avatar for all users
+const DEFAULT_AVATAR_KEY = 'goldfish_666';
 
 function StatCard({ icon, value, label, className, onClick = undefined, disabled = false, ariaLabel, title }) {
   return (
@@ -187,7 +182,7 @@ export default function UserStats(props: UserStatsProps) {
   const [showEraSelector, setShowEraSelector] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState(displayAvatar);
+  const [selectedAvatar, setSelectedAvatar] = useState(displayAvatar || DEFAULT_AVATAR_KEY);
   const [isSaving, setIsSaving] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -292,12 +287,12 @@ export default function UserStats(props: UserStatsProps) {
       if (e.key === 'Escape') setShowAvatarModal(false);
       if (e.key === 'Enter') handleAvatarSave();
       // Arrow keys navigation
-      const idx = AVATAR_OPTIONS.findIndex(opt => opt.key === selectedAvatar);
+      const idx = ALL_COURSES.findIndex(opt => opt.title === selectedAvatar);
       if (e.key === 'ArrowRight') {
-        setSelectedAvatar(AVATAR_OPTIONS[(idx + 1) % AVATAR_OPTIONS.length].key);
+        setSelectedAvatar(ALL_COURSES[(idx + 1) % ALL_COURSES.length].title);
       }
       if (e.key === 'ArrowLeft') {
-        setSelectedAvatar(AVATAR_OPTIONS[(idx - 1 + AVATAR_OPTIONS.length) % AVATAR_OPTIONS.length].key);
+        setSelectedAvatar(ALL_COURSES[(idx - 1 + ALL_COURSES.length) % ALL_COURSES.length].title);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -518,7 +513,7 @@ export default function UserStats(props: UserStatsProps) {
           <div className="flex flex-col items-center md:items-start gap-4 min-w-[180px]">
             <div className="relative">
                   <img
-                    src={AVATAR_OPTIONS.find(opt => opt.key === selectedAvatar)?.src || AVATAR_OPTIONS[0].src}
+                    src={AVATAR_OPTIONS.find(opt => opt.key === selectedAvatar)?.src || AVATAR_OPTIONS.find(opt => opt.key === DEFAULT_AVATAR_KEY)?.src}
                     alt={displayName + "'s avatar"}
                 className="w-32 h-32 object-contain drop-shadow-xl rounded-full border-4 border-timelingo-gold bg-gradient-to-br from-yellow-200 via-timelingo-gold to-purple-200"
               />
@@ -548,7 +543,7 @@ export default function UserStats(props: UserStatsProps) {
                 {/* Avatar Tab */}
                 {profileTab === 'avatar' && (
                   <div className="grid grid-cols-3 gap-4">
-                    {ALL_AVATARS.filter(opt => !!opt.src).map(opt => {
+                    {AVATAR_OPTIONS.map(opt => {
                       const isLocked = level < (opt.minLevel || 1);
                       return (
                         <button
@@ -730,7 +725,7 @@ export default function UserStats(props: UserStatsProps) {
             <div className="flex flex-col gap-2">
               {displayBadges.map((f, idx) => (
                 <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
-                  <img src={AVATAR_OPTIONS.find(opt => opt.key === f.friend?.avatar_base)?.src || AVATAR_OPTIONS[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
+                  <img src={ALL_COURSES.find(opt => opt.title === f.friend?.avatar_base)?.src || ALL_COURSES[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
                   <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
                   <button className="ml-auto px-2 py-1 rounded bg-red-500 text-white text-xs" onClick={() => handleRemoveFriend(f.friend_id)}>Remove</button>
                 </div>
@@ -793,7 +788,7 @@ export default function UserStats(props: UserStatsProps) {
               )}
               {displayBadges?.map((f, idx) => (
                 <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
-                  <img src={AVATAR_OPTIONS.find(opt => opt.key === f.friend?.avatar_base)?.src || AVATAR_OPTIONS[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
+                  <img src={ALL_COURSES.find(opt => opt.title === f.friend?.avatar_base)?.src || ALL_COURSES[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
                   <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
                   <button className="ml-auto px-2 py-1 rounded bg-red-500 text-white text-xs" onClick={() => handleRemoveFriend(f.friend_id)}>Remove</button>
                 </div>
