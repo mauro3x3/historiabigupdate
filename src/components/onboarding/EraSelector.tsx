@@ -181,7 +181,7 @@ const EraSelector = ({
                 data-era-idx={index}
                 tabIndex={0}
                 className={cn(
-                  "era-card relative border-2 rounded-lg p-4 transition-all duration-300 flex flex-col items-center justify-center gap-2 outline-none",
+                  "era-card relative border border-gray-200 rounded-lg p-4 transition-all duration-300 flex flex-col items-center justify-center gap-2 outline-none",
                   animatedItems.includes(era.code) ? 'animate-scale-in' : 'opacity-0',
                   isSelected(era.code) ? 'border-purple-500 bg-purple-50 shadow-lg scale-105' : '',
                   isPreferred(era.code) && isPreferenceSelector ? 'ring-2 ring-timelingo-teal' : '',

@@ -148,7 +148,15 @@ const Home = () => {
         <button
           className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-30 hover:bg-purple-100 transition"
           style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
-          onClick={() => handleEraSelection(prevEra)}
+          onClick={() => {
+            const audio = new Audio('/sounds/swoosh.mp3');
+            audio.volume = 1;
+            audio.muted = false;
+            audio.play().catch((err) => {
+              console.error('Audio play error:', err);
+            });
+            handleEraSelection(prevEra);
+          }}
           aria-label="Previous Era"
         >
           <ChevronLeft className="w-10 h-10" />
@@ -157,7 +165,15 @@ const Home = () => {
         <button
           className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-30 hover:bg-purple-100 transition"
           style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
-          onClick={() => handleEraSelection(nextEra)}
+          onClick={() => {
+            const audio = new Audio('/sounds/swoosh.mp3');
+            audio.volume = 1;
+            audio.muted = false;
+            audio.play().catch((err) => {
+              console.error('Audio play error:', err);
+            });
+            handleEraSelection(nextEra);
+          }}
           aria-label="Next Era"
         >
           <ChevronRight className="w-10 h-10" />
