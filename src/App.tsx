@@ -36,8 +36,6 @@ import QuizEditPage from './pages/QuizEditPage';
 import UpvotingBoard from "./pages/UpvotingBoard";
 import AiWhale from "./pages/AiWhale";
 import ProfilePublic from './pages/ProfilePublic';
-import { ShepherdJourneyProvider } from 'react-shepherd';
-import 'shepherd.js/dist/css/shepherd.css';
 
 const queryClient = new QueryClient();
 
@@ -283,22 +281,20 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <ShepherdJourneyProvider>
-      <ThemeContextProvider>
-        <ThemeProvider>
-          <QueryClientProvider client={queryClient}>
-            <UserProvider>
-              <TooltipProvider>
-                <Toaster />
-                <BrowserRouter>
-                  <RouterWithFishbowl />
-                </BrowserRouter>
-              </TooltipProvider>
-            </UserProvider>
-          </QueryClientProvider>
-        </ThemeProvider>
-      </ThemeContextProvider>
-    </ShepherdJourneyProvider>
+    <ThemeContextProvider>
+      <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <UserProvider>
+            <TooltipProvider>
+              <Toaster />
+              <BrowserRouter>
+                <RouterWithFishbowl />
+              </BrowserRouter>
+            </TooltipProvider>
+          </UserProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ThemeContextProvider>
   );
 };
 

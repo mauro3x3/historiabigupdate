@@ -13,7 +13,6 @@ import LearningPath from './LearningPath';
 import { eraOptions } from './hero/EraOptions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { ShepherdJourneyProvider, useShepherd } from 'react-shepherd';
 import 'shepherd.js/dist/css/shepherd.css';
 
 const tourSteps = [
@@ -105,11 +104,9 @@ const tourOptions = {
 };
 
 function TourStartButton() {
-  const tour = useShepherd();
   return (
     <button
       className="fixed bottom-6 right-6 z-50 bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700"
-      onClick={() => (tour as any).start()}
     >
       Show Tour
     </button>
@@ -123,7 +120,6 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEra, setSelectedEra] = useState<string | null>(preferredEra);
   const [showTrackModal, setShowTrackModal] = useState(true);
-  const tour = useShepherd();
 
   // Helper: get index and next/prev era
   const eraList = eraOptions.map(e => e.code);
@@ -211,19 +207,6 @@ const Home = () => {
       toast.info('Sign in to save your preferences');
     }
   };
-
-  useEffect(() => {
-    if (tour && typeof window !== 'undefined' && !localStorage.getItem('historia_tour_shown')) {
-      setTimeout(() => {
-        if ((tour as any).steps && (tour as any).steps.length === 0) {
-          (tour as any).addSteps(tourSteps);
-        }
-        (tour as any).options = tourOptions;
-        (tour as any).start();
-        localStorage.setItem('historia_tour_shown', 'true');
-      }, 500);
-    }
-  }, [tour]);
 
   return (
     <div className={`min-h-screen bg-gradient-to-b ${eraBg(selectedEra)}`}>
