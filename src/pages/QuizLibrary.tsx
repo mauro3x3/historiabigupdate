@@ -74,68 +74,42 @@ const QuizLibrary: React.FC = () => {
 
   const allThemes = Array.from(new Set(quizzes.map(q => q.theme).filter(Boolean)));
 
+  // Helper for pastel backgrounds
+  function pastelBg(idx) {
+    const bgs = [
+      'bg-yellow-50',
+      'bg-blue-50',
+      'bg-pink-50',
+      'bg-green-50',
+      'bg-purple-50',
+      'bg-orange-50',
+      'bg-teal-50',
+      'bg-red-50',
+    ];
+    return bgs[idx % bgs.length];
+  }
+
   if (loading) return <div className="text-center py-10">Loading quizzes...</div>;
   if (error) return <div className="text-center text-red-500 py-10">{error}</div>;
 
   return (
-    <div className="py-4">
-      <h2 className="text-xl font-bold mb-4 text-timelingo-navy">Quiz Your Friends</h2>
-      {/* Global Leaderboard */}
-      <div className="mb-8 flex flex-col items-center">
-        <div className="w-full max-w-2xl bg-white rounded-2xl shadow-lg p-6 mb-4 flex flex-col items-center">
-          <div className="flex items-center gap-2 mb-2">
-            <Trophy className="h-6 w-6 text-yellow-400" />
-            <h3 className="text-lg font-bold text-timelingo-gold">Global Leaderboard</h3>
-          </div>
-          {globalLeaderboard.length === 0 ? (
-            <div className="text-gray-400 text-sm">No results yet. Play some quizzes!</div>
-          ) : (
-            <table className="w-full text-sm border rounded-xl overflow-hidden">
-              <thead>
-                <tr className="bg-timelingo-gold/20">
-                  <th className="py-2 px-2">Rank</th>
-                  <th className="py-2 px-2">Player</th>
-                  <th className="py-2 px-2">Total Score</th>
-                  <th className="py-2 px-2">Quizzes Played</th>
-                </tr>
-              </thead>
-              <tbody>
-                {globalLeaderboard.map((entry, idx) => {
-                  const colors = [
-                    'bg-yellow-100 text-yellow-700',
-                    'bg-gray-200 text-gray-700',
-                    'bg-orange-200 text-orange-700',
-                    ''
-                  ];
-                  return (
-                    <tr key={idx} className={idx < 3 ? colors[idx] : ''}>
-                      <td className="py-1 px-2 text-center font-bold">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : idx + 1}</td>
-                      <td className="py-1 px-2 flex items-center gap-2">
-                        <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-timelingo-purple/10 text-timelingo-navy font-bold">
-                          {entry.nickname?.[0]?.toUpperCase() || <UserIcon className="h-5 w-5" />}
-                        </span>
-                        <span>{entry.nickname || 'Anonymous'}</span>
-                      </td>
-                      <td className="py-1 px-2 text-center font-semibold">{entry.total_score}</td>
-                      <td className="py-1 px-2 text-center">{entry.quizzes_played}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </div>
+    <div className="min-h-screen w-full font-sans bg-gradient-to-br from-gray-50 to-blue-50">
+      <style>{`body { font-family: 'Inter', 'Space Grotesk', sans-serif; }`}</style>
+      {/* Header */}
+      <div className="w-full px-4 md:px-12 pt-10 pb-4">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-timelingo-navy mb-2">Quiz Your Friends</h2>
+        <p className="text-gray-500 text-lg mb-4">Create a custom quiz and share it with friends! Get creative, compete, and go viral.</p>
       </div>
-      {/* Filters/Search */}
-      <div className="flex flex-wrap gap-2 mb-6 items-center justify-center w-full max-w-2xl mx-auto">
+      {/* Filters Bar */}
+      <div className="w-full sticky top-0 z-10 bg-white/80 backdrop-blur border-b border-gray-100 py-4 px-2 flex flex-wrap gap-3 items-center justify-center">
         <input
           type="text"
           placeholder="Search by name, theme, or creator..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="border rounded px-3 py-2 text-sm flex-1 min-w-[160px]"
+          className="rounded-full px-5 py-2 text-base border border-gray-200 bg-white focus:ring-2 focus:ring-timelingo-gold flex-1 min-w-[120px] transition"
         />
-        <select value={theme} onChange={e => setTheme(e.target.value)} className="border rounded px-2 py-2 text-sm">
+        <select value={theme} onChange={e => setTheme(e.target.value)} className="rounded-full px-4 py-2 text-base border border-gray-200 bg-white focus:ring-2 focus:ring-timelingo-gold">
           <option value="">All Themes</option>
           {allThemes.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
@@ -144,57 +118,80 @@ const QuizLibrary: React.FC = () => {
           placeholder="Filter by creator..."
           value={creator}
           onChange={e => setCreator(e.target.value)}
-          className="border rounded px-3 py-2 text-sm flex-1 min-w-[120px]"
+          className="rounded-full px-5 py-2 text-base border border-gray-200 bg-white focus:ring-2 focus:ring-timelingo-gold flex-1 min-w-[100px] transition"
         />
-        <select value={showOfficial} onChange={e => setShowOfficial(e.target.value as any)} className="border rounded px-2 py-2 text-sm">
+        <select value={showOfficial} onChange={e => setShowOfficial(e.target.value as any)} className="rounded-full px-4 py-2 text-base border border-gray-200 bg-white focus:ring-2 focus:ring-timelingo-gold">
           <option value="all">All</option>
           <option value="official">Official</option>
           <option value="user">User</option>
         </select>
-        <select value={sort} onChange={e => setSort(e.target.value as any)} className="border rounded px-2 py-2 text-sm">
+        <select value={sort} onChange={e => setSort(e.target.value as any)} className="rounded-full px-4 py-2 text-base border border-gray-200 bg-white focus:ring-2 focus:ring-timelingo-gold">
           <option value="newest">Newest</option>
           <option value="mostPlayed">Most Played</option>
         </select>
       </div>
-      {/* Quiz Cards */}
-      {filtered.length === 0 ? (
-        <div className="text-gray-500 text-center">No quizzes found.</div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
-          {filtered.map((quiz) => (
+      {/* Quiz List (blended, no cards, no grid) */}
+      <div className="w-full max-w-3xl mx-auto flex flex-col gap-4 px-2 md:px-0 pb-32 mt-8">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24">
+            <span className="text-7xl mb-4">🫥</span>
+            <div className="text-3xl font-bold text-gray-400 mb-2">No quizzes found</div>
+            <div className="text-lg text-gray-500 mb-6">Try changing your filters or create a new quiz!</div>
+            <button className="bg-timelingo-gold hover:bg-yellow-400 text-white font-bold rounded-full px-8 py-3 shadow transition text-lg" onClick={() => navigate('/quiz-builder')}>+ Create Quiz</button>
+          </div>
+        ) : (
+          filtered.map((quiz, idx) => (
             <div
               key={quiz.id}
-              className="bg-white rounded-2xl shadow-md p-5 flex flex-col gap-2 border border-gray-100 hover:shadow-lg transition cursor-pointer relative"
-              onClick={() => navigate(`/quiz/${quiz.id}`)}
+              className={`relative ${pastelBg(idx)} border border-gray-100 rounded-2xl px-6 py-5 flex flex-col sm:flex-row items-center transition-colors duration-200 hover:bg-opacity-90 hover:border-timelingo-gold w-full`}
             >
-              {quiz.is_official && (
-                <span className="absolute top-2 right-2 bg-timelingo-gold text-white text-xs font-bold px-2 py-1 rounded shadow">Official</span>
-              )}
-              <div className="flex items-center gap-2 mb-1">
-                <ListChecks className="h-5 w-5 text-timelingo-purple" />
-                <span className="font-semibold text-lg text-timelingo-navy">{quiz.name || 'Untitled Quiz'}</span>
-              </div>
-              <div className="text-gray-500 text-sm mb-1">Theme: {quiz.theme}</div>
-              <div className="text-gray-700 text-base font-semibold mb-1 flex items-center gap-2">
-                <UserIcon className="h-4 w-4" />
-                {quiz.signature && quiz.signature.trim() ? quiz.signature : 'Unknown'}
-              </div>
+              {/* Edit icon */}
               <button
-                className="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl text-sm shadow flex items-center gap-2 self-end"
+                className="absolute top-4 right-4 bg-white border border-gray-200 rounded-full p-2 shadow-sm hover:bg-timelingo-gold hover:text-white transition"
+                title="Edit Quiz"
                 onClick={e => { e.stopPropagation(); navigate(`/quiz-edit/${quiz.id}`); }}
               >
-                Edit
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536M9 11l6 6M3 17v4h4l12-12a2 2 0 0 0-2.828-2.828L3 17z" /></svg>
               </button>
-              <button
-                className="mt-2 bg-timelingo-gold hover:bg-yellow-400 text-white font-bold py-2 px-4 rounded-xl text-sm shadow flex items-center gap-2 self-end"
-                onClick={e => { e.stopPropagation(); navigate(`/quiz/${quiz.id}`); }}
-              >
-                <PlayCircle className="h-4 w-4" /> Play
-              </button>
+              {/* Icon/avatar left */}
+              <div className="flex-shrink-0 flex items-center justify-center mr-0 sm:mr-6 mb-4 sm:mb-0">
+                <span className="text-3xl bg-white rounded-full p-2 border border-gray-200"><span role="img" aria-label="Quiz">📚</span></span>
+              </div>
+              {/* Main content */}
+              <div className="flex-1 w-full flex flex-col items-center sm:items-start">
+                {/* Title */}
+                <div className="text-lg md:text-xl font-bold text-gray-900 mb-1 text-center sm:text-left leading-tight">{quiz.name || 'Untitled Quiz'}</div>
+                {/* Theme */}
+                <div className="text-sm text-timelingo-gold font-semibold text-center sm:text-left mb-1">{quiz.theme}</div>
+                {/* Author */}
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="inline-flex items-center justify-center h-7 w-7 rounded-full bg-gray-200 text-timelingo-purple font-bold text-base border border-gray-300">
+                    {quiz.signature && quiz.signature.trim() ? quiz.signature[0].toUpperCase() : '👤'}
+                  </span>
+                  <span className="text-gray-500 text-xs">by {quiz.signature && quiz.signature.trim() ? quiz.signature : 'Unknown'}</span>
+                </div>
+              </div>
+              {/* Play button right */}
+              <div className="flex-shrink-0 w-full sm:w-auto flex justify-center sm:justify-end mt-4 sm:mt-0">
+                <button
+                  className="w-full sm:w-32 bg-timelingo-gold hover:bg-yellow-400 text-white font-bold rounded-full py-2 shadow-sm transition text-base"
+                  onClick={e => { e.stopPropagation(); navigate(`/quiz/${quiz.id}`); }}
+                >
+                  <span className="inline-flex items-center gap-2 justify-center"><svg className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><polygon points="10,8 16,12 10,16" fill="currentColor" /></svg> Play</span>
+                </button>
+              </div>
+              {/* Official badge */}
+              {quiz.is_official && (
+                <span className="absolute top-4 left-4 bg-gradient-to-r from-timelingo-gold to-yellow-400 text-white text-xs font-bold px-3 py-1 rounded-full shadow">Official</span>
+              )}
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
+      {/* Floating Create Quiz Button */}
+      <button className="fixed bottom-8 right-8 z-50 bg-gradient-to-br from-timelingo-gold to-purple-400 text-white rounded-full w-16 h-16 flex items-center justify-center text-3xl shadow-lg hover:scale-110 transition" title="Create Quiz" onClick={() => navigate('/quiz-builder')}>
+        +
+      </button>
     </div>
   );
 };

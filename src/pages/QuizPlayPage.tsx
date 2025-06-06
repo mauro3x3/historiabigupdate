@@ -462,95 +462,108 @@ const QuizPlayPage: React.FC = () => {
 
   // --- Landing Page ---
   if (!started) return (
-    <div className="min-h-screen flex flex-col items-center justify-center py-10" style={backgroundStyle}>
-      <div className="w-full max-w-md flex flex-col items-center gap-4 relative" style={cardStyle}>
-        <div className="flex flex-col items-center w-full">
+    <div className="min-h-screen flex flex-col items-center justify-center py-10 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)' }}>
+      {/* Animated floating shapes */}
+      <div className="pointer-events-none absolute inset-0 z-0">
+        <div className="absolute top-[-80px] left-[-80px] w-[300px] h-[300px] bg-gradient-to-br from-yellow-100 via-yellow-50 to-purple-100 rounded-full opacity-40 blur-2xl animate-float-slow" />
+        <div className="absolute bottom-[-100px] right-[-100px] w-[350px] h-[350px] bg-gradient-to-tr from-blue-100 via-purple-100 to-yellow-50 rounded-full opacity-30 blur-2xl animate-float-slower" />
+        <div className="absolute top-1/2 left-[-120px] w-[200px] h-[200px] bg-gradient-to-br from-purple-100 to-blue-50 rounded-full opacity-20 blur-2xl animate-float-medium" />
+      </div>
+      <style>{`
+        @keyframes floatSlow { 0% { transform: translateY(0); } 50% { transform: translateY(30px); } 100% { transform: translateY(0); } }
+        @keyframes floatSlower { 0% { transform: translateY(0); } 50% { transform: translateY(-40px); } 100% { transform: translateY(0); } }
+        @keyframes floatMedium { 0% { transform: translateY(0); } 50% { transform: translateY(20px); } 100% { transform: translateY(0); } }
+        .animate-float-slow { animation: floatSlow 8s ease-in-out infinite; }
+        .animate-float-slower { animation: floatSlower 12s ease-in-out infinite; }
+        .animate-float-medium { animation: floatMedium 10s ease-in-out infinite; }
+      `}</style>
+      {/* Glassmorphic card, less boxy, more blended */}
+      <div className="w-full max-w-lg flex flex-col items-center gap-4 relative z-10 bg-white/60 rounded-[2.5rem] shadow-2xl p-10" style={{ backdropFilter: 'blur(16px)', boxShadow: '0 8px 40px 0 rgba(80,120,200,0.10)', border: 'none' }}>
+        {/* Mascot/image/question mark floating above card */}
+        <div className="relative flex flex-col items-center mb-2" style={{ marginTop: '-70px', marginBottom: '10px' }}>
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-yellow-100 blur-2xl opacity-60" style={{ width: 120, height: 120, zIndex: 0 }} />
           {wikiImage ? (
             <img
               src={wikiImage}
               alt="Quiz Topic"
-              className="h-32 w-32 object-cover rounded-full shadow-lg border-4 border-yellow-200 mb-2"
-              onError={e => (e.currentTarget.src = '/images/mascot/dolphin-animated.gif')}
+              className="w-28 h-28 object-cover rounded-full border-4 border-yellow-200 shadow-xl relative z-10 bg-white"
+              onError={e => (e.currentTarget.src = '')}
             />
           ) : (
-            <img src="/images/mascot/dolphin-animated.gif" alt="Quiz Mascot" className="h-24 w-24 rounded-full shadow-lg border-4 border-yellow-200 mb-2" />
+            <div className="w-28 h-28 flex items-center justify-center rounded-full border-4 border-yellow-200 shadow-xl relative z-10 bg-white text-5xl text-gray-400 font-extrabold select-none">
+              ?
+            </div>
           )}
         </div>
-        <h1 className="text-3xl font-extrabold mb-2 text-center text-timelingo-navy drop-shadow-lg">{quiz.name || 'Untitled Quiz'}</h1>
+        <h1 className="text-4xl font-extrabold mb-2 text-center text-timelingo-navy drop-shadow-lg tracking-tight" style={{ fontFamily: 'Baloo 2, sans-serif' }}>{quiz.name || 'Untitled Quiz'}</h1>
         {quiz.theme && (
-          <span className="inline-block font-semibold px-4 py-2 rounded-full text-base mb-2 bg-timelingo-gold/90 text-white shadow">{quiz.theme}</span>
+          <span className="inline-block font-bold px-6 py-2 rounded-full text-lg mb-2 bg-gradient-to-r from-timelingo-gold to-yellow-400 text-white shadow-lg tracking-wide" style={{ letterSpacing: 1 }}>{quiz.theme}</span>
         )}
-        <div className="flex items-center gap-2 mb-1">
-          <span className="inline-flex items-center justify-center h-8 w-8 rounded-full bg-timelingo-purple/10 text-timelingo-navy font-bold">
+        {/* Creator info, more prominent */}
+        <div className="flex items-center gap-3 mb-3 mt-1">
+          <span className="inline-flex items-center justify-center h-10 w-10 rounded-full bg-timelingo-purple/10 text-timelingo-navy font-bold text-xl border-2 border-timelingo-gold shadow">
             {quiz.creator?.[0]?.toUpperCase() || '👤'}
           </span>
-          <span className="text-gray-700 text-base">By: <span className="font-semibold">{quiz.creator || 'Anonymous'}</span></span>
+          <span className="text-timelingo-purple text-lg font-semibold">{quiz.creator || 'Anonymous'}</span>
         </div>
-        <div className="flex flex-wrap gap-3 justify-center text-sm text-gray-500 mb-2">
-          <span className="flex items-center gap-1"><ListChecks className="h-4 w-4" /> {quiz.questions?.length || 0} questions</span>
-          <span className="flex items-center gap-1"><PlayCircle className="h-4 w-4" /> {plays} plays</span>
-          <span className="flex items-center gap-1"><Calendar className="h-4 w-4" /> {new Date(quiz.created_at).toLocaleDateString()}</span>
+        {/* Friendly encouragement/description */}
+        <div className="mb-4 text-timelingo-navy text-center text-lg font-medium bg-yellow-50/60 rounded-xl px-6 py-3 shadow-inner">
+          {quiz.description || 'Ready to test your knowledge? Click below to start!'}
         </div>
-        <div className="mb-2 text-timelingo-navy text-center text-base font-medium">Ready to test your knowledge? Click below to start!</div>
+        {/* Modern gradient buttons */}
         {user ? (
-          <div className="mb-1 text-green-700 text-xs font-semibold bg-green-50 px-3 py-1 rounded-full">Logged in as {user.email}</div>
+          <div className="mb-2 text-green-700 text-xs font-semibold bg-green-50 px-3 py-1 rounded-full">Logged in as {user.email}</div>
         ) : (
-          <div className="mb-1 text-blue-700 text-xs">Enter a nickname to appear on the leaderboard!</div>
+          <div className="mb-2 text-blue-700 text-xs">Enter a nickname to appear on the leaderboard!</div>
         )}
-        <Button onClick={startQuiz} className="w-full font-bold py-3 rounded-xl text-lg shadow mb-3 bg-timelingo-gold hover:bg-yellow-400 text-white transition-all">Start Quiz</Button>
-        {/* Modern Share Button with Dropdown */}
-        <div className="relative w-full flex justify-center mb-2">
-          <div className="group inline-block w-full">
-            <Button className="w-full bg-timelingo-purple hover:bg-purple-700 text-lg font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
-              <svg className="h-5 w-5 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 12v.01M12 4v.01M20 12v.01M12 20v.01M7.05 7.05v.01M16.95 7.05v.01M16.95 16.95v.01M7.05 16.95v.01" /></svg>
-              Share
-            </Button>
-            <div className="absolute left-0 right-0 z-20 hidden group-hover:block bg-white border border-gray-200 rounded-xl shadow-lg mt-2 p-2 w-full">
-              <button onClick={handleShare} className="w-full text-left px-4 py-2 hover:bg-gray-100 rounded-lg text-timelingo-navy font-semibold">Copy Link</button>
-              <button onClick={handleShareQuizTwitter} className="w-full text-left px-4 py-2 hover:bg-blue-50 rounded-lg text-blue-500 font-semibold">Share on Twitter</button>
-              <a href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="block w-full text-left px-4 py-2 hover:bg-blue-50 rounded-lg text-blue-700 font-semibold">Share on Facebook</a>
-              <a href={`https://wa.me/?text=${shareText}%20${encodeURIComponent(shareUrl)}`} target="_blank" rel="noopener noreferrer" className="block w-full text-left px-4 py-2 hover:bg-green-50 rounded-lg text-green-600 font-semibold">Share on WhatsApp</a>
-            </div>
-          </div>
-        </div>
-        <button onClick={scrollToLeaderboard} className="mt-2 text-timelingo-gold underline font-semibold">View Leaderboard</button>
+        <Button onClick={startQuiz} className="w-full font-bold py-4 rounded-2xl text-xl shadow-lg mb-3 bg-gradient-to-r from-timelingo-gold to-yellow-400 hover:from-yellow-400 hover:to-timelingo-gold text-white transition-all tracking-wide">
+          Start Quiz
+        </Button>
+        <Button className="w-full bg-gradient-to-r from-purple-400 to-timelingo-purple hover:from-timelingo-purple hover:to-purple-400 text-xl font-bold py-4 rounded-2xl shadow-lg flex items-center justify-center gap-2 mb-2">
+          <svg className="h-6 w-6 mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4 12v.01M12 4v.01M20 12v.01M12 20v.01M7.05 7.05v.01M16.95 7.05v.01M16.95 16.95v.01M7.05 16.95v.01" /></svg>
+          Share
+        </Button>
+        <button onClick={scrollToLeaderboard} className="mt-2 text-timelingo-gold underline font-semibold text-base">View Leaderboard</button>
       </div>
-      <div ref={leaderboardRef} className="w-full max-w-xl mt-8">
-        <h2 className="text-lg font-bold mb-2 text-timelingo-navy">Leaderboard</h2>
-        {leaderboard.length === 0 ? (
-          <div className="text-gray-400 text-sm">No results yet. Be the first!</div>
-        ) : (
-          <div className="relative">
-            <button onClick={handleCopyLeaderboardLink} className="absolute right-0 top-0 text-xs bg-timelingo-gold/80 text-white px-2 py-1 rounded shadow">Copy Link</button>
-            <table className="w-full text-sm border rounded-xl overflow-hidden mt-6">
-              <thead>
-                <tr className="bg-timelingo-gold/20">
-                  <th className="py-2 px-2">Rank</th>
-                  <th className="py-2 px-2">Name</th>
-                  <th className="py-2 px-2">Score</th>
-                  <th className="py-2 px-2">Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leaderboard.map((entry, idx) => (
-                  <tr key={idx} className={
-                    (user && entry.user_id === user.id) || (!user && entry.nickname === nickname)
-                      ? 'bg-timelingo-purple/10 font-bold'
-                      : ''
-                  }>
-                    <td className="py-1 px-2 text-center">{idx + 1}</td>
-                    <td className="py-1 px-2">{entry.nickname || 'Anonymous'}</td>
-                    <td className="py-1 px-2 text-center">{entry.score}</td>
-                    <td className="py-1 px-2 text-center">{formatTime(entry.time_seconds)}</td>
+      {/* Leaderboard visually distinct */}
+      <div ref={leaderboardRef} className="w-full max-w-xl mt-10 z-10">
+        <h2 className="text-2xl font-extrabold mb-4 text-timelingo-navy text-center tracking-tight">Leaderboard</h2>
+        <div className="bg-white/80 rounded-2xl shadow-lg p-6">
+          {leaderboard.length === 0 ? (
+            <div className="text-gray-400 text-base text-center">No results yet. Be the first!</div>
+          ) : (
+            <div className="relative">
+              <button onClick={handleCopyLeaderboardLink} className="absolute right-0 top-0 text-xs bg-timelingo-gold/80 text-white px-2 py-1 rounded shadow">Copy Link</button>
+              <table className="w-full text-base border rounded-xl overflow-hidden mt-6">
+                <thead>
+                  <tr className="bg-timelingo-gold/20">
+                    <th className="py-2 px-2">Rank</th>
+                    <th className="py-2 px-2">Name</th>
+                    <th className="py-2 px-2">Score</th>
+                    <th className="py-2 px-2">Time</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-        {!user && (
-          <div className="mt-2 text-xs text-gray-500">Want to track all your scores? <a href="/auth" className="text-timelingo-purple underline">Sign up or log in</a>!</div>
-        )}
+                </thead>
+                <tbody>
+                  {leaderboard.map((entry, idx) => (
+                    <tr key={idx} className={
+                      (user && entry.user_id === user.id) || (!user && entry.nickname === nickname)
+                        ? 'bg-timelingo-purple/10 font-bold'
+                        : ''
+                    }>
+                      <td className="py-1 px-2 text-center">{idx + 1}</td>
+                      <td className="py-1 px-2">{entry.nickname || 'Anonymous'}</td>
+                      <td className="py-1 px-2 text-center">{entry.score}</td>
+                      <td className="py-1 px-2 text-center">{formatTime(entry.time_seconds)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+          {!user && (
+            <div className="mt-2 text-xs text-gray-500 text-center">Want to track all your scores? <a href="/auth" className="text-timelingo-purple underline">Sign up or log in</a>!</div>
+          )}
+        </div>
       </div>
     </div>
   );
