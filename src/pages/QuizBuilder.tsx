@@ -305,7 +305,7 @@ const QuizBuilder: React.FC = () => {
                   </div>
                 )}
                 {/* Show Create Quiz button if questions are present and not loading */}
-                {questions.length > 0 && !aiLoading && (
+                {false && questions.length > 0 && !aiLoading && (
                   <Button
                     onClick={() => {
                       // Always use the full aiPrompt as the topic for AI quizzes

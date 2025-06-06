@@ -53,7 +53,7 @@ const EraSelectionSection = ({ handleEraSelection }: EraSelectionSectionProps) =
       {/* Dropdown for quick era switching */}
       <div className="flex justify-center mb-6">
         <Select value={selectedEra || undefined} onValueChange={handleEraChange}>
-          <SelectTrigger className="w-64 bg-white shadow-md">
+          <SelectTrigger className="w-64 bg-white shadow-md era-dropdown">
             <span className="flex items-center">
               {eras.find(e => e.code === selectedEra)?.emoji || '🌍'}
               <span className="ml-2">

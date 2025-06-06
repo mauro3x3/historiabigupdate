@@ -16,7 +16,7 @@ const LessonCard = ({ lesson, onStart }: LessonCardProps) => {
   // Optionally, show a 'New' badge if lesson.new === true
   const isNew = 'new' in lesson && lesson.new;
   return (
-    <div className="border-l-4 border-timelingo-purple border border-gray-200 rounded-2xl bg-gradient-to-br from-white via-gray-50 to-blue-50 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:scale-[1.03] hover:bg-white transition-all duration-200 flex flex-col justify-between group p-5 relative" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #f3e8ff 8%, transparent 80%)' }}>
+    <div className="lesson-card border-l-4 border-timelingo-purple border border-gray-200 rounded-2xl bg-gradient-to-br from-white via-gray-50 to-blue-50 shadow-sm hover:shadow-lg hover:-translate-y-1 hover:scale-[1.03] hover:bg-white transition-all duration-200 flex flex-col justify-between group p-5 relative" style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #f3e8ff 8%, transparent 80%)' }}>
       {/* New badge */}
       {isNew && (
         <span className="absolute top-3 right-3 bg-green-400 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow">New</span>

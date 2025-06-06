@@ -175,10 +175,9 @@ const QuizLibrary: React.FC = () => {
                 <span className="font-semibold text-lg text-timelingo-navy">{quiz.name || 'Untitled Quiz'}</span>
               </div>
               <div className="text-gray-500 text-sm mb-1">Theme: {quiz.theme}</div>
-              <div className="text-gray-400 text-xs">By: {quiz.signature || 'Anonymous'}</div>
-              <div className="flex items-center gap-2 text-gray-400 text-xs mt-1">
-                <PlayCircle className="h-4 w-4" /> {quiz.plays || 0} plays
-                <Calendar className="h-4 w-4 ml-2" /> {new Date(quiz.created_at).toLocaleDateString()}
+              <div className="text-gray-700 text-base font-semibold mb-1 flex items-center gap-2">
+                <UserIcon className="h-4 w-4" />
+                {quiz.signature && quiz.signature.trim() ? quiz.signature : 'Unknown'}
               </div>
               <button
                 className="mt-2 bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-xl text-sm shadow flex items-center gap-2 self-end"

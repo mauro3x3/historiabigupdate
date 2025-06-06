@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { MapGameEntry } from '@/types/mapGame';
@@ -9,6 +8,8 @@ import ResultDisplay from './ResultDisplay';
 import GuessControlFooter from './GuessControlFooter';
 import GameHeader from './GameHeader';
 import GameProgress from './GameProgress';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Info } from 'lucide-react';
 
 interface GameInterfaceProps {
   game: {
@@ -58,24 +59,60 @@ const GameInterface: React.FC<GameInterfaceProps> = ({
         navigateToGames={navigateToGames}
       />
       
-      <GameProgress 
-        currentEntryIndex={currentEntryIndex}
-        entriesLength={entriesLength}
-      />
+      <div className="flex items-center gap-2 mb-4">
+        <GameProgress 
+          currentEntryIndex={currentEntryIndex}
+          entriesLength={entriesLength}
+        />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <Info className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Track your progress through this historical journey</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <MapDisplay 
-          currentEntry={currentEntry}
-          hint={currentEntry.hint}
-          showResult={showResult}
-          isFullscreenOpen={isFullscreenOpen}
-          setIsFullscreenOpen={setIsFullscreenOpen}
-          handleImageError={handleImageError}
-        />
+        <div className="relative">
+          <MapDisplay 
+            currentEntry={currentEntry}
+            hint={currentEntry.hint}
+            showResult={showResult}
+            isFullscreenOpen={isFullscreenOpen}
+            setIsFullscreenOpen={setIsFullscreenOpen}
+            handleImageError={handleImageError}
+          />
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="absolute top-2 right-2 h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Click the image to view it in fullscreen</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
         
         <Card className="border-gray-200">
           <CardHeader className="bg-gradient-to-r from-timelingo-purple/10 to-timelingo-purple/5">
-            <CardTitle>Make Your Guess</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>Make Your Guess</CardTitle>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger>
+                    <Info className="h-5 w-5 text-gray-400 hover:text-gray-600 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Try to guess the year this historical map is from</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
           </CardHeader>
           <CardContent className="space-y-6 p-6">
             {!showResult ? (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import HomeHeader from './HomeHeader';
@@ -13,6 +13,108 @@ import LearningPath from './LearningPath';
 import { eraOptions } from './hero/EraOptions';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ShepherdJourneyProvider, useShepherd } from 'react-shepherd';
+import 'shepherd.js/dist/css/shepherd.css';
+
+const tourSteps = [
+  {
+    id: 'era-dropdown',
+    attachTo: { element: '.era-dropdown', on: 'bottom' },
+    title: 'Change Era',
+    text: ['Click here to change the historical era you\'re learning about.'],
+    buttons: [
+      {
+        text: 'Next',
+        action: function() { return this.next(); }
+      }
+    ]
+  },
+  {
+    id: 'lesson-card',
+    attachTo: { element: '.lesson-card', on: 'right' },
+    title: 'Lessons',
+    text: ['These are your lessons. Click to start learning!'],
+    buttons: [
+      {
+        text: 'Back',
+        action: function() { return this.back(); }
+      },
+      {
+        text: 'Next',
+        action: function() { return this.next(); }
+      }
+    ]
+  },
+  {
+    id: 'nav-arrow-right',
+    attachTo: { element: '.nav-arrow-right', on: 'left' },
+    title: 'Next Era',
+    text: ['Use this arrow to move forward in your learning journey.'],
+    buttons: [
+      {
+        text: 'Back',
+        action: function() { return this.back(); }
+      },
+      {
+        text: 'Next',
+        action: function() { return this.next(); }
+      }
+    ]
+  },
+  {
+    id: 'nav-arrow-left',
+    attachTo: { element: '.nav-arrow-left', on: 'right' },
+    title: 'Previous Era',
+    text: ['Use this arrow to move backward in your learning journey.'],
+    buttons: [
+      {
+        text: 'Back',
+        action: function() { return this.back(); }
+      },
+      {
+        text: 'Next',
+        action: function() { return this.next(); }
+      }
+    ]
+  },
+  {
+    id: 'special-glow-button',
+    attachTo: { element: '.special-glow-button', on: 'top' },
+    title: 'Special Feature',
+    text: ['Try this button to unlock something special!'],
+    buttons: [
+      {
+        text: 'Back',
+        action: function() { return this.back(); }
+      },
+      {
+        text: 'Done',
+        action: function() { return this.complete(); }
+      }
+    ]
+  }
+];
+
+const tourOptions = {
+  defaultStepOptions: {
+    scrollTo: true,
+    cancelIcon: { enabled: true },
+    canClickTarget: false,
+  },
+  useModalOverlay: true,
+};
+
+function TourStartButton() {
+  const tour = useShepherd();
+  return (
+    <button
+      className="fixed bottom-6 right-6 z-50 bg-purple-600 text-white px-4 py-2 rounded-full shadow-lg hover:bg-purple-700"
+      onClick={() => (tour as any).start()}
+    >
+      Show Tour
+    </button>
+  );
+}
 
 const Home = () => {
   const navigate = useNavigate();
@@ -21,6 +123,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedEra, setSelectedEra] = useState<string | null>(preferredEra);
   const [showTrackModal, setShowTrackModal] = useState(true);
+  const tour = useShepherd();
 
   // Helper: get index and next/prev era
   const eraList = eraOptions.map(e => e.code);
@@ -109,8 +212,22 @@ const Home = () => {
     }
   };
 
+  useEffect(() => {
+    if (tour && typeof window !== 'undefined' && !localStorage.getItem('historia_tour_shown')) {
+      setTimeout(() => {
+        if ((tour as any).steps && (tour as any).steps.length === 0) {
+          (tour as any).addSteps(tourSteps);
+        }
+        (tour as any).options = tourOptions;
+        (tour as any).start();
+        localStorage.setItem('historia_tour_shown', 'true');
+      }, 500);
+    }
+  }, [tour]);
+
   return (
     <div className={`min-h-screen bg-gradient-to-b ${eraBg(selectedEra)}`}>
+      <TourStartButton />
       {/* Stay on track modal */}
       <Dialog open={showTrackModal} onOpenChange={setShowTrackModal}>
         <DialogContent>
@@ -146,7 +263,7 @@ const Home = () => {
       <main className="container mx-auto py-8 px-4 relative">
         {/* Left Arrow Button */}
         <button
-          className="absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-30 hover:bg-purple-100 transition"
+          className="nav-arrow-left absolute left-0 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-30 hover:bg-purple-100 transition"
           style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
           onClick={() => {
             const audio = new Audio('/sounds/swoosh.mp3');
@@ -163,7 +280,7 @@ const Home = () => {
         </button>
         {/* Right Arrow Button */}
         <button
-          className="absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-30 hover:bg-purple-100 transition"
+          className="nav-arrow-right absolute right-0 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-30 hover:bg-purple-100 transition"
           style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
           onClick={() => {
             const audio = new Audio('/sounds/swoosh.mp3');

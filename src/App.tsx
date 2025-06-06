@@ -36,6 +36,8 @@ import QuizEditPage from './pages/QuizEditPage';
 import UpvotingBoard from "./pages/UpvotingBoard";
 import AiWhale from "./pages/AiWhale";
 import ProfilePublic from './pages/ProfilePublic';
+import { ShepherdJourneyProvider } from 'react-shepherd';
+import 'shepherd.js/dist/css/shepherd.css';
 
 const queryClient = new QueryClient();
 
@@ -217,7 +219,7 @@ function GlobalFishbowlMenu() {
       </div>
       {/* Orb Button */}
       <button
-        className={`rounded-full shadow-2xl bg-gradient-to-br from-blue-100 via-timelingo-gold to-purple-200 p-3 border-4 border-white transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${open ? 'ring-4 ring-timelingo-gold scale-105' : ''}`}
+        className={`special-glow-button rounded-full shadow-2xl bg-gradient-to-br from-blue-100 via-timelingo-gold to-purple-200 p-3 border-4 border-white transition-transform duration-200 hover:scale-110 focus:outline-none focus:ring-2 focus:ring-yellow-400 ${open ? 'ring-4 ring-timelingo-gold scale-105' : ''}`}
         aria-label={open ? 'Close menu' : 'Open menu'}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -281,20 +283,22 @@ const App: React.FC = () => {
   }, []);
 
   return (
-    <ThemeContextProvider>
-      <ThemeProvider>
-        <QueryClientProvider client={queryClient}>
-          <UserProvider>
-            <TooltipProvider>
-              <Toaster />
-              <BrowserRouter>
-                <RouterWithFishbowl />
-              </BrowserRouter>
-            </TooltipProvider>
-          </UserProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
-    </ThemeContextProvider>
+    <ShepherdJourneyProvider>
+      <ThemeContextProvider>
+        <ThemeProvider>
+          <QueryClientProvider client={queryClient}>
+            <UserProvider>
+              <TooltipProvider>
+                <Toaster />
+                <BrowserRouter>
+                  <RouterWithFishbowl />
+                </BrowserRouter>
+              </TooltipProvider>
+            </UserProvider>
+          </QueryClientProvider>
+        </ThemeProvider>
+      </ThemeContextProvider>
+    </ShepherdJourneyProvider>
   );
 };
 
