@@ -34,7 +34,6 @@ import LandingPage from "./pages/Index";
 import posthog from 'posthog-js';
 import QuizEditPage from './pages/QuizEditPage';
 import UpvotingBoard from "./pages/UpvotingBoard";
-import AiWhale from "./pages/AiWhale";
 import ProfilePublic from './pages/ProfilePublic';
 
 const queryClient = new QueryClient();
@@ -121,19 +120,17 @@ const AppRoutes = () => {
       <Route path="/achievements" element={<AllAchievements />} />
       <Route path="/quiz-edit/:id" element={<QuizEditPage />} />
       <Route path="/upvoting-board" element={<UpvotingBoard />} />
-      <Route path="/ai-whale" element={<AiWhale />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
 };
 
 const NAV_LINKS = [
-  { label: 'Home', href: '/home', icon: <HomeIcon className="h-6 w-6" /> },
+  { label: 'Home', href: '/home', icon: <img src="/images/icons/home.png" alt="Home" className="h-7 w-7" /> },
   { label: 'Quiz Your Friends', href: '/quiz-builder', icon: <Sparkles className="h-6 w-6 text-yellow-400" /> },
   { label: 'Explore Eras', href: '/onboarding', icon: <Hourglass className="h-6 w-6" /> },
   { label: 'Upvoting board', href: '/upvoting-board', icon: <span className="h-6 w-6">⬆️</span>, external: true },
-  { label: 'AI Whale', href: '/ai-whale', icon: <span className="h-6 w-6">🐋</span> },
-  { label: 'Profile', href: '/profile', icon: <User className="h-6 w-6" /> },
+  { label: 'Profile', href: '/profile', icon: <img src="/images/icons/profile.png" alt="Profile" className="h-7 w-7" /> },
 ];
 
 function GlobalFishbowlMenu() {

@@ -44,16 +44,25 @@ const COURSE_COLORS = {
 };
 
 const AVATAR_OPTIONS = [
-  { key: 'goldfish_539', src: '/images/avatars/goldfish_539.png' },
-  { key: 'goldfish_540', src: '/images/avatars/goldfish_540.png' },
-  { key: 'goldfish_666', src: '/images/avatars/goldfish_666.png' },
-  { key: 'goldfish_1000', src: '/images/avatars/goldfish_1000.png' },
-  { key: 'goldfish_1001', src: '/images/avatars/goldfish_1001.png' },
-  { key: 'goldfish_1002', src: '/images/avatars/goldfish_1002.png' },
+  { key: 'ghost', src: '/images/avatars/ghost.png', unlockCondition: 'default', description: 'Default avatar' },
+  { key: 'hummingbird', src: '/images/avatars/hummingbird.png', unlockCondition: 'ancient-egypt', description: 'Complete Ancient Egypt modules' },
+  { key: 'lion', src: '/images/avatars/lion.png', unlockCondition: 'judaism', description: 'Complete Judaism modules' },
+  { key: 'whale', src: '/images/avatars/whale.png', unlockCondition: 'vikings', description: 'Complete Viking modules' },
+  { key: 'squid', src: '/images/avatars/squid.png', unlockCondition: 'ancient-greece', description: 'Complete Ancient Greece modules' },
+  { key: 'axolotl', src: '/images/avatars/axolotl.png', unlockCondition: 'aztec-maya', description: 'Complete Aztec/Maya modules' },
+  { key: 'bison', src: '/images/avatars/bison.png', unlockCondition: 'native-american', description: 'Complete Native American modules' },
+  { key: 'cat', src: '/images/avatars/cat.png', unlockCondition: 'ancient-egypt-advanced', description: 'Complete all Ancient Egypt modules' },
+  { key: 'crow', src: '/images/avatars/crow.png', unlockCondition: 'germanic-tribes', description: 'Complete Germanic Tribes modules' },
+  { key: 'koala', src: '/images/avatars/koala.png', unlockCondition: 'australian', description: 'Complete Australian history modules' },
+  { key: 'orangutan', src: '/images/avatars/orangutan.png', unlockCondition: 'southeast-asian', description: 'Complete Southeast Asian modules' },
+  { key: 'panda', src: '/images/avatars/panda.png', unlockCondition: 'china', description: 'Complete all Chinese modules' },
+  { key: 'snail', src: '/images/avatars/snail.png', unlockCondition: 'roman-empire', description: 'Complete Roman Empire modules' },
+  { key: 'snake', src: '/images/avatars/snake.png', unlockCondition: 'islam', description: 'Complete Islamic history modules' },
+  { key: 'snowfox', src: '/images/avatars/snowfox.png', unlockCondition: 'russia', description: 'Complete Russian history modules' },
 ];
 
-// Set goldfish_666 as the default avatar for all users
-const DEFAULT_AVATAR_KEY = 'goldfish_666';
+// Set ghost as the default avatar for all users
+const DEFAULT_AVATAR_KEY = 'ghost';
 
 function StatCard({ icon, value, label, className, onClick = undefined, disabled = false, ariaLabel, title }) {
   return (
@@ -171,7 +180,7 @@ export default function UserStats(props: UserStatsProps) {
   const displayCompletedEras = isPublic ? completedEras : myCompletedEras;
   const displayPreferredEra = isPublic ? preferredEra : myPreferredEra;
   const displayUsername = isPublic ? username : (user?.username || user?.email?.split('@')[0] || 'Historian');
-  const displayAvatar = isPublic ? avatar_base : (user?.user_metadata?.avatar_base || 'goldfish_666');
+  const displayAvatar = isPublic ? avatar_base : (user?.user_metadata?.avatar_base || 'ghost');
   const displayFeaturedEras = (isPublic ? featured_eras : undefined) || [];
   const displayBadges = (isPublic ? badges : undefined) || [];
   const displayAchievements = (isPublic ? achievements : undefined) || [];
@@ -544,7 +553,7 @@ export default function UserStats(props: UserStatsProps) {
                 {profileTab === 'avatar' && (
                   <div className="grid grid-cols-3 gap-4">
                     {AVATAR_OPTIONS.map(opt => {
-                      const isLocked = level < (opt.minLevel || 1);
+                      const isLocked = opt.unlockCondition !== 'default' && !displayCompletedEras.includes(opt.unlockCondition);
                       return (
                         <button
                           key={opt.key}
@@ -558,7 +567,7 @@ export default function UserStats(props: UserStatsProps) {
                           {isLocked && (
                             <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center rounded-xl">
                               <svg className="w-8 h-8 text-white mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 17v1m0-4a2 2 0 00-2 2v1a2 2 0 002 2h0a2 2 0 002-2v-1a2 2 0 00-2-2zm0 0V9a4 4 0 10-8 0v4" /></svg>
-                              <span className="text-xs text-white font-bold bg-black/60 px-2 py-0.5 rounded">Unlock at Level {opt.minLevel}</span>
+                              <span className="text-xs text-white font-bold bg-black/60 px-2 py-0.5 rounded text-center">{opt.description}</span>
                             </div>
                           )}
                         </button>

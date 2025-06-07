@@ -16,18 +16,21 @@ const reminderOptions = [
     title: 'Push Notifications',
     description: 'Get notifications directly on your device',
     icon: '🔔',
+    customIcon: '/images/icons/notification.png',
   },
   {
     id: 'email' as ReminderMethod,
     title: 'Email Reminders',
     description: 'Receive daily emails to continue learning',
     icon: '📧',
+    customIcon: '/images/icons/email.png',
   },
   {
     id: 'none' as ReminderMethod,
     title: 'No Reminders',
     description: 'I\'ll remember to study on my own',
     icon: '🙅‍♂️',
+    customIcon: '/images/icons/noreminders.png',
   },
 ];
 
@@ -77,7 +80,17 @@ const ReminderPreferences = ({
             className={`reminder-option relative rounded-xl border-2 p-6 cursor-pointer transition-all duration-200 flex flex-col items-center text-center shadow-sm ${selectedMethod === option.id ? 'border-timelingo-purple bg-purple-50 scale-105 shadow-lg' : 'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50'}`}
             onClick={() => onMethodSelect(option.id)}
           >
-            <div className="text-3xl mb-2">{option.icon}</div>
+            <div className="mb-2">
+              {option.customIcon ? (
+                <img 
+                  src={option.customIcon} 
+                  alt={option.title}
+                  className="h-8 w-8 object-contain"
+                />
+              ) : (
+                <span className="text-3xl">{option.icon}</span>
+              )}
+            </div>
             <h3 className="font-semibold text-timelingo-navy">{option.title}</h3>
             <p className="text-sm text-gray-500">{option.description}</p>
             {selectedMethod === option.id && (

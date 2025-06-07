@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { LearningTime } from '@/types';
 import { Clock, Clock2, Clock4, Clock8 } from 'lucide-react';
@@ -16,25 +15,25 @@ const learningTimeOptions: LearnTimeOption[] = [
     value: "5-min",
     label: "5 minutes",
     description: "Quick daily history facts",
-    icon: <Clock className="h-8 w-8 text-timelingo-purple" />
+    icon: <img src="/images/icons/howmuchtime.png" alt="Time" className="h-8 w-8 object-contain" />
   },
   {
     value: "15-min",
     label: "10-15 minutes",
     description: "Short lessons and quizzes",
-    icon: <Clock2 className="h-8 w-8 text-timelingo-purple" />
+    icon: <img src="/images/icons/howmuchtime.png" alt="Time" className="h-8 w-8 object-contain" />
   },
   {
     value: "30-min",
     label: "30 minutes",
     description: "Deeper learning with scenarios",
-    icon: <Clock4 className="h-8 w-8 text-timelingo-purple" />
+    icon: <img src="/images/icons/howmuchtime.png" alt="Time" className="h-8 w-8 object-contain" />
   },
   {
     value: "60-min",
     label: "60+ minutes",
     description: "Comprehensive historical immersion",
-    icon: <Clock8 className="h-8 w-8 text-timelingo-purple" />
+    icon: <img src="/images/icons/howmuchtime.png" alt="Time" className="h-8 w-8 object-contain" />
   }
 ];
 

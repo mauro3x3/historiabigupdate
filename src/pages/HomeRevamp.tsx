@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '@/contexts/UserContext';
 import { HistoryEra, LearningTrackLevel } from '@/types';
@@ -13,8 +14,6 @@ import LearningPath from '../components/home/LearningPath';
 const ERA_OPTIONS = [
   { code: 'jewish', name: 'Jewish History', emoji: '✡️' },
   { code: 'ancient-greece', name: 'Ancient Greece', emoji: '🏛️' },
-  { code: 'ancient-rome', name: 'Ancient Rome', emoji: '🏺' },
-  { code: 'china', name: 'Chinese History', emoji: '🐲' },
   { code: 'islamic', name: 'Islamic History', emoji: '☪️' },
   { code: 'christian', name: 'Christian History', emoji: '✝️' },
   { code: 'russian', name: 'Russian History', emoji: '🇷🇺' },
@@ -62,37 +61,293 @@ function FullscreenBackground() {
   );
 }
 
-function EraPicker({ era, onChange, disabled }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          variant="outline"
-          size="lg"
-          className="flex items-center gap-2 bg-white/80 border-2 border-purple-200 text-purple-700 font-bold text-base px-6 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:ring-4 focus:ring-purple-200"
-          disabled={disabled}
-        >
-          <BookOpen className="h-6 w-6" />
-          {ERA_OPTIONS.find(e => e.code === era)?.name || 'Change Era'}
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-64 p-2 bg-white/95 rounded-2xl shadow-2xl z-[99999] fixed top-24 right-10">
-        {ERA_OPTIONS.map((eraOpt) => (
-          <Button
-            key={eraOpt.code}
-            variant="ghost"
-            className={`flex items-center justify-start w-full px-3 py-2 text-base rounded-lg hover:bg-purple-50 hover:text-purple-700 transition-all ${eraOpt.code === era ? 'ring-4 ring-pink-300' : ''}`}
-            onClick={() => { onChange(eraOpt.code); setOpen(false); }}
-            disabled={disabled}
+// Course Selection Modal Component (rendered via Portal)
+function CourseSelectionModal({ isOpen, onClose, era, onChange }) {
+  const iconMap = {
+    'jewish': '/images/icons/judaism.png',
+    'ancient-greece': '/images/icons/greek.png',
+    'ancient-rome': '/images/icons/scroll.png',
+    'china': '/images/icons/china.png',
+    'islamic': '/images/icons/islam.png',
+    'christian': '/images/icons/church.png',
+    'russian': '/images/icons/russia.png',
+    'america': '/images/icons/america.png'
+  };
+
+  const selectCourse = (courseCode) => {
+    onChange(courseCode);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div 
+      className="fixed top-0 left-0 w-screen h-screen bg-white z-[999999] overflow-y-auto"
+      style={{ margin: 0, padding: 0 }}
+    >
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-6 shadow-lg sticky top-0 z-50">
+        <div className="flex items-center justify-between max-w-7xl mx-auto">
+          <div>
+            <h1 className="text-4xl font-bold mb-2">Choose Your Historical Journey</h1>
+            <p className="text-blue-100 text-lg">Select the historical period that fascinates you most</p>
+          </div>
+          <button 
+            onClick={onClose}
+            className="w-12 h-12 rounded-full bg-white bg-opacity-20 hover:bg-opacity-30 flex items-center justify-center text-white transition-all duration-200 hover:scale-110"
           >
-            <span className="mr-3 text-xl">{eraOpt.emoji}</span>
-            {eraOpt.name}
-          </Button>
-        ))}
-      </PopoverContent>
-    </Popover>
+            <span className="text-2xl">×</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen pb-20">
+        <div className="max-w-7xl mx-auto px-8 py-12">
+          {/* Available Courses Section */}
+          <div className="mb-16">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-800 mb-4">📚 Available Courses</h2>
+              <p className="text-gray-600 text-lg">Start your journey through time with these carefully crafted historical experiences</p>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+              {ERA_OPTIONS.map((eraOpt) => {
+                const isSelected = eraOpt.code === era;
+                
+                // Course metadata with historical dates and real module counts
+                const courseData = {
+                  'jewish': { dates: '2000 BCE - 70 CE', modules: 100 },
+                  'ancient-greece': { dates: '800 - 146 BCE', modules: 60 },
+                  'ancient-rome': { dates: '753 BCE - 476 CE', modules: 120 },
+                  'china': { dates: '2070 BCE - 1644 CE', modules: 180 },
+                  'islamic': { dates: '610 - 1258 CE', modules: 29 },
+                  'christian': { dates: '30 - 1517 CE', modules: 150 },
+                  'russian': { dates: '862 - 1917 CE', modules: 95 },
+                  'america': { dates: '1492 - 1865 CE', modules: 110 }
+                };
+                
+                const currentCourse = courseData[eraOpt.code] || { dates: 'Various dates', modules: 50 };
+                
+                return (
+                  <div
+                    key={eraOpt.code}
+                    onClick={() => selectCourse(eraOpt.code)}
+                    className={`relative group cursor-pointer transform transition-all duration-300 hover:scale-105 hover:-translate-y-2 ${
+                      isSelected ? 'scale-105 -translate-y-2' : ''
+                    }`}
+                  >
+                    {/* Course Card */}
+                    <div className={`bg-white rounded-3xl shadow-xl overflow-hidden border-4 transition-all duration-300 ${
+                      isSelected 
+                        ? 'border-green-400 shadow-green-200' 
+                        : 'border-transparent group-hover:border-blue-300 group-hover:shadow-blue-200'
+                    }`}>
+                      
+                      {/* Selected Badge */}
+                      {isSelected && (
+                        <div className="absolute -top-3 -right-3 w-12 h-12 bg-green-500 rounded-full flex items-center justify-center shadow-lg z-10 animate-pulse">
+                          <Check className="w-6 h-6 text-white" />
+                        </div>
+                      )}
+
+                      {/* Course Image/Icon */}
+                      <div className="relative h-32 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
+                        {iconMap[eraOpt.code] ? (
+                          <img 
+                            src={iconMap[eraOpt.code]} 
+                            alt={eraOpt.name}
+                            className="w-20 h-20 object-contain filter drop-shadow-lg"
+                          />
+                        ) : (
+                          <div className="w-20 h-20 bg-white bg-opacity-80 rounded-2xl flex items-center justify-center text-4xl shadow-lg">
+                            {eraOpt.emoji}
+                          </div>
+                        )}
+                        
+                        {/* Overlay gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black from-0% via-transparent via-50% to-transparent opacity-20"></div>
+                      </div>
+
+                      {/* Course Content */}
+                      <div className="p-6">
+                        <h3 className="text-xl font-bold text-gray-800 mb-2 line-clamp-2">
+                          {eraOpt.name}
+                        </h3>
+                        
+                        <div className="space-y-3 mb-4">
+                          {isSelected && (
+                            <div className="flex items-center text-sm text-green-600 font-medium">
+                              <span className="mr-2">📈</span>
+                              <span>45% completed</span>
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="mr-2">📅</span>
+                            <span>{currentCourse.dates}</span>
+                          </div>
+                          
+                          <div className="flex items-center text-sm text-gray-600">
+                            <span className="mr-2">📚</span>
+                            <span>{currentCourse.modules} modules</span>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar for selected course */}
+                        {isSelected && (
+                          <div className="mb-4">
+                            <div className="w-full bg-gray-200 rounded-full h-2">
+                              <div className="bg-green-500 h-2 rounded-full transition-all duration-500" style={{ width: '45%' }}></div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Action Button */}
+                        <button className={`w-full py-3 px-4 rounded-xl font-semibold transition-all duration-200 ${
+                          isSelected 
+                            ? 'bg-green-500 text-white shadow-lg hover:bg-green-600' 
+                            : 'bg-blue-500 text-white shadow-lg hover:bg-blue-600 hover:shadow-xl'
+                        }`}>
+                          {isSelected ? '✓ Currently Learning' : 'Start Learning'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Coming Soon Section */}
+          <div className="text-center">
+            <h2 className="text-3xl font-bold text-gray-700 mb-4">🚀 Coming Soon</h2>
+            <p className="text-gray-600 text-lg mb-12">Exciting new historical journeys in development</p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                { name: 'Ancient Rome', emoji: '🏺', description: '753 BCE - 476 CE' },
+                { name: 'Chinese History', emoji: '🐲', description: '2070 BCE - 1644 CE' },
+                { name: 'Indian History', emoji: '🕉️', description: 'Vedic Period - Mughal Empire' },
+                { name: 'German History', emoji: '🏰', description: 'Holy Roman Empire - WWII' },
+                { name: 'African Empires', emoji: '🌍', description: 'Mali, Songhai & More' },
+                { name: 'Viking Age', emoji: '⚔️', description: 'Norse Exploration' },
+                { name: 'Medieval Europe', emoji: '🏰', description: 'Feudalism & Crusades' },
+                { name: 'Industrial Revolution', emoji: '🏭', description: 'Steam & Progress' }
+              ].map((course, index) => (
+                <div
+                  key={index}
+                  className="bg-white bg-opacity-60 rounded-3xl p-6 border-2 border-dashed border-gray-300 relative overflow-hidden"
+                >
+                  {/* Lock Icon */}
+                  <div className="absolute top-4 right-4 w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                    <Lock className="w-4 h-4 text-white" />
+                  </div>
+
+                  {/* Course Icon */}
+                  <div className="w-16 h-16 bg-gray-200 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4">
+                    {course.emoji}
+                  </div>
+
+                  {/* Course Info */}
+                  <h3 className="text-lg font-bold text-gray-600 mb-2">{course.name}</h3>
+                  <p className="text-sm text-gray-500 mb-3">{course.description}</p>
+                  <div className="inline-block bg-gray-200 text-gray-600 text-xs font-semibold px-3 py-1 rounded-full">
+                    Coming Soon
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function EraPicker({ era, onChange, disabled, completedModules = 0, totalModules = 0 }) {
+  const [open, setOpen] = useState(false);
+  
+  const currentEra = ERA_OPTIONS.find(e => e.code === era);
+  const iconMap = {
+    'jewish': '/images/icons/judaism.png',
+    'ancient-greece': '/images/icons/greek.png',
+    'ancient-rome': '/images/icons/scroll.png',
+    'china': '/images/icons/china.png',
+    'islamic': '/images/icons/islam.png',
+    'christian': '/images/icons/church.png',
+    'russian': '/images/icons/russia.png',
+    'america': '/images/icons/america.png'
+  };
+
+  // Course metadata with historical dates and real module counts
+  const courseData = {
+    'jewish': { dates: '2000 BCE - 70 CE', modules: 100 },
+    'ancient-greece': { dates: '800 - 146 BCE', modules: 60 },
+    'ancient-rome': { dates: '753 BCE - 476 CE', modules: 120 },
+    'china': { dates: '2070 BCE - 1644 CE', modules: 180 },
+    'islamic': { dates: '610 - 1258 CE', modules: 29 },
+    'christian': { dates: '30 - 1517 CE', modules: 150 },
+    'russian': { dates: '862 - 1917 CE', modules: 95 },
+    'america': { dates: '1492 - 1865 CE', modules: 110 }
+  };
+
+  return (
+    <>
+      {/* Course Selector Card Button */}
+      <div 
+        className="bg-white rounded-2xl border border-gray-200 shadow-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-[1.02] hover:border-blue-300 min-w-[280px]"
+        onClick={() => setOpen(true)}
+      >
+        <div className="flex items-center gap-4">
+          {/* Course Icon */}
+          <div className="flex-shrink-0">
+            {iconMap[era] ? (
+              <img 
+                src={iconMap[era]} 
+                alt={currentEra?.name}
+                className="w-12 h-12 object-contain rounded-lg"
+              />
+            ) : (
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-xl">
+                {currentEra?.emoji || '📚'}
+              </div>
+            )}
+          </div>
+
+          {/* Course Info */}
+          <div className="flex-grow">
+            <div className="flex items-center gap-2 mb-1">
+              <h3 className="font-bold text-gray-900 text-lg">
+                {currentEra?.name || 'Select Course'}
+              </h3>
+              <ChevronDown className="h-4 w-4 text-gray-400" />
+            </div>
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <span>📊 Progress: {totalModules > 0 ? Math.floor((completedModules / totalModules) * 100) : 0}% ({completedModules}/{totalModules} modules)</span>
+              <span>🔥 3 day streak</span>
+            </div>
+            {/* Progress Bar */}
+            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-green-500 h-2 rounded-full transition-all duration-300" 
+                style={{ width: totalModules > 0 ? `${Math.floor((completedModules / totalModules) * 100)}%` : '0%' }}
+              ></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal rendered via Portal */}
+      <CourseSelectionModal 
+        isOpen={open}
+        onClose={() => setOpen(false)}
+        era={era}
+        onChange={onChange}
+      />
+    </>
   );
 }
 
@@ -252,6 +507,17 @@ const HomeRevamp = () => {
     }
   };
 
+  // Compute real progress for selected era
+  let completedModules = 0;
+  let totalModules = 0;
+  if (learningTrack && learningTrack.length > 0) {
+    totalModules = learningTrack.reduce((sum, level) => sum + (level.lessons?.length || 0), 0);
+    completedModules = learningTrack.reduce(
+      (sum, level) => sum + (level.lessons?.filter(l => l.progress?.completed).length || 0),
+      0
+    );
+  }
+
   // Era change handler
   const handleEraChange = async (era) => {
     setSelectedEra(era);
@@ -280,23 +546,13 @@ const HomeRevamp = () => {
       <FullscreenBackground />
       <div className="fixed top-8 right-10 z-40 flex items-center gap-4">
         <div className="flex gap-2 px-5 py-3 rounded-2xl shadow-2xl bg-gradient-to-br from-white/80 to-purple-100/80 backdrop-blur-md border border-purple-200/60">
-          {/* Temporarily hiding the View Map button
-          <Button
-            variant="default"
-            size="lg"
-            onClick={handleViewMap}
-            className="flex items-center gap-2 bg-gradient-to-r from-purple-500 to-pink-400 hover:from-pink-400 hover:to-purple-500 text-white font-bold text-base px-6 py-3 rounded-xl shadow-lg transition-all duration-200 transform hover:scale-105 focus:ring-4 focus:ring-pink-200 relative overflow-hidden ripple-effect"
+          <EraPicker 
+            era={selectedEra} 
+            onChange={handleEraChange} 
+            completedModules={completedModules}
+            totalModules={totalModules}
             disabled={isLoading}
-          >
-            {isLoading ? (
-              <span className="animate-spin mr-2 w-5 h-5 border-2 border-white border-t-transparent rounded-full"></span>
-            ) : (
-              <Map size={22} />
-            )}
-            <span>View Map</span>
-          </Button>
-          */}
-          <EraPicker era={selectedEra} onChange={handleEraChange} disabled={isLoading} />
+          />
         </div>
       </div>
       <main className="container mx-auto py-8 px-4 relative">

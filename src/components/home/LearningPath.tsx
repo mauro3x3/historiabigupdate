@@ -1,306 +1,273 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Check, Lock, BookOpen, ChevronDown, Map } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import React, { useState, useRef, useEffect } from 'react';
+import { Check, Lock, BookOpen, Package, BookText } from 'lucide-react';
 
-// Chapter-based data structure
-// chapters: [{ title, description, lessons: [{ id, title, emoji, xp, status, description }] }]
+const NODE_SIZE = 60;
+const CHEST_SIZE = 80;
+const LABEL_GAP = 8;
+const ROW_HEIGHT = 92;
+const ZIGZAG_X = 60;
+const PATH_WIDTH = 20;
+const PATH_COLOR = 'url(#pathGradient)';
 
-const getNodeColor = (status) => {
-  if (status === 'current') return 'bg-gradient-to-br from-yellow-300 to-pink-400 border-pink-500';
-  if (status === 'completed') return 'bg-gradient-to-br from-green-300 to-blue-400 border-green-400';
-  return 'bg-gradient-to-br from-gray-700 to-gray-800 border-gray-500';
-};
-
-const getNodeShadow = (status) => {
-  if (status === 'current') return 'shadow-2xl ring-4 ring-pink-400 animate-glow';
-  if (status === 'completed') return 'shadow-xl';
-  return 'shadow-lg';
-};
-
-const AVATAR_SIZE = 120;
-
-// Keyframes for pop-in and checkmark
-const popIn = {
-  animation: 'popIn 0.5s cubic-bezier(0.22, 1, 0.36, 1)'
-};
-const checkmarkAnim = {
-  animation: 'checkPop 0.4s cubic-bezier(0.22, 1, 0.36, 1)'
-};
-
-const MASCOT_BLINK_INTERVAL = 3500;
-const MASCOT_BOUNCE_INTERVAL = 2500;
-
-const getEraBackground = (era) => {
-  // Example: return different backgrounds based on era string
-  if (!era) return 'linear-gradient(to bottom, #181e2a, #232946)';
-  if (era === 'ancient') return 'linear-gradient(135deg, #f9d29d 0%, #ffd6e0 100%)';
-  if (era === 'medieval') return 'linear-gradient(135deg, #b1cbbb 0%, #6b7a8f 100%)';
-  if (era === 'modern') return 'linear-gradient(135deg, #f67280 0%, #355c7d 100%)';
-  return 'linear-gradient(to bottom, #181e2a, #232946)';
-};
-
-const CRESCENT_NODES = 24; // Default for Islamic journey
-
-// Helper: Generate crescent path coordinates
-function getCrescentPathCoords(count, radius = 320, cx = 0, cy = 0) {
-  // Crescent: Use a partial arc (e.g., 210deg to -30deg)
-  const startAngle = (210 * Math.PI) / 180;
-  const endAngle = (-30 * Math.PI) / 180;
-  const angleStep = (endAngle - startAngle) / (count - 1);
-  const coords = [];
-  for (let i = 0; i < count; i++) {
-    const angle = startAngle + i * angleStep;
-    // Crescent: Offset the center for the inner arc
-    const r = radius + (i > count / 2 ? 30 : 0);
-    coords.push({
-      x: cx + r * Math.cos(angle),
-      y: cy + r * Math.sin(angle),
-    });
-  }
-  return coords;
+function getNodeX(idx, centerX) {
+  return centerX + (idx % 2 === 0 ? -ZIGZAG_X : ZIGZAG_X);
 }
 
-const LearningPath = (props) => {
-  const [isBlinking, setIsBlinking] = useState(false);
-  const [showConfetti, setShowConfetti] = useState(false);
-  const [popoverOpen, setPopoverOpen] = useState(false);
-  const nodeRefs = useRef([]);
-  const [currentYear, setCurrentYear] = useState(null);
-  const lessonRefs = useRef([]);
-  // Tooltip state for locked lesson
-  const [lockedTooltipIdx, setLockedTooltipIdx] = useState<number | null>(null);
-
-  // Fallback emoji-rich era options
-  const defaultEraOptions = [
-    { code: 'jewish', name: 'Jewish History', emoji: '✡️' },
-    { code: 'ancient-egypt', name: 'Ancient Egypt', emoji: '🏺' },
-    { code: 'ancient-greece', name: 'Ancient Greece', emoji: '��️' },
-    { code: 'ancient-rome', name: 'Ancient Rome', emoji: '🏺' },
-    { code: 'medieval', name: 'Medieval', emoji: '🏰' },
-    { code: 'revolutions', name: 'Revolutions', emoji: '⚔️' },
-    { code: 'modern', name: 'Modern', emoji: '🌍' },
-    { code: 'china', name: 'Chinese History', emoji: '🐲' },
-    { code: 'islamic', name: 'Islamic History', emoji: '☪️' },
-    { code: 'christian', name: 'Christian History', emoji: '✝️' },
-    { code: 'russian', name: 'Russian History', emoji: '🇷🇺' },
-  ];
-  const eraOptions = props.eraOptions && props.eraOptions.length > 0 ? props.eraOptions : defaultEraOptions;
-
-  // Debug log for eraOptions
-  console.log('RECEIVED eraOptions in LearningPath:', eraOptions);
-
-  useEffect(() => {
-    const blinkInterval = setInterval(() => setIsBlinking((b) => !b), MASCOT_BLINK_INTERVAL);
-    return () => clearInterval(blinkInterval);
-  }, []);
-
-  useEffect(() => {
-    const current = nodeRefs.current.find(Boolean);
-    if (current) {
-      current.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-    }
-  }, [props.chapters]);
-
-  // Find the index and position of the current lesson for mascot placement
-  let currentLessonIdx = -1;
-  let currentChapterIdx = -1;
-  let currentNodeGlobalIdx = -1;
-  let nodeCount = 0;
-  props.chapters.forEach((chapter, cIdx) => {
-    chapter.lessons.forEach((lesson, lIdx) => {
-      if (lesson.status === 'current') {
-        currentLessonIdx = lIdx;
-        currentChapterIdx = cIdx;
-        currentNodeGlobalIdx = nodeCount;
-      }
-      nodeCount++;
-    });
-  });
-
-  // Debug logs to verify data and rendering
-  console.log('CHAPTERS:', props.chapters);
-  // Helper: flat list of all lessons for vertical path
-  const allLessons = props.chapters.flatMap((chapter) => chapter.lessons.map((lesson, idx) => ({
-    ...lesson,
-    chapterTitle: chapter.title,
-    chapterIdx: props.chapters.indexOf(chapter),
-    lessonIdx: idx,
-  })));
-  console.log('ALL LESSONS:', allLessons);
-
-  // Mascot vertical position
-  const [mascotTop, setMascotTop] = useState(0);
-  useEffect(() => {
-    if (currentNodeGlobalIdx !== -1 && nodeRefs.current[currentNodeGlobalIdx]) {
-      const rect = nodeRefs.current[currentNodeGlobalIdx].getBoundingClientRect();
-      setMascotTop(rect.top + rect.height / 2 + window.scrollY);
-    }
-  }, [currentNodeGlobalIdx, allLessons.length, isBlinking]);
-
-  // Dynamic mascot message based on progress (keep for fun)
-  const mascotMessages = [
-    "Hi, I am Johan! I will guide you on your journey! 🚀",
-    "Great job! Ready for your next adventure? 🌟",
-    "Keep going! You're making history! 📚",
-    "Checkpoint ahead! Almost there! 🏰",
-    "You unlocked a new lesson! 🎉",
-  ];
-  let mascotMessage = mascotMessages[0];
-  if (props.chapters && props.chapters.length > 0) {
-    const completed = props.chapters.flatMap(ch => ch.lessons).filter(l => l.status === 'completed').length;
-    const total = props.chapters.flatMap(ch => ch.lessons).length;
-    if (completed === 0) mascotMessage = mascotMessages[0];
-    else if (completed < total - 1) mascotMessage = mascotMessages[1];
-    else if (completed === total - 1) mascotMessage = mascotMessages[3];
-    else mascotMessage = mascotMessages[2];
+function getMajorityEra(lessons) {
+  // Returns 'BC' if most years are BC/BCE, 'AD' if most are AD/CE, '' otherwise
+  let bc = 0, ad = 0;
+  for (const l of lessons) {
+    const y = String(l.year || '').toUpperCase();
+    if (y.includes('BC') || y.includes('BCE')) bc++;
+    if (y.includes('AD') || y.includes('CE')) ad++;
   }
+  if (bc > ad && bc > 0) return 'BC';
+  if (ad > bc && ad > 0) return 'AD';
+  return '';
+}
 
-  React.useEffect(() => { nodeRefs.current = nodeRefs.current.slice(0, allLessons.length); }, [allLessons.length]);
+// Add a helper for rolling number animation
+function RollingYear({ value, defaultEra }) {
+  // Extract numeric year and suffix (e.g., BCE, BC, AD, CE)
+  const match = String(value).match(/(\d{1,4})(\s*(BCE|BC|CE|AD))?/i);
+  const numericYear = match ? match[1] : null;
+  let suffix = match && match[3] ? match[3].toUpperCase() : '';
+  // If no suffix, use defaultEra if provided
+  if (!suffix && defaultEra) suffix = defaultEra;
+  const [display, setDisplay] = useState(numericYear || value);
+  const [rolling, setRolling] = useState(false);
 
-  // Helper: chapter progress
-  function getChapterProgress(chapter) {
-    const total = chapter.lessons.length;
-    const completed = chapter.lessons.filter(l => l.status === 'completed').length;
-    return { completed, total };
-  }
-
-  // Filter chapters to only those with lessons
-  const chaptersWithLessons = Array.isArray(props.chapters)
-    ? props.chapters.filter(ch => Array.isArray(ch.lessons) && ch.lessons.length > 0)
-    : [];
-  const hasAnyLessons = chaptersWithLessons.length > 0;
-
-  // If no real lessons, use a demo path for MVP/demo
-  const demoChapters = [
-    {
-      title: 'Demo Chapter – Try the Path!',
-      icon: '✨',
-      description: 'This is a playful demo path. Add real lessons to see your own journey!',
-      lessons: [
-        { id: 'demo1', title: 'Welcome!', emoji: '👋', status: 'current', xp: 50 },
-        { id: 'demo2', title: 'Learn the Basics', emoji: '📚', status: 'locked', xp: 50 },
-        { id: 'demo3', title: 'Test Your Skills', emoji: '🧠', status: 'locked', xp: 50 },
-        { id: 'demo4', title: 'Celebrate!', emoji: '🎉', status: 'locked', xp: 50 },
-      ]
+  useEffect(() => {
+    if (!numericYear) {
+      setDisplay(value);
+      setRolling(false);
+      return;
     }
-  ];
-  const chaptersToShow = hasAnyLessons ? chaptersWithLessons : demoChapters;
-
-  // Determine if we're in the Islamic journey
-  const isIslamic = (props.era && (props.era.toLowerCase().includes('islamic') || props.era.toLowerCase().includes('islam')));
-
-  // Render all lessons in a single vertical column, no crescent, no padding, no limit
-  let nodesToShow = allLessons;
-
-  // Attach refs to each lesson node
-  useEffect(() => {
-    lessonRefs.current = lessonRefs.current.slice(0, nodesToShow.length);
-  }, [nodesToShow.length]);
-
-  // Intersection Observer to update year as you scroll
-  useEffect(() => {
-    if (!lessonRefs.current.length) return;
-    const handleIntersect = (entries) => {
-      // Find the lesson most in view (closest to top)
-      const visible = entries.filter(e => e.isIntersecting);
-      if (visible.length > 0) {
-        // Sort by boundingClientRect.top
-        visible.sort((a, b) => Math.abs(a.boundingClientRect.top) - Math.abs(b.boundingClientRect.top));
-        const idx = Number(visible[0].target.getAttribute('data-idx'));
-        const lesson = nodesToShow[idx];
-        if (lesson && lesson.year) setCurrentYear(lesson.year);
+    if (numericYear === display) return;
+    setRolling(true);
+    let frame = 0;
+    const start = parseInt(display) || 0;
+    const end = parseInt(numericYear) || 0;
+    const diff = end - start;
+    const steps = 12;
+    function animate() {
+      frame++;
+      const next = Math.round(start + (diff * frame) / steps);
+      setDisplay(next);
+      if (frame < steps) {
+        requestAnimationFrame(animate);
+      } else {
+        setDisplay(end);
+        setRolling(false);
       }
-    };
-    const observer = new window.IntersectionObserver(handleIntersect, {
-      root: null,
-      rootMargin: '-50% 0px -50% 0px', // Focus on center of viewport
-      threshold: 0.1,
-    });
-    lessonRefs.current.forEach((ref) => {
-      if (ref) observer.observe(ref);
-    });
-    return () => observer.disconnect();
-  }, [nodesToShow]);
-
-  // Default to first lesson's year if not set or if currentYear is invalid
-  useEffect(() => {
-    if ((!currentYear || isNaN(currentYear)) && nodesToShow.length > 0 && nodesToShow[0].year) {
-      setCurrentYear(nodesToShow[0].year);
     }
-  }, [nodesToShow, currentYear]);
+    animate();
+    // eslint-disable-next-line
+  }, [numericYear, value]);
 
+  // If not a numeric year, just show the value as plain text
+  if (!numericYear) {
+    return <span style={{ minWidth: 40 }}>{value}</span>;
+  }
+  // Style for rolling effect
   return (
-    <>
-      {/* Removed sticky timeline header with large year label */}
-      <div className="relative flex flex-col items-center w-full max-w-3xl mx-auto pt-10 pb-16 z-10">
-        {/* Thinner, lighter vertical timeline line */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-0 h-full w-1 bg-gradient-to-b from-blue-200 via-purple-200 to-pink-200 opacity-30 rounded-full z-0" style={{minHeight: '100%'}} />
-        {nodesToShow.map((lesson, idx) => (
-          <div key={lesson.id} className="relative flex flex-col items-center w-full mb-28 z-10">
-            {/* Lesson card above the node, with clear margin */}
-            <div
-              className={`z-20 mb-4 w-full flex justify-center ${lesson.status !== 'locked' ? 'cursor-pointer hover:scale-[1.02] transition-transform' : 'opacity-60 cursor-not-allowed'}`}
-              onClick={() => {
-                if (lesson.status !== 'locked' && props.onLessonClick) {
-                  props.onLessonClick(lesson);
-                } else if (lesson.status === 'locked') {
-                  setLockedTooltipIdx(idx);
-                  setTimeout(() => setLockedTooltipIdx(null), 1800);
-                }
-              }}
-              style={{ pointerEvents: lesson.status !== 'locked' ? 'auto' : 'auto' }}
-            >
-              <div className="bg-white rounded-xl shadow-xl px-6 py-4 max-w-lg w-full flex flex-col items-start border border-gray-200" style={{ minHeight: 80 }}>
-                <div className="font-bold text-lg mb-1">{lesson.title}</div>
-                {lesson.description && <div className="text-gray-600 text-base mb-1">{lesson.description}</div>}
-              </div>
-              {/* Locked tooltip */}
-              {lockedTooltipIdx === idx && lesson.status === 'locked' && (
-                <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-full bg-yellow-300 border-2 border-yellow-600 text-yellow-900 px-6 py-3 rounded-2xl shadow-2xl text-base font-bold z-50 animate-fade-in flex items-center gap-2" style={{letterSpacing: 0.2}}>
-                  <svg xmlns='http://www.w3.org/2000/svg' className='w-5 h-5 text-yellow-700 mr-2' fill='none' viewBox='0 0 24 24' stroke='currentColor'><path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 9v2m0 4h.01M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9 9 4.03 9 9z' /></svg>
-                  Complete all levels above to unlock this!
-                </div>
-              )}
-            </div>
-            {/* Node (circle) on the timeline, with year label to the left */}
-            <div className="z-20 flex flex-row items-center justify-center" style={{marginBottom: 0}}>
-              {/* Year label to the left of the node */}
-              {lesson.year && (
-                <div className="text-xs font-bold text-blue-700 bg-white/80 rounded-lg px-3 py-1 mr-4 shadow border border-blue-200" style={{minWidth: 54, textAlign: 'right', fontSize: 16, letterSpacing: 1}}>
-                  {lesson.year}
-                </div>
-              )}
-              <div
-                className={`w-16 h-16 rounded-full flex items-center justify-center border-4 ${lesson.status === 'completed' ? 'bg-green-200 border-green-400 shadow-xl' : lesson.status === 'current' ? 'bg-yellow-100 border-yellow-400 shadow-2xl ring-4 ring-pink-400 animate-glow' : 'bg-gray-200 border-gray-300 opacity-60 shadow-lg'} ${lesson.status !== 'locked' ? 'cursor-pointer hover:scale-110 hover:animate-slow-spin transition-transform' : 'cursor-not-allowed'}`}
-                style={{fontSize: 32, position: 'relative', zIndex: 2, pointerEvents: lesson.status !== 'locked' ? 'auto' : 'none'}}
-                onClick={() => lesson.status !== 'locked' && props.onLessonClick && props.onLessonClick(lesson)}
-                title={lesson.status === 'locked' ? 'Complete previous lessons to unlock!' : ''}
-              >
-                {lesson.emoji || '📖'}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-      <style>{`
-        @keyframes glow {
-          0%, 100% { box-shadow: 0 0 5px rgba(244, 114, 182, 0.5); }
-          50% { box-shadow: 0 0 20px rgba(244, 114, 182, 0.8); }
-        }
-        .animate-glow {
-          animation: glow 2s infinite;
-        }
-        @keyframes slow-spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-slow-spin {
-          animation: slow-spin 3s linear infinite;
-        }
-      `}</style>
-    </>
+    <span style={{ display: 'inline-block', minWidth: 40, transition: 'transform 0.3s', transform: rolling ? 'translateY(-10%) scale(1.1)' : 'none' }}>
+      {display} {suffix && <span style={{ fontSize: 14, marginLeft: 2 }}>{suffix}</span>}
+    </span>
   );
-};
+}
 
-export default LearningPath;
+export default function LearningPath({ chapters = [], onLessonClick }) {
+  // Section/unit info for top bar (use first chapter as example)
+  const sectionTitle = chapters[0]?.title || 'Section 1, Unit 1';
+  const mainTitle = chapters[0]?.lessons?.[0]?.title || 'Your Learning Journey';
+
+  // Flatten lessons
+  const lessons = chapters.flatMap(ch => ch.lessons);
+  // Chunk into sections of 5
+  const chunkSize = 5;
+  const lessonChunks = [];
+  for (let i = 0; i < lessons.length; i += chunkSize) {
+    lessonChunks.push(lessons.slice(i, i + chunkSize));
+  }
+
+  // --- Scroll tracking state ---
+  const [activeLessonIdx, setActiveLessonIdx] = useState(0);
+  const nodeRefs = useRef([]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!nodeRefs.current.length) return;
+      const offsets = nodeRefs.current.map(ref => {
+        if (!ref) return Infinity;
+        const rect = ref.getBoundingClientRect();
+        return Math.abs(rect.top - 140); // 140px below top bar
+      });
+      const minIdx = offsets.indexOf(Math.min(...offsets));
+      setActiveLessonIdx(minIdx);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lessons.length]);
+
+  const activeLesson = lessons[activeLessonIdx] || {};
+  const activeYear = activeLesson.year || '';
+  const activeTitle = activeLesson.title || mainTitle;
+
+  // Determine the defaultEra for the current chunk
+  const currentChunkIdx = Math.floor(activeLessonIdx / chunkSize);
+  const currentChunk = lessonChunks[currentChunkIdx] || [];
+  const defaultEra = getMajorityEra(currentChunk);
+
+  // Render each chunk as a vertical path
+  return (
+    <div className="relative w-full max-w-xl mx-auto py-8">
+      {/* Top Bar */}
+      <div className="w-full flex items-center justify-between rounded-2xl px-6 py-4 mb-8 shadow-xl bg-gradient-to-r from-green-400 to-lime-400 border border-green-300 sticky top-4 z-30" style={{ minHeight: 70 }}>
+        <div className="flex flex-col">
+          <span className="uppercase text-xs font-bold text-green-900/80 tracking-widest mb-1">
+            <RollingYear value={activeYear} defaultEra={defaultEra} />
+          </span>
+          <span className="text-2xl font-extrabold text-white drop-shadow-lg">{activeTitle}</span>
+        </div>
+        {/* Date and section/unit title now update as you scroll. */}
+      </div>
+      {lessonChunks.map((chunk, chunkIdx) => {
+        // Add chest as last node
+        const nodes = [...chunk, { isChest: true, id: `chest-${chunkIdx}` }];
+        const svgHeight = ROW_HEIGHT * (nodes.length - 1) + NODE_SIZE;
+        const svgWidth = 340;
+        const centerX = svgWidth / 2;
+        // Calculate node positions
+        const points = nodes.map((_, idx) => ({
+          x: getNodeX(idx, centerX),
+          y: idx * ROW_HEIGHT + NODE_SIZE / 2,
+        }));
+        // Path: single polyline through all node centers
+        const pathD = points.map((pt, i) => `${i === 0 ? 'M' : 'L'} ${pt.x} ${pt.y}`).join(' ');
+        return (
+          <div key={chunkIdx} className="relative w-full" style={{ minHeight: svgHeight + 40, marginBottom: 24 }}>
+            {/* SVG path */}
+            <svg width={svgWidth} height={svgHeight} className="absolute left-1/2 -translate-x-1/2 top-0 z-0 pointer-events-none">
+              <defs>
+                <linearGradient id="pathGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.0" />
+                  <stop offset="10%" stopColor="#38bdf8" stopOpacity="0.7" />
+                  <stop offset="90%" stopColor="#38bdf8" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.0" />
+                </linearGradient>
+              </defs>
+              <path d={pathD} fill="none" stroke={PATH_COLOR} strokeWidth={PATH_WIDTH} strokeLinecap="round" strokeLinejoin="round" opacity="0.95" />
+            </svg>
+            {/* Render nodes */}
+            {nodes.map((lesson, idx) => {
+              const pt = points[idx];
+              const isLeft = idx % 2 === 0;
+              // Chest node
+              if (lesson.isChest) {
+                return (
+                  <div
+                    key={lesson.id}
+                    style={{
+                      position: 'absolute',
+                      left: pt.x - CHEST_SIZE / 2,
+                      top: pt.y - CHEST_SIZE / 2,
+                      zIndex: 2,
+                      width: CHEST_SIZE,
+                      height: CHEST_SIZE,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      background: 'linear-gradient(135deg, #fbbf24 60%, #f59e42 100%)',
+                      borderRadius: 28,
+                      boxShadow: '0 0 48px 12px #fbbf24cc, 0 8px 32px #fbbf24cc',
+                      border: '4px solid #f59e42',
+                    }}
+                  >
+                    <Package className="w-16 h-16 text-yellow-700 drop-shadow-xl" />
+                  </div>
+                );
+              }
+              // Node status
+              let nodeColor = 'bg-gray-200 border-gray-300 shadow-xl';
+              let icon = <Lock className="w-8 h-8 text-gray-400" />;
+              if (lesson.status === 'completed') {
+                nodeColor = 'bg-gradient-to-br from-green-400 to-blue-400 border-green-500 shadow-2xl';
+                icon = <Check className="w-9 h-9 text-white drop-shadow-lg" />;
+              } else if (lesson.status === 'current') {
+                nodeColor = 'bg-gradient-to-br from-yellow-200 to-pink-300 border-pink-400 shadow-2xl animate-glow';
+                icon = <BookOpen className="w-9 h-9 text-pink-600 drop-shadow-lg" />;
+              }
+              const clickable = lesson.status !== 'locked';
+              // Label pill
+              const label = (
+                <div
+                  className="inline-block font-semibold text-gray-900 text-base bg-white/90 px-5 py-2 rounded-full shadow-lg border border-gray-200 whitespace-nowrap overflow-hidden text-ellipsis"
+                  style={{
+                    minWidth: 120,
+                    maxWidth: 220,
+                    marginLeft: isLeft ? LABEL_GAP : 0,
+                    marginRight: isLeft ? 0 : LABEL_GAP,
+                    boxShadow: '0 2px 12px #b3b3b3cc',
+                    fontWeight: 700,
+                    fontSize: 18,
+                  }}
+                  ref={el => {
+                    if (!nodeRefs.current) nodeRefs.current = [];
+                    nodeRefs.current[idx + chunkIdx * chunkSize] = el;
+                  }}
+                >
+                  {lesson.title}
+                </div>
+              );
+              // Year pill hidden since date is now in the top bar
+              const year = null;
+              return (
+                <div
+                  key={lesson.id}
+                  style={{
+                    position: 'absolute',
+                    left: isLeft ? pt.x - NODE_SIZE / 2 - 2 : pt.x - NODE_SIZE / 2 - 2,
+                    top: pt.y - NODE_SIZE / 2,
+                    zIndex: 2,
+                    width: svgWidth,
+                    height: NODE_SIZE,
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: isLeft ? 'flex-start' : 'flex-end',
+                  }}
+                >
+                  {/* Node (circle) */}
+                  <button
+                    className={`w-16 h-16 rounded-full border-4 ${nodeColor} flex items-center justify-center text-2xl font-bold shadow-2xl transition-all duration-300 focus:outline-none ${clickable ? 'hover:scale-110 cursor-pointer' : 'opacity-60 cursor-not-allowed'}`}
+                    onClick={() => clickable && onLessonClick && onLessonClick(lesson)}
+                    disabled={!clickable}
+                    title={clickable ? lesson.title : 'Complete previous lessons to unlock!'}
+                    tabIndex={clickable ? 0 : -1}
+                    style={lesson.status === 'current' ? { boxShadow: '0 0 0 10px #fbbf24aa, 0 2px 16px #bbb' } : {}}
+                  >
+                    {icon}
+                  </button>
+                  {/* Label pill, attached and slightly overlapping node */}
+                  {isLeft ? (
+                    <>
+                      {label}
+                      {/* {year} */}
+                    </>
+                  ) : (
+                    <>
+                      {/* {year} */}
+                      {label}
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
+    </div>
+  );
+}

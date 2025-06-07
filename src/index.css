@@ -1,3 +1,64 @@
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-Regular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-Bold.otf') format('opentype');
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-Light.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-Black.otf') format('opentype');
+  font-weight: 900;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-Italic.otf') format('opentype');
+  font-weight: 400;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-BoldItalic.otf') format('opentype');
+  font-weight: 700;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-LightItalic.otf') format('opentype');
+  font-weight: 300;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-BlackItalic.otf') format('opentype');
+  font-weight: 900;
+  font-style: italic;
+}
+@font-face {
+  font-family: 'Satoshi';
+  src: url('/fonts/Satoshi_Complete/Fonts/OTF/Satoshi-MediumItalic.otf') format('opentype');
+  font-weight: 500;
+  font-style: italic;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Crimson+Pro:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Literata:wght@400;700&family=Alegreya:wght@400;700&family=Lora:wght@400;700&family=Bitter:wght@400;700&family=Inter:wght@400;700&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
 
 .font-ebgaramond { font-family: 'EB Garamond', serif !important; }
@@ -166,7 +227,7 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+    font-family: 'Satoshi', 'Inter', 'Segoe UI', Arial, sans-serif;
   }
   
   html {
@@ -198,4 +259,9 @@ input:-webkit-autofill:active {
   -webkit-text-fill-color: #000 !important;
   caret-color: #000 !important;
   transition: background-color 5000s ease-in-out 0s;
+}
+
+/* Force Satoshi globally for debugging */
+* {
+  font-family: 'Satoshi', sans-serif !important;
 }
