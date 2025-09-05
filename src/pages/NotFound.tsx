@@ -23,7 +23,7 @@ const NotFound = () => {
       
       <div className="flex-1 flex items-center justify-center">
         <div className="text-center max-w-md px-4">
-          <div className="text-6xl mb-6">🧭</div>
+
           <h1 className="text-4xl font-bold mb-4 text-timelingo-navy">404 - Lost in History</h1>
           <p className="text-xl text-gray-600 mb-8">
             This historical page doesn't exist yet. Let's get you back to your timeline.

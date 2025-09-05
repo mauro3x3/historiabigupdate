@@ -164,22 +164,7 @@ const Tooltip = ({ children, text }: { children: React.ReactNode; text: string }
   );
 };
 
-// Utility to get the bounding rect of the current selection
-function getSelectionRect() {
-  const selection = window.getSelection();
-  if (!selection || selection.rangeCount === 0) return null;
-  const range = selection.getRangeAt(0).cloneRange();
-  if (range.collapsed) return null;
-  const rect = range.getBoundingClientRect();
-  return rect;
-}
-
-// Dolphin sound
-function playDolphinSound() {
-  const audio = new Audio('/sounds/dolphin.mp3');
-  audio.volume = 0.2;
-  audio.play();
-}
+// Removed utility functions that were only used for dolphin functionality
 
 const LessonPage = () => {
   const { lessonId } = useParams();
@@ -195,8 +180,6 @@ const LessonPage = () => {
   const [showStreakReward, setShowStreakReward] = useState(false);
   const [nextModuleLoading, setNextModuleLoading] = useState(false);
   const [modalImageUrl, setModalImageUrl] = useState<string | null>(null);
-  const [dolphinButton, setDolphinButton] = useState<{ x: number; y: number; text: string } | null>(null);
-  const [dolphinTooltip, setDolphinTooltip] = useState<{ x: number; y: number; text: string; loading: boolean; answer?: string } | null>(null);
   const storyRef = useRef<HTMLDivElement>(null);
   const [storyFont, setStoryFont] = useState<string>(() => localStorage.getItem('lessonFont') || 'serif');
   
@@ -334,62 +317,17 @@ const LessonPage = () => {
 
   // Listen for text selection in the story
   useEffect(() => {
-    const handleMouseUp = (e: MouseEvent) => {
-      const selection = window.getSelection();
-      if (!selection || selection.rangeCount === 0) {
-        setDolphinButton(null);
-        return;
-      }
-      const text = selection.toString().trim();
-      if (!text || !storyRef.current || !storyRef.current.contains(selection.anchorNode)) {
-        setDolphinButton(null);
-        return;
-      }
-      const rect = getSelectionRect();
-      if (rect) {
-        setDolphinButton({ x: rect.left + rect.width / 2, y: rect.top - 8, text });
-      } else {
-        setDolphinButton(null);
-      }
+    const handleSelectionChange = () => {
+      // Removed dolphin functionality - no more text selection handling needed
     };
-    document.addEventListener('mouseup', handleMouseUp);
-    return () => document.removeEventListener('mouseup', handleMouseUp);
+
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
   }, []);
 
-  // Handler for "Ask the Dolphin"
-  const handleAskDolphin = async () => {
-    if (!dolphinButton) return;
-    setDolphinTooltip({ x: dolphinButton.x, y: dolphinButton.y, text: dolphinButton.text, loading: true });
-    setDolphinButton(null);
-    try {
-      const res = await fetch('/api/explain-term', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          term: dolphinButton.text,
-          context: lesson.story_content || lesson.description || ''
-        })
-      });
-      const data = await res.json();
-      setDolphinTooltip(tt => {
-        if (tt) {
-          playDolphinSound();
-          return { ...tt, loading: false, answer: data.explanation || `No explanation found.` };
-        }
-        return null;
-      });
-    } catch (err) {
-      setDolphinTooltip(tt => tt ? { ...tt, loading: false, answer: 'Sorry, Dolphin is having trouble right now.' } : null);
-    }
-  };
+  // Removed handler for "Ask the Dolphin"
 
-  // Hide tooltip on click elsewhere
-  useEffect(() => {
-    if (!dolphinTooltip) return;
-    const hide = () => setDolphinTooltip(null);
-    document.addEventListener('mousedown', hide);
-    return () => document.removeEventListener('mousedown', hide);
-  }, [dolphinTooltip]);
+  // Removed tooltip on click elsewhere
 
   const moveToNextQuestion = () => {
     if (currentQuestionIndex < questions.length - 1) {
@@ -523,73 +461,30 @@ const LessonPage = () => {
                 51%, 100% { opacity: 0; }
               }
             `}</style>
-            {/* Dolphin button */}
-            {dolphinButton && (
-              <button
-                style={{
-                  position: 'fixed',
-                  left: dolphinButton.x,
-                  top: dolphinButton.y - 48, // place above selection
-                  zIndex: 10000,
-                  transform: 'translate(-50%, -100%)',
-                  minWidth: 120
-                }}
-                className="bg-sky-400 text-white px-5 py-3 rounded-full shadow-2xl border-4 border-white font-bold text-base hover:bg-sky-500 transition flex items-center gap-2 animate-bounce-dolphin"
-                onClick={handleAskDolphin}
-              >
-                <span className="text-2xl">🐬</span>
-                <span className="font-bold">Ask the Dolphin</span>
-              </button>
-            )}
-            <style>{`
-              @keyframes bounce-dolphin {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-10px); }
-              }
-              .animate-bounce-dolphin {
-                animation: bounce-dolphin 1s infinite;
-              }
-            `}</style>
-            {/* Dolphin tooltip */}
-            {dolphinTooltip && (
-              <div
-                style={{
-                  position: 'fixed',
-                  left: dolphinTooltip.x,
-                  top: dolphinTooltip.y - 120, // above selection
-                  zIndex: 10001,
-                  transform: 'translate(-50%, -100%)',
-                  minWidth: 200,
-                  pointerEvents: 'auto',
-                }}
-                className="bg-white border-2 border-sky-400 rounded-2xl shadow-2xl px-6 py-4 text-gray-900 text-base max-w-xs animate-fade-in flex flex-col items-center"
-              >
-                <div className="font-bold mb-2 flex items-center gap-2 text-sky-600 text-lg">
-                  <span className="text-2xl">🐬</span> Dolphin says
-                </div>
-                {/* Placeholder for dolphin animation */}
-                <div className="mb-2">
-                  {/* You can replace this with an animated SVG or GIF */}
-                  <span className="text-3xl">🌊</span>
-                </div>
-                {dolphinTooltip.loading ? (
-                  <span className="italic text-sky-500">Loading...</span>
-                ) : (
-                  <span>{dolphinTooltip.answer}</span>
-                )}
-              </div>
-            )}
+                                      {/* Removed Ask the Dolphin button and related functionality */}
+             <div className="mt-8 flex justify-center" style={{ minHeight: '60px' }}>
+               <button
+                 className="px-10 py-3 text-lg continue-button-solid transition-all duration-200"
+                 style={{
+                   backgroundColor: '#2563eb',
+                   color: 'white',
+                   border: '2px solid #1d4ed8',
+                   fontWeight: 'bold',
+                   backgroundImage: 'none',
+                   position: 'relative',
+                   zIndex: 10,
+                   transform: 'translateZ(0)'
+                 }}
+                 onClick={() => {
+                   setStoryFading(true);
+                   setTimeout(() => setShowStoryPhase(false), 400);
+                 }}
+                 data-testid="story-continue-btn"
+               >
+                 Continue
+               </button>
+             </div>
           </div>
-          <Button
-            className="mt-2 px-10 py-3 text-lg bg-green-500 hover:bg-green-600 rounded-full shadow-lg font-bold tracking-wide"
-            onClick={() => {
-              setStoryFading(true);
-              setTimeout(() => setShowStoryPhase(false), 400);
-            }}
-            data-testid="story-continue-btn"
-          >
-            Continue
-          </Button>
         </div>
       </div>
     );
@@ -611,15 +506,15 @@ const LessonPage = () => {
   
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Add data-testid to Back button, always rendered */}
-      <button
-        className="absolute top-6 left-6 bg-white rounded-full px-6 py-2 shadow-md text-timelingo-purple font-bold text-lg flex items-center gap-2 hover:bg-purple-50 transition z-20"
-        onClick={() => navigate(-1)}
-        data-testid="lesson-back-btn"
-      >
-        <span className="mr-2">&larr;</span> Back
-      </button>
-      <LessonHeader title={lesson?.title || 'Loading...'} />
+             <LessonHeader title={lesson?.title || 'Loading...'} />
+       {/* Fixed back button to navigate to globe instead of navigate(-1) */}
+       <button
+         className="absolute top-20 left-6 bg-white rounded-full px-6 py-2 shadow-md text-timelingo-purple font-bold text-lg flex items-center gap-2 hover:bg-purple-50 transition z-20"
+         onClick={() => navigate('/globe')}
+         data-testid="lesson-back-btn"
+       >
+         <span className="mr-2">&larr;</span> Back to Globe
+       </button>
       {/* Story phase content, if active */}
       {showStoryPhase ? (
         storyPhaseContent

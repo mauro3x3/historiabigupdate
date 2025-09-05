@@ -1,5 +1,5 @@
 // User related types
-export type LearningStyle = 'reading' | 'visual' | 'daily' | 'mystery' | 'journey';
+export type LearningStyle = 'reading' | 'visual' | 'daily' | 'mystery' | 'journey' | 'globe';
 export type LearningTime = '5-min' | '15-min' | '30-min' | '60-min' | '10-min';
 export type ReminderMethod = 'email' | 'push' | 'none';
 export type HistoryInterest = 

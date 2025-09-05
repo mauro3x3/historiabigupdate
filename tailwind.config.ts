@@ -20,6 +20,7 @@ export default {
 		},
 		fontFamily: {
 			sans: ['Satoshi', ...defaultTheme.fontFamily.sans],
+			mono: ['JetBrainsMono', ...defaultTheme.fontFamily.mono],
 		},
 		extend: {
 			colors: {

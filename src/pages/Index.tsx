@@ -70,8 +70,8 @@ const LandingPage = () => {
       <div className="absolute top-6 left-8 z-20">
         {/* Cinzel font: Add <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet"> to your index.html */}
         <span
-          className="text-3xl font-extrabold tracking-widest drop-shadow-lg select-none"
-          style={{ fontFamily: "'Cinzel', serif", color: '#7c3aed' }}
+          className="text-3xl font-extrabold tracking-widest drop-shadow-lg select-none text-timelingo-navy"
+          style={{ fontFamily: "'Cinzel', serif" }}
         >
           HISTORIA
         </span>

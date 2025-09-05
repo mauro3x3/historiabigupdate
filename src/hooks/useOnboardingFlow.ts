@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { NavigateFunction } from 'react-router-dom';
-import { HistoryEra, HistoryInterest, LearningStyle, LearningTime, UserPreferences, ReminderMethod } from '@/types';
+import { HistoryEra, HistoryInterest, LearningStyle, LearningTime, UserPreferences } from '@/types';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -16,14 +16,16 @@ export const useOnboardingFlow = (
   const [era, setEra] = useState<HistoryEra | null>(null);
   const [learningStyle, setLearningStyle] = useState<LearningStyle | null>(null);
   const [learningTime, setLearningTime] = useState<LearningTime | null>(null);
-  const [reminderMethod, setReminderMethod] = useState<ReminderMethod | null>(null);
-  const [reminderTime, setReminderTime] = useState<string | null>(null);
-  const [skillLevel, setSkillLevel] = useState<string | null>(null);
   
-  const totalSteps = 6;
+  const totalSteps = 2;
   
   const handleNext = () => {
+    console.log('🔄 handleNext called for step:', step);
+    console.log('🔄 Current state:', { interests, era, learningStyle });
+    console.log('🔄 Step 1 validation - interests.length:', interests.length);
+    
     if (step === 1 && interests.length === 0) {
+      console.log('🔄 Step 1 validation failed - no interests selected');
       toast.error('Please select at least one interest to continue');
       return;
     }
@@ -31,29 +33,17 @@ export const useOnboardingFlow = (
       toast.error('Please select an era to continue');
       return;
     }
-    if (step === 3 && !learningStyle) {
-      toast.error('Please select a learning style to continue');
-      return;
-    }
-    if (step === 4 && !skillLevel) {
-      toast.error('Please select your skill level to continue');
-      return;
-    }
-    if (step === 5 && !learningTime) {
-      toast.error('Please select a daily learning time to continue');
-      return;
-    }
-    if (step === 6 && !reminderMethod) {
-      toast.error('Please select a reminder method to continue');
-      return;
-    }
-    if (step === 6 && reminderMethod !== 'none' && !reminderTime) {
-      toast.error('Please select a reminder time');
-      return;
-    }
+
+
+
+    console.log('🔄 All validations passed, proceeding...');
+    console.log('🔄 Current step:', step, 'Total steps:', totalSteps);
+    
     if (step < totalSteps) {
+      console.log('🔄 Moving to next step:', step + 1);
       setStep(step + 1);
     } else {
+      console.log('🔄 Last step reached, finishing onboarding...');
       finishOnboarding();
     }
   };
@@ -65,14 +55,14 @@ export const useOnboardingFlow = (
   };
   
   const finishOnboarding = async () => {
-    if (interests.length > 0 && skillLevel && era && learningStyle && learningTime) {
+    if (interests.length > 0 && era) {
       const preferences: UserPreferences = {
         interests,
         era,
-        learningStyle,
-        dailyLearningTime: learningTime,
-        reminderMethod: reminderMethod || 'none',
-        reminderTime: reminderMethod !== 'none' ? reminderTime || null : null
+        learningStyle: 'journey', // Default since we removed the selection
+        dailyLearningTime: '15-min', // Default since we removed the time selection
+        reminderMethod: 'none', // Default to no reminders since we removed that step
+        reminderTime: null
       };
       
       updatePreferences(preferences);
@@ -85,24 +75,12 @@ export const useOnboardingFlow = (
             .update({
               updated_at: new Date().toISOString(),
               preferred_era: era,
-              learning_style: learningStyle,
-              skill_level: skillLevel,
+              learning_style: 'journey', // Default since we removed the selection
               is_onboarded: true
             })
             .eq('id', user.id);
             
           if (error) throw error;
-          
-          // Register for push notifications if selected
-          if (reminderMethod === 'push') {
-            if ('Notification' in window) {
-              Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                  toast.success('Push notifications enabled!');
-                }
-              });
-            }
-          }
           
         } catch (error) {
           console.error('Error saving onboarding preferences:', error);
@@ -111,19 +89,19 @@ export const useOnboardingFlow = (
       
       toast.success('Welcome to Historia! Your journey begins now.');
       
-      // Direct user based on learning style
-      if (learningStyle === 'visual') {
-        navigate('/videos');
-      } else if (learningStyle === 'daily') {
-        navigate('/daily-challenge');
-      } else if (learningStyle === 'journey') {
-        navigate('/home');
-      } else if (learningStyle === 'mystery') {
-        navigate('/mystery-history');
-      } else if (learningStyle === 'ai-dolphin') {
-        navigate('/quiz-builder');
+      // Direct user based on interests selected in Step 1
+      console.log('🎯 Onboarding complete! Directing user based on interests:', interests);
+      console.log('🎯 User era:', era);
+      
+      // Check if user selected "World Map History" interest
+      const hasWorldMapHistory = interests.includes('world-map-history');
+      
+      if (hasWorldMapHistory) {
+        console.log('🎯 User selected World Map History, navigating to Globe (/globe)');
+        navigate('/globe'); // Go to globe
       } else {
-        navigate('/dashboard');
+        console.log('🎯 User selected other interests, navigating to Learning Journeys (/home)');
+        navigate('/home'); // Go to learning journeys
       }
     }
   };
@@ -133,18 +111,8 @@ export const useOnboardingFlow = (
     totalSteps,
     interests,
     era,
-    learningStyle,
-    learningTime,
-    reminderMethod,
-    reminderTime,
-    skillLevel,
     setInterests,
     setEra,
-    setLearningStyle,
-    setLearningTime,
-    setReminderMethod,
-    setReminderTime,
-    setSkillLevel,
     handleNext,
     handleBack,
     finishOnboarding

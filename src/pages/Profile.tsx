@@ -37,9 +37,9 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent pt-0">
       <DashboardHeader />
-      <div className="flex flex-col items-center">
+      <div className="flex flex-col items-center w-full">
         <UserStats learningTrack={learningTrack} />
       </div>
     </div>

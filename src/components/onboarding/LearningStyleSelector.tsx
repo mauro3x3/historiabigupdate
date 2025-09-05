@@ -43,19 +43,18 @@ const LearningStyleSelector = ({ selectedStyle, onSelect }: LearningStyleSelecto
       icon: Map,
       customIcon: '/images/icons/learningjourney.png',
       title: 'Learning Journeys',
-      description: 'Themed paths like "Rise of Rome" or "World War II Leaders"',
+      description: 'Follow a themed path like in Duolingo focusing on a historical topic of your liking!',
       isNew: true,
       isRecommended: true
     },
     {
-      id: 'ai-dolphin' as LearningStyle,
-      emoji: '🐬',
-      icon: null,
-      customIcon: '/images/icons/dolphin.png',
-      title: 'AI Quiz Dolphin',
-      description: 'Let our friendly AI dolphin create custom quizzes just for you!',
-      isNew: true,
-      isAi: true
+      id: 'globe' as LearningStyle,
+      emoji: '🌍',
+      icon: Map,
+      customIcon: '/images/icons/globe.png',
+      title: 'Globe & Map Learning',
+      description: 'Explore history through a globe!',
+      isNew: false
     }
   ];
 
@@ -66,20 +65,19 @@ const LearningStyleSelector = ({ selectedStyle, onSelect }: LearningStyleSelecto
       </h2>
       <p className="text-center text-gray-500">Choose your preferred learning style</p>
       
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+      <div className="grid grid-cols-1 gap-8 max-w-5xl mx-auto">
         {learningStyles.map((style, index) => {
           const isJourney = style.id === 'journey';
           return (
             <div 
               key={style.id}
               className={cn(
-                "relative rounded-2xl border-4 transition-all duration-300 flex items-center gap-6 cursor-pointer",
+                "relative rounded-2xl border-4 transition-all duration-300 flex items-start gap-12 cursor-pointer",
                 animatedItems.includes(style.id) ? 'animate-scale-in' : 'opacity-0',
                 isSelected(style.id) ? 
                   'border-purple-500 bg-purple-50 shadow-xl scale-105' : 
                   'border-gray-200 hover:border-purple-300 hover:bg-purple-50/50',
-                style.isAi ? 'border-blue-400 bg-blue-50' : '',
-                isJourney ? 'p-8 min-h-[180px] bg-gradient-to-br from-yellow-50 to-white shadow-lg ring-2 ring-yellow-300/60' : 'p-6 min-h-[150px]',
+                isJourney ? 'p-12 min-h-[300px] bg-gradient-to-br from-yellow-50 to-white shadow-lg ring-2 ring-yellow-300/60' : 'p-10 min-h-[300px]',
                 isJourney ? 'hover:shadow-2xl' : '',
                 isJourney && style.isRecommended ? 'before:content-["Recommended"] before:absolute before:-top-5 before:left-1/2 before:-translate-x-1/2 before:bg-yellow-400 before:text-white before:px-4 before:py-1 before:rounded-full before:shadow-lg before:text-xs before:font-bold' : ''
               )}
@@ -87,32 +85,32 @@ const LearningStyleSelector = ({ selectedStyle, onSelect }: LearningStyleSelecto
               style={{ animationDelay: `${index * 75}ms` }}
             >
               <div className={cn(
-                isJourney ? 'flex-shrink-0 bg-yellow-100 rounded-full p-5 text-yellow-600 shadow-lg' : 'flex-shrink-0 bg-purple-100 rounded-full p-4 text-purple-600',
-                isJourney ? 'border-2 border-yellow-300' : ''
+                "flex items-center justify-center rounded-full p-8 min-w-[160px] min-h-[160px] flex-shrink-0",
+                isJourney ? 'bg-yellow-100 border-2 border-yellow-300' : 'bg-gray-100'
               )}>
                 {style.customIcon ? (
                   <img 
                     src={style.customIcon} 
                     alt={style.title}
-                    className={isJourney ? "h-14 w-14 object-contain" : "h-10 w-10 object-contain"}
+                    className="h-40 w-40 object-contain"
                   />
                 ) : style.icon ? (
-                  <style.icon className={isJourney ? "h-10 w-10" : "h-6 w-6"} />
+                  <style.icon className="h-32 w-32 text-gray-600" />
                 ) : (
-                  <span className={isJourney ? "text-4xl" : "text-2xl"}>{style.emoji}</span>
+                  <span className="text-9xl">{style.emoji}</span>
                 )}
               </div>
-              <div className="flex-grow">
-                <div className="flex items-center gap-2">
-                  <h3 className={isJourney ? "font-bold text-timelingo-navy text-2xl" : "font-semibold text-timelingo-navy text-lg"}>{style.title}</h3>
-                  {style.isAi && (
-                    <Badge className="bg-blue-500 text-white text-xs">AI-powered</Badge>
-                  )}
-                  {style.isNew && !style.isAi && (
+              <div className="flex-grow min-w-0 flex-1 pr-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className={isJourney ? "font-bold text-timelingo-navy text-2xl" : "font-semibold text-timelingo-navy text-xl"}>{style.title}</h3>
+                  {style.isNew && (
                     <Badge className="bg-green-500 text-white text-xs">New</Badge>
                   )}
                 </div>
-                <p className={isJourney ? "text-base text-gray-600 font-medium" : "text-sm text-gray-500"}>{style.description}</p>
+                <p className={cn(
+                  "text-gray-600 leading-relaxed text-lg",
+                  isJourney ? "font-medium" : ""
+                )}>{style.description}</p>
               </div>
               {isSelected(style.id) && (
                 <div className="absolute -top-2 -right-2 bg-purple-500 text-white rounded-full p-1 shadow-md animate-fade-in">

@@ -13,7 +13,7 @@ const defaultPreferences = (): UserPreferences => {
   return {
     interests: ['ancient-history'] as HistoryInterest[],
     era: 'ancient-egypt' as HistoryEra,
-    learningStyle: 'reading' as LearningStyle,
+    learningStyle: 'traditional' as LearningStyle,
     dailyLearningTime: '15-min' as LearningTime,
     reminderMethod: 'none' as ReminderMethod,
     reminderTime: null

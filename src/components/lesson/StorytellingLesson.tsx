@@ -82,13 +82,25 @@ const StorytellingLesson: React.FC<StorytellingLessonProps> = ({
         {isTransitionVisible && (
           <div className="my-12 py-10 text-center opacity-90 animate-fade-in">
             <p className="text-xl md:text-2xl mb-8">{transitionQuestion}</p>
-            <Button 
-              onClick={handleContinueToQuiz}
-              className="bg-timelingo-purple hover:bg-purple-700 text-white py-2 px-6 rounded-full text-lg"
-              data-testid="story-continue-btn"
-            >
-              Continue
-            </Button>
+            <div className="mt-4 flex justify-center" style={{ minHeight: '50px' }}>
+              <button 
+                onClick={handleContinueToQuiz}
+                className="py-2 px-6 text-lg continue-button-solid transition-all duration-200"
+                style={{
+                  backgroundColor: '#2563eb',
+                  color: 'white',
+                  border: '2px solid #1d4ed8',
+                  fontWeight: 'bold',
+                  backgroundImage: 'none',
+                  position: 'relative',
+                  zIndex: 10,
+                  transform: 'translateZ(0)'
+                }}
+                data-testid="story-continue-btn"
+              >
+                Continue
+              </button>
+            </div>
           </div>
         )}
       </div>

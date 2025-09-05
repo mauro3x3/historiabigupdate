@@ -59,6 +59,14 @@
   font-style: italic;
 }
 
+@font-face {
+  font-family: 'JetBrainsMono';
+  src: url('/JetBrains Mono-Bold') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:wght@400;700&family=Crimson+Pro:wght@400;700&family=Cormorant+Garamond:wght@400;700&family=Literata:wght@400;700&family=Alegreya:wght@400;700&family=Lora:wght@400;700&family=Bitter:wght@400;700&family=Inter:wght@400;700&family=Merriweather:wght@400;700&family=Playfair+Display:wght@400;700&display=swap');
 
 .font-ebgaramond { font-family: 'EB Garamond', serif !important; }
@@ -71,6 +79,7 @@
 .font-inter { font-family: 'Inter', sans-serif !important; }
 .font-merriweather { font-family: 'Merriweather', serif !important; }
 .font-playfair { font-family: 'Playfair Display', serif !important; }
+.font-jetbrainsmono { font-family: 'JetBrainsMono', monospace !important; }
 
 @tailwind base;
 @tailwind components;
@@ -96,7 +105,7 @@
   }
   
   .history-option.selected {
-    @apply bg-purple-50 border-purple-500 shadow-md;
+    @apply bg-blue-50 border-blue-500 shadow-md;
     transform: scale(1.03);
   }
   
@@ -111,12 +120,12 @@
   
   .learning-style-card {
     @apply cursor-pointer rounded-xl border border-gray-200 p-4 flex flex-col items-center text-center;
-    @apply transition-all duration-300 hover:border-purple-300 hover:shadow-md;
+    @apply transition-all duration-300 hover:border-blue-300 hover:shadow-md;
     min-height: 180px;
   }
   
   .learning-style-card.selected {
-    @apply bg-purple-50 border-purple-500 shadow-md;
+    @apply bg-blue-50 border-blue-500 shadow-md;
     transform: scale(1.03);
   }
 }
@@ -187,7 +196,6 @@
     --radius: 0.5rem;
     
     --timelingo-navy: 223 47% 11%;
-    --timelingo-purple: 252 82% 74%;
   }
 
   .dark {
@@ -235,7 +243,7 @@
   }
   
   input, textarea, select {
-    @apply focus-visible:ring-timelingo-purple/40;
+    @apply focus-visible:ring-blue-500/40;
   }
 }
 
@@ -264,4 +272,89 @@ input:-webkit-autofill:active {
 /* Force Satoshi globally for debugging */
 * {
   font-family: 'Satoshi', sans-serif !important;
+}
+
+/* Custom continue button styles to override global button styles */
+.continue-button-solid {
+  background: #2563eb !important;
+  background-color: #2563eb !important;
+  color: white !important;
+  border: 2px solid #1d4ed8 !important;
+  font-weight: bold !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 10px 30px !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  /* Force override any gradient backgrounds */
+  background-image: none !important;
+  -webkit-background-image: none !important;
+  -moz-background-image: none !important;
+  -ms-background-image: none !important;
+  /* Override any other button styles */
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+  display: inline-block !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+.continue-button-solid:hover {
+  background: #1d4ed8 !important;
+  background-color: #1d4ed8 !important;
+  background-image: none !important;
+  -webkit-background-image: none !important;
+  -moz-background-image: none !important;
+  -ms-background-image: none !important;
+}
+
+.continue-button-solid:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
+
+/* Even more specific selectors to override global styles */
+button.continue-button-solid,
+.continue-button-solid,
+[data-testid="story-continue-btn"].continue-button-solid,
+button[data-testid="story-continue-btn"],
+button[data-testid="story-continue-btn"].continue-button-solid {
+  background: #2563eb !important;
+  background-color: #2563eb !important;
+  background-image: none !important;
+  -webkit-background-image: none !important;
+  -moz-background-image: none !important;
+  -ms-background-image: none !important;
+  -o-background-image: none !important;
+  color: white !important;
+  border: 2px solid #1d4ed8 !important;
+  font-weight: bold !important;
+  width: auto !important;
+  margin: 0 !important;
+  padding: 10px 30px !important;
+  border-radius: 9999px !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+  display: inline-block !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  cursor: pointer !important;
+  user-select: none !important;
+  transition: all 0.2s ease-in-out !important;
+  /* Force override any gradient or complex backgrounds */
+  background: linear-gradient(none) !important;
+  background: -webkit-linear-gradient(none) !important;
+  background: -moz-linear-gradient(none) !important;
+  background: -ms-linear-gradient(none) !important;
+  background: -o-linear-gradient(none) !important;
+  /* Override any filter effects */
+  filter: none !important;
+  -webkit-filter: none !important;
+  -moz-filter: none !important;
+  -ms-filter: none !important;
+  -o-filter: none !important;
 }

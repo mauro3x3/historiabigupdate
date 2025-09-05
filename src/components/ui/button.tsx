@@ -10,7 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-br from-timelingo-purple via-purple-400 to-yellow-300 text-white hover:from-yellow-400 hover:via-timelingo-purple hover:to-purple-400 hover:text-timelingo-navy active:scale-95",
+          "bg-gradient-to-br from-blue-500 via-blue-400 to-blue-300 text-white hover:from-blue-600 hover:via-blue-500 hover:to-blue-400 active:scale-95",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         outline:

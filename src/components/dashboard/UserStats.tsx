@@ -64,6 +64,25 @@ const AVATAR_OPTIONS = [
 // Set ghost as the default avatar for all users
 const DEFAULT_AVATAR_KEY = 'ghost';
 
+// Prize avatar filenames
+const PRIZE_AVATARS = [
+  "image-7EsQAdw5NUVcdw52hBwTqNGgip9vcR.png",
+  "image-a6WugtiuViBPIRbDNPg3OtImITAx.png",
+  "image-AR6B9OO3Hvvi0mCU7IMvQGiOHzzgN1.png",
+  "image-dtoN56U9XTn0CfjjNUnMD2x1PzV51q.png",
+  "image-h3qcn77afchwlZrlJ5eGWlgGGdRdJw.png",
+  "image-JLGCwuVRfOMwVMpimP9wXFiuf6Nw4x.png",
+  "image-N2KDrpBUh9PwoJIFRVq8kM6BPUg0a.png",
+  "image-oYQvk6Y2V2EuKUJMTNt6lCyV5DzIx8x.png",
+  "image-XWWDqRRiqU7CVt0JjdRPOCMPrSXfoY.png"
+];
+
+function getRandomPrizeAvatar(unlocked) {
+  const locked = PRIZE_AVATARS.filter(a => !unlocked.includes(a));
+  if (locked.length === 0) return null;
+  return locked[Math.floor(Math.random() * locked.length)];
+}
+
 function StatCard({ icon, value, label, className, onClick = undefined, disabled = false, ariaLabel, title }) {
   return (
     <button
@@ -146,7 +165,7 @@ function ChangeUsername({ user, onUsernameChange }) {
         <button
           onClick={handleSave}
           disabled={loading}
-          className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+          className="bg-timelingo-gold text-timelingo-navy px-3 py-1 rounded hover:bg-yellow-400 font-semibold"
         >
           {loading ? 'Saving...' : 'Save'}
         </button>
@@ -211,6 +230,9 @@ export default function UserStats(props: UserStatsProps) {
   const [eraProgressData, setEraProgressData] = useState([]);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboardType, setLeaderboardType] = useState<'xp' | 'streak'>('xp');
+  const [unlockedPrizeAvatars, setUnlockedPrizeAvatars] = useState<string[]>([]);
+  const [showPrizeAvatarModal, setShowPrizeAvatarModal] = useState(false);
+  const [rewardedPrizeAvatar, setRewardedPrizeAvatar] = useState<string | null>(null);
   
   // Load the username and avatar from the database when the component mounts
   useEffect(() => {
@@ -509,8 +531,47 @@ export default function UserStats(props: UserStatsProps) {
     setShowLeaderboard(true);
   };
 
+  // Fetch unlocked prize avatars on mount
+  useEffect(() => {
+    if (!user) return;
+    const fetchPrizeAvatars = async () => {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('prize_avatars')
+        .eq('id', user.id)
+        .single();
+      if (!error && data && Array.isArray(data.prize_avatars)) {
+        setUnlockedPrizeAvatars(data.prize_avatars);
+      }
+    };
+    fetchPrizeAvatars();
+  }, [user]);
+
+  // Reward logic (simulate with a button for now)
+  const handleRewardPrizeAvatar = async () => {
+    if (!user) return;
+    const avatar = getRandomPrizeAvatar(unlockedPrizeAvatars);
+    if (!avatar) {
+      toast('You have unlocked all prize avatars!');
+      return;
+    }
+    const newUnlocked = [...unlockedPrizeAvatars, avatar];
+    const { error } = await supabase.from('user_profiles').update({
+      prize_avatars: newUnlocked,
+      avatar_base: avatar
+    }).eq('id', user.id);
+    if (!error) {
+      setUnlockedPrizeAvatars(newUnlocked);
+      setRewardedPrizeAvatar(avatar);
+      setShowPrizeAvatarModal(true);
+      toast.success('New avatar unlocked!');
+    } else {
+      toast.error('Failed to unlock avatar');
+    }
+  };
+
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-timelingo-navy/95 to-purple-900/90 flex flex-col lg:flex-row items-start justify-start py-10 relative overflow-x-hidden">
+    <div className="min-h-screen w-full bg-gradient-to-br from-timelingo-navy/95 to-purple-900/90 flex flex-col lg:flex-row items-start justify-start pt-20 pb-0 relative overflow-x-hidden -mt-6 -ml-6 -mr-6">
       {/* Animated/Blurred Background Shapes */}
       <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-gradient-to-br from-timelingo-gold/30 to-timelingo-purple/20 rounded-full blur-3xl opacity-60 z-0 animate-pulse-slow pointer-events-none" />
       <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-gradient-to-tr from-timelingo-teal/30 to-timelingo-navy/20 rounded-full blur-2xl opacity-50 z-0 animate-pulse-slow pointer-events-none" />
@@ -544,10 +605,10 @@ export default function UserStats(props: UserStatsProps) {
                   <DialogTitle>Customize Profile</DialogTitle>
                 </DialogHeader>
                 <div className="flex gap-4 mb-4">
-                  <button className={`px-3 py-1 rounded ${profileTab === 'avatar' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-white/10 text-white'}`} onClick={() => setProfileTab('avatar')}>Avatar</button>
-                  <button className={`px-3 py-1 rounded ${profileTab === 'courses' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-white/10 text-white'}`} onClick={() => setProfileTab('courses')}>Featured Courses</button>
-                  <button className={`px-3 py-1 rounded ${profileTab === 'badges' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-white/10 text-white'}`} onClick={() => setProfileTab('badges')}>Badges</button>
-                  <button className={`px-3 py-1 rounded ${profileTab === 'username' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-white/10 text-white'}`} onClick={() => setProfileTab('username')}>Change Username</button>
+                  <button className={`px-3 py-1 rounded ${profileTab === 'avatar' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-timelingo-navy/40 text-white'}`} onClick={() => setProfileTab('avatar')}>Avatar</button>
+                  <button className={`px-3 py-1 rounded ${profileTab === 'courses' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-timelingo-navy/40 text-white'}`} onClick={() => setProfileTab('courses')}>Featured Courses</button>
+                  <button className={`px-3 py-1 rounded ${profileTab === 'badges' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-timelingo-navy/40 text-white'}`} onClick={() => setProfileTab('badges')}>Badges</button>
+                  <button className={`px-3 py-1 rounded ${profileTab === 'username' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-timelingo-navy/40 text-white'}`} onClick={() => setProfileTab('username')}>Change Username</button>
                 </div>
                 {/* Avatar Tab */}
                 {profileTab === 'avatar' && (
@@ -557,7 +618,7 @@ export default function UserStats(props: UserStatsProps) {
                       return (
                         <button
                           key={opt.key}
-                          className={`rounded-xl border-2 p-2 flex flex-col items-center transition-all focus:outline-none focus:ring-2 focus:ring-timelingo-gold relative group ${selectedAvatar === opt.key ? 'border-timelingo-gold bg-yellow-100 scale-105 shadow-lg' : 'border-gray-200 bg-gray-50 hover:border-timelingo-gold hover:scale-105'} ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
+                          className={`rounded-xl border-2 p-2 flex flex-col items-center transition-all focus:outline-none focus:ring-2 focus:ring-timelingo-gold relative group ${selectedAvatar === opt.key ? 'border-timelingo-gold bg-timelingo-navy/80 scale-105 shadow-lg' : 'border-gray-600 bg-timelingo-navy/40 hover:border-timelingo-gold hover:scale-105'} ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
                           onClick={() => !isLocked && setSelectedAvatar(opt.key)}
                           aria-label={opt.key}
                           tabIndex={0}
@@ -599,7 +660,7 @@ export default function UserStats(props: UserStatsProps) {
                       {eras.filter(e => !selectedFeaturedEras.includes(e.code)).map(era => (
                         <button
                           key={era.code}
-                          className={`px-3 py-1 rounded bg-white/10 text-white hover:bg-timelingo-gold/80 hover:text-timelingo-navy ${selectedFeaturedEras.length >= 4 ? 'opacity-50 pointer-events-none' : ''}`}
+                          className={`px-3 py-1 rounded bg-timelingo-navy/40 text-white hover:bg-timelingo-gold/80 hover:text-timelingo-navy ${selectedFeaturedEras.length >= 4 ? 'opacity-50 pointer-events-none' : ''}`}
                           onClick={() => {
                             if (selectedFeaturedEras.length < 4) setSelectedFeaturedEras([...selectedFeaturedEras, era.code]);
                           }}
@@ -693,10 +754,10 @@ export default function UserStats(props: UserStatsProps) {
           {!eraLoading && featuredEraObjects.length === 0 && <div className="text-white/70">No featured courses selected. <button className='underline' onClick={() => { setShowProfileModal(true); setProfileTab('courses'); }}>Customize</button></div>}
           <div className="flex flex-row gap-6 justify-center">
             {featuredEraObjects.slice(0, 4).map((era) => (
-              <div key={era.code} className="min-w-[220px] rounded-2xl bg-gradient-to-br from-timelingo-purple to-timelingo-gold p-6 shadow-xl flex flex-col items-center justify-center glass-card border border-white/20 transition-all duration-200 hover:scale-105 hover:shadow-2xl hover:border-timelingo-gold/60 cursor-pointer">
+              <div key={era.code} className="min-w-[220px] rounded-2xl bg-gradient-to-br from-timelingo-navy/80 to-timelingo-purple/80 p-6 shadow-xl flex flex-col items-center justify-center glass-card border border-timelingo-gold/30 transition-all duration-200 hover:scale-105 hover:shadow-2xl hover:border-timelingo-gold/60 cursor-pointer backdrop-blur-xl">
                 <span className="text-5xl mb-3 drop-shadow-lg">{era.emoji}</span>
                 <span className="text-xl font-bold text-white mb-2">{getDisplayEraName(era)}</span>
-                <span className="text-xs text-gray-200 mb-4">{era.time_period}</span>
+                <span className="text-xs text-gray-300 mb-4">{era.time_period}</span>
                 <button className="px-5 py-2 rounded-full bg-gradient-to-r from-timelingo-gold to-timelingo-purple text-white font-semibold shadow hover:bg-yellow-400/80 hover:text-timelingo-navy focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors text-base" onClick={() => navigate(`/home?era=${era.code}`)}>Go to Course</button>
               </div>
             ))}
@@ -860,6 +921,22 @@ export default function UserStats(props: UserStatsProps) {
       <Dialog open={showLeaderboard} onOpenChange={setShowLeaderboard}>
         <DialogContent className="max-w-3xl w-full">
           <LeaderboardPage initialType={leaderboardType} />
+        </DialogContent>
+      </Dialog>
+      {/* Prize Avatar Reward Button (for demo) */}
+      <Dialog open={showPrizeAvatarModal} onOpenChange={setShowPrizeAvatarModal}>
+        <DialogContent>
+          <DialogTitle>🎉 New Avatar Unlocked!</DialogTitle>
+          {rewardedPrizeAvatar && (
+            <div className="flex flex-col items-center">
+              <img
+                src={`/images/prizeavatars/${rewardedPrizeAvatar}`}
+                alt="Prize Avatar"
+                className="w-32 h-32 rounded-full border-4 border-yellow-400 shadow-lg mb-4"
+              />
+              <p className="text-lg font-bold">You earned a new avatar!</p>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>

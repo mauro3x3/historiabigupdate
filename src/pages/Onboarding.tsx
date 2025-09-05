@@ -3,11 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import OnboardingContainer from '@/components/onboarding/OnboardingContainer';
 import InterestSelector from '@/components/onboarding/InterestSelector';
 import EraSelector from '@/components/onboarding/EraSelector';
-import LearningStyleSelector from '@/components/onboarding/LearningStyleSelector';
-import LearningTimeSelector from '@/components/onboarding/LearningTimeSelector';
-import ReminderPreferences from '@/components/onboarding/ReminderPreferences';
-import SkillLevelSelector from '@/components/onboarding/SkillLevelSelector';
-import { HistoryInterest, HistoryEra, LearningStyle, LearningTime, UserPreferences, ReminderMethod } from '@/types';
+
+
+import { HistoryInterest, HistoryEra, LearningTime, UserPreferences } from '@/types';
 import { useUser } from '@/contexts/UserContext';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,18 +21,8 @@ const Onboarding = () => {
     totalSteps,
     interests,
     era,
-    learningStyle,
-    learningTime,
-    reminderMethod,
-    reminderTime,
-    skillLevel,
     setInterests,
     setEra,
-    setLearningStyle,
-    setLearningTime,
-    setReminderMethod,
-    setReminderTime,
-    setSkillLevel,
     handleNext,
     handleBack,
     finishOnboarding
@@ -72,32 +60,7 @@ const Onboarding = () => {
             onSelect={setEra} 
           />
         )}
-        {step === 3 && (
-          <LearningStyleSelector 
-            selectedStyle={learningStyle} 
-            onSelect={setLearningStyle} 
-          />
-        )}
-        {step === 4 && (
-          <SkillLevelSelector
-            selectedSkill={skillLevel}
-            onSelect={setSkillLevel}
-          />
-        )}
-        {step === 5 && (
-          <LearningTimeSelector
-            selectedTime={learningTime}
-            onSelect={setLearningTime}
-          />
-        )}
-        {step === 6 && (
-          <ReminderPreferences
-            selectedMethod={reminderMethod}
-            selectedTime={reminderTime}
-            onMethodSelect={setReminderMethod}
-            onTimeSelect={setReminderTime}
-          />
-        )}
+
       </>
     </OnboardingContainer>
   );

@@ -7,7 +7,7 @@ import { getLessonProgress } from '@/services/progressService';
 import { generateTrackForEra } from '@/data/trackData';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { BookOpen, ChevronDown, Map, Check, Lock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { BookOpen, ChevronDown, Map, Check, Lock, ChevronLeft } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import LearningPath from '../components/home/LearningPath';
 
@@ -463,12 +463,14 @@ const HomeRevamp = () => {
     }
   }
   const chaptersWithLessons = Array.isArray(chapters) ? chapters.filter(ch => Array.isArray(ch.lessons) && ch.lessons.length > 0) : [];
-  // Find mascot node idx
-  let mascotNodeIdx = -1, nodeCount = 0;
+  
+  // Find current lesson idx
+  let currentLessonIdx = -1;
   chaptersWithLessons.forEach((chapter) => {
-    chapter.lessons.forEach((lesson) => {
-      if (lesson.status === 'current') mascotNodeIdx = nodeCount;
-      nodeCount++;
+    chapter.lessons.forEach((lesson, idx) => {
+      if (lesson.status === 'current') {
+        currentLessonIdx = idx;
+      }
     });
   });
 
@@ -481,13 +483,9 @@ const HomeRevamp = () => {
   // Keyboard navigation for era
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
-      if (['ArrowLeft', 'ArrowRight'].includes(e.key)) {
+      if (['ArrowLeft'].includes(e.key)) {
         e.preventDefault();
-      }
-      if (e.key === 'ArrowLeft') {
         handleEraChange(prevEra);
-      } else if (e.key === 'ArrowRight') {
-        handleEraChange(nextEra);
       }
     };
     window.addEventListener('keydown', onKeyDown);
@@ -565,15 +563,7 @@ const HomeRevamp = () => {
         >
           <ChevronLeft className="w-10 h-10" />
         </button>
-        {/* Right Arrow Button */}
-        <button
-          className="fixed right-8 top-1/2 -translate-y-1/2 bg-white/80 shadow-lg rounded-full p-4 z-50 hover:bg-purple-100 transition"
-          style={{ fontSize: 32, display: eraList.length > 1 ? 'block' : 'none' }}
-          onClick={() => handleEraChange(nextEra)}
-          aria-label="Next Era"
-        >
-          <ChevronRight className="w-10 h-10" />
-        </button>
+        {/* Removed Right Arrow Button */}
         {!user ? (
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <img src={AVATAR} alt="Mascot" className="w-40 h-40 rounded-full border-4 border-pink-400 shadow-2xl bg-white object-cover mb-6" />
@@ -596,7 +586,6 @@ const HomeRevamp = () => {
               <LearningPath
                 chapters={chaptersWithLessons}
                 onLessonClick={handleLessonClick}
-                mascotNodeIdx={mascotNodeIdx}
               />
             </div>
           </>
