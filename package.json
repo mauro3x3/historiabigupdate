@@ -85,7 +85,7 @@
     "stripe": "^18.1.1",
     "tailwind-merge": "^2.5.2",
     "tailwindcss-animate": "^1.0.7",
-    "three": "^0.150.0",
+    "three": "^0.180.0",
     "three-globe": "^2.25.0",
     "three-render-objects": "^1.36.0",
     "uuid": "^11.1.0",
