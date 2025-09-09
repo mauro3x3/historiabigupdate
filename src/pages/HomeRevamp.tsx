@@ -296,45 +296,34 @@ function EraPicker({ era, onChange, disabled, completedModules = 0, totalModules
 
   return (
     <>
-      {/* Course Selector Card Button */}
+      {/* Course Selector Card Button - Compact Version */}
       <div 
-        className="bg-white rounded-2xl border border-gray-200 shadow-lg p-4 cursor-pointer transition-all duration-200 hover:shadow-xl hover:scale-[1.02] hover:border-blue-300 min-w-[280px]"
+        className="bg-white rounded-xl border border-gray-200 shadow-md p-3 cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] hover:border-blue-300 min-w-[200px]"
         onClick={() => setOpen(true)}
       >
-        <div className="flex items-center gap-4">
-          {/* Course Icon */}
+        <div className="flex items-center gap-3">
+          {/* Course Icon - Smaller */}
           <div className="flex-shrink-0">
             {iconMap[era] ? (
               <img 
                 src={iconMap[era]} 
                 alt={currentEra?.name}
-                className="w-12 h-12 object-contain rounded-lg"
+                className="w-8 h-8 object-contain rounded-lg"
               />
             ) : (
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-xl">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-sm">
                 {currentEra?.emoji || '📚'}
               </div>
             )}
           </div>
 
-          {/* Course Info */}
+          {/* Course Info - Compact */}
           <div className="flex-grow">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="font-bold text-gray-900 text-lg">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-gray-900 text-sm">
                 {currentEra?.name || 'Select Course'}
               </h3>
-              <ChevronDown className="h-4 w-4 text-gray-400" />
-            </div>
-            <div className="flex items-center gap-4 text-sm text-gray-600">
-              <span>📊 Progress: {totalModules > 0 ? Math.floor((completedModules / totalModules) * 100) : 0}% ({completedModules}/{totalModules} modules)</span>
-              <span>🔥 3 day streak</span>
-            </div>
-            {/* Progress Bar */}
-            <div className="mt-2 w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-green-500 h-2 rounded-full transition-all duration-300" 
-                style={{ width: totalModules > 0 ? `${Math.floor((completedModules / totalModules) * 100)}%` : '0%' }}
-              ></div>
+              <ChevronDown className="h-3 w-3 text-gray-400" />
             </div>
           </div>
         </div>
@@ -541,8 +530,8 @@ const HomeRevamp = () => {
 
   return (
     <div style={{position: 'relative', zIndex: 1, minHeight: '100vh'}} className={`bg-gradient-to-b ${eraBg(selectedEra)}`}>
-      <FullscreenBackground />
-      <div className="fixed top-8 right-10 z-40 flex items-center gap-4">
+        <FullscreenBackground />
+      <div className="fixed top-8 right-10 z-[60] flex items-center gap-4">
         <div className="flex gap-2 px-5 py-3 rounded-2xl shadow-2xl bg-gradient-to-br from-white/80 to-purple-100/80 backdrop-blur-md border border-purple-200/60">
           <EraPicker 
             era={selectedEra} 

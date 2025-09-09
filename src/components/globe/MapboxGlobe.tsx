@@ -59,6 +59,10 @@ const MapboxGlobe: React.FC<MapboxGlobeProps> = ({
   selectedMonth,
   selectedDay
 }) => {
+  // Function to get color based on category - all user content is blue
+  const getCategoryColor = (category: string) => {
+    return '#4A90E2'; // Blue for all user content to match official modules
+  };
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -101,31 +105,18 @@ const MapboxGlobe: React.FC<MapboxGlobeProps> = ({
     if (!map.current || !isLoaded) return;
 
     // Clear existing markers
-    const existingMarkers = document.querySelectorAll('.module-marker, .test-marker');
+    const existingMarkers = document.querySelectorAll('.module-marker, .test-marker, .user-content-marker');
     existingMarkers.forEach(marker => marker.remove());
+
+    console.log('🗺️ MapboxGlobe: Adding markers for', journeys.length, 'journeys');
+    console.log('🗺️ MapboxGlobe: Total modules to show:', journeys.reduce((sum, j) => sum + j.modules.length, 0));
 
     // Add module markers
     journeys.forEach(journey => {
       journey.modules.forEach(module => {
         if (!showOfficialModules) return;
 
-        // Filter by calendar mode if enabled
-        if (calendarMode) {
-          // Check if module matches selected date
-          const moduleYear = module.year;
-          const moduleMonth = module.month;
-          const moduleDay = module.day;
-          
-          // Skip if module doesn't have date info
-          if (!moduleYear || !moduleMonth || !moduleDay) return;
-          
-          // Check if module matches selected date
-          if (moduleYear !== selectedYear || 
-              moduleMonth !== selectedMonth || 
-              moduleDay !== selectedDay) {
-            return;
-          }
-        }
+        console.log('🗺️ Adding marker for module:', module.title, 'at', module.latitude, module.longitude);
 
         // Create a simple marker
         const marker = document.createElement('div');
@@ -156,7 +147,43 @@ const MapboxGlobe: React.FC<MapboxGlobeProps> = ({
       });
     });
 
-  }, [journeys, showOfficialModules, isLoaded, onModuleClick, calendarMode, selectedYear, selectedMonth, selectedDay]);
+    // Add user content markers
+    if (showUserContent && userContent) {
+      console.log('🗺️ MapboxGlobe: Adding user content markers:', userContent.length);
+      
+      userContent.forEach(content => {
+        console.log('🗺️ Adding user content marker:', content.title, 'at', content.coordinates);
+
+        // Create a marker for user content
+        const marker = document.createElement('div');
+        marker.className = 'user-content-marker';
+        marker.style.width = '12px';
+        marker.style.height = '12px';
+        marker.style.borderRadius = '50%';
+        marker.style.backgroundColor = getCategoryColor(content.category);
+        marker.style.cursor = 'pointer';
+        marker.style.border = '2px solid white';
+        marker.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+
+        // Add click handler
+        marker.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (onUserContentClick) {
+            onUserContentClick(content);
+          }
+        });
+
+        // Use content coordinates
+        const lng = content.coordinates[0];
+        const lat = content.coordinates[1];
+
+        new mapboxgl.Marker(marker)
+          .setLngLat([lng, lat])
+          .addTo(map.current!);
+      });
+    }
+
+  }, [journeys, showOfficialModules, showUserContent, userContent, isLoaded, onModuleClick, onUserContentClick, calendarMode, selectedYear, selectedMonth, selectedDay]);
 
   return (
     <div className="w-full h-full">

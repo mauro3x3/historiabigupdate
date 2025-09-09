@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import Globe from '@/components/globe/Globe';
+import { useNavigate } from 'react-router-dom';
+import { Menu, X, Home, Globe, Trophy, BarChart3, Bookmark, ShoppingBag, Settings, User } from 'lucide-react';
+import GlobeComponent from '@/components/globe/Globe';
 import ModuleModal from '@/components/globe/ModuleModal';
 import ProgressBox from '@/components/globe/ProgressBox';
 import ThreeGlobe from '@/components/globe/ThreeGlobe'; // Added import for ThreeGlobe
@@ -28,10 +30,12 @@ interface Journey {
 }
 
 export default function GlobeView() {
+  const navigate = useNavigate();
   const [showDebug, setShowDebug] = useState(true);
   const [visibleJourneys, setVisibleJourneys] = useState<Set<number>>(new Set());
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(false);
   
   // Handle module clicks
   const handleModuleClick = (module: any) => {
@@ -341,6 +345,79 @@ export default function GlobeView() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Navigation Button */}
+      <button
+        onClick={() => setShowSidebar(true)}
+        className="fixed top-4 left-4 z-50 bg-white/90 hover:bg-white text-gray-800 p-3 rounded-lg shadow-lg transition-all duration-200 hover:scale-105"
+        title="Open Navigation"
+      >
+        <Menu className="h-6 w-6" />
+      </button>
+
+      {/* Sidebar Overlay */}
+      {showSidebar && (
+        <div className="fixed inset-0 z-[60] flex">
+          {/* Backdrop */}
+          <div 
+            className="flex-1 bg-black/50" 
+            onClick={() => setShowSidebar(false)}
+          />
+          
+          {/* Sidebar */}
+          <div className="w-64 bg-gray-900 text-white shadow-2xl">
+            {/* Header */}
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
+                    <span className="text-white font-bold text-lg">H</span>
+                  </div>
+                  <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">
+                    Historia
+                  </span>
+                </div>
+                <button
+                  onClick={() => setShowSidebar(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Navigation Items */}
+            <nav className="p-4 space-y-2">
+              {[
+                { label: 'HOME', href: '/home', icon: <Home className="h-6 w-6" /> },
+                { label: 'GLOBE', href: '/globe', icon: <Globe className="h-6 w-6" /> },
+                { label: 'MUSEUM', href: '/museum', icon: <Trophy className="h-6 w-6" /> },
+                { label: 'LEADERBOARD', href: '/leaderboard', icon: <BarChart3 className="h-6 w-6" /> },
+                { label: 'BOOKMARKS', href: '/bookmarks', icon: <Bookmark className="h-6 w-6" /> },
+                { label: 'GET A JOHAN PLUSHIE!', href: '/store', icon: <ShoppingBag className="h-6 w-6" /> },
+                { label: 'SETTINGS', href: '/settings', icon: <Settings className="h-6 w-6" /> },
+                { label: 'PROFILE', href: '/profile', icon: <User className="h-6 w-6" /> },
+              ].map((item) => (
+                <button
+                  key={item.href}
+                  onClick={() => {
+                    navigate(item.href);
+                    setShowSidebar(false);
+                  }}
+                  className="w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 group text-left hover:bg-gray-800"
+                >
+                  <div className="text-gray-400 group-hover:text-white transition-colors">
+                    {item.icon}
+                  </div>
+                  <span className="font-semibold text-sm tracking-wide">
+                    {item.label}
+                  </span>
+                </button>
+              ))}
+            </nav>
           </div>
         </div>
       )}

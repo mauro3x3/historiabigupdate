@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { AlertTriangle, CheckCircle } from 'lucide-react';
+import ContentValidator from './ContentValidator';
 
 export interface UserGeneratedContent {
   id: string;
@@ -9,6 +11,8 @@ export interface UserGeneratedContent {
   coordinates: [number, number];
   category: string;
   imageUrl?: string;
+  dateHappened: string;
+  source: string;
 }
 
 interface AddContentModalProps {
@@ -16,21 +20,44 @@ interface AddContentModalProps {
   onClose: () => void;
   coordinates: [number, number] | null;
   onSubmit: (content: Omit<UserGeneratedContent, 'id' | 'createdAt'>) => void;
+  defaultDate?: string;
 }
 
-export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit }: AddContentModalProps) {
+export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit, defaultDate }: AddContentModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Historical Event');
   const [author, setAuthor] = useState('Anonymous');
+  const [dateHappened, setDateHappened] = useState('');
+  const [source, setSource] = useState('');
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [imageUrl, setImageUrl] = useState('');
   const [useImageUrl, setUseImageUrl] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [validationResult, setValidationResult] = useState<{
+    isValid: boolean;
+    errors: string[];
+    warnings: string[];
+  } | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
+
+  // Set default date when modal opens
+  React.useEffect(() => {
+    if (isOpen && defaultDate) {
+      setDateHappened(defaultDate);
+    }
+  }, [isOpen, defaultDate]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      processImageFile(file);
+    }
+  };
+
+  const processImageFile = (file: File) => {
+    if (file && file.type.startsWith('image/')) {
       setImageFile(file);
       const reader = new FileReader();
       reader.onload = (e) => {
@@ -39,6 +66,43 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
       reader.readAsDataURL(file);
     }
   };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set drag over to false if we're leaving the drop zone entirely
+    if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFile = files.find(file => file.type.startsWith('image/'));
+    
+    if (imageFile) {
+      processImageFile(imageFile);
+    }
+  };
+
+  const handleDropZoneClick = () => {
+    // Trigger file input click
+    const fileInput = document.getElementById('image-file-input') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.click();
+    }
+  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,7 +124,9 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
           author: author.trim() || 'Anonymous',
           coordinates,
           category,
-          imageUrl: base64Image
+          imageUrl: base64Image,
+          dateHappened: dateHappened.trim(),
+          source: source.trim()
         };
         onSubmit(newContent);
         
@@ -69,6 +135,8 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
         setDescription('');
         setCategory('Historical Event');
         setAuthor('');
+        setDateHappened('');
+        setSource('');
         setImageFile(null);
         setImagePreview(null);
         setImageUrl('');
@@ -85,7 +153,9 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
       author: author.trim() || 'Anonymous',
       coordinates,
       category,
-      imageUrl: finalImageUrl
+      imageUrl: finalImageUrl,
+      dateHappened: dateHappened.trim(),
+      source: source.trim()
     };
     onSubmit(newContent);
     
@@ -94,6 +164,8 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
     setDescription('');
     setCategory('Historical Event');
     setAuthor('');
+    setDateHappened('');
+    setSource('');
     setImageFile(null);
     setImagePreview(null);
     setImageUrl('');
@@ -112,7 +184,7 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
         <div className="bg-blue-600 rounded-t-xl p-6 text-white">
           <div className="flex justify-between items-start">
             <div>
-              <h2 className="text-2xl font-bold">Add Historical Content</h2>
+              <h2 className="text-2xl font-bold">Add Content</h2>
               <p className="text-blue-100 mt-1">Share your knowledge with the community</p>
             </div>
             <button
@@ -125,6 +197,44 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
         </div>
         
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Validation Results */}
+          {validationResult && (
+            <div className={`p-4 rounded-lg border ${
+              validationResult.isValid 
+                ? 'bg-green-50 border-green-200' 
+                : 'bg-red-50 border-red-200'
+            }`}>
+              <div className="flex items-start gap-2">
+                {validationResult.isValid ? (
+                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
+                )}
+                <div className="flex-1">
+                  <h4 className={`font-medium ${
+                    validationResult.isValid ? 'text-green-800' : 'text-red-800'
+                  }`}>
+                    {validationResult.isValid ? 'Content looks good!' : 'Please fix the following issues:'}
+                  </h4>
+                  {validationResult.errors.length > 0 && (
+                    <ul className="mt-2 text-sm text-red-700 list-disc list-inside">
+                      {validationResult.errors.map((error, index) => (
+                        <li key={index}>{error}</li>
+                      ))}
+                    </ul>
+                  )}
+                  {validationResult.warnings.length > 0 && (
+                    <ul className="mt-2 text-sm text-yellow-700 list-disc list-inside">
+                      {validationResult.warnings.map((warning, index) => (
+                        <li key={index}>{warning}</li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Title *
@@ -134,7 +244,7 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter a title for your historical content"
+              placeholder="Enter a title for your content"
               required
             />
           </div>
@@ -148,7 +258,7 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
               onChange={(e) => setDescription(e.target.value)}
               rows={4}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Describe the historical event, person, or place..."
+              placeholder="Describe the event, person, or place..."
               required
             />
           </div>
@@ -171,6 +281,52 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
               <option value="Discovery">Discovery</option>
               <option value="Other">Other</option>
             </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Date It Happened *
+            </label>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={dateHappened}
+                onChange={(e) => setDateHappened(e.target.value)}
+                placeholder="Enter date (e.g., 02/24/1337, 1066, or 44 BC)"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const today = new Date();
+                  const month = (today.getMonth() + 1).toString().padStart(2, '0');
+                  const day = today.getDate().toString().padStart(2, '0');
+                  const year = today.getFullYear();
+                  setDateHappened(`${month}/${day}/${year}`);
+                }}
+                className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-md transition-colors whitespace-nowrap"
+              >
+                Today
+              </button>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              Examples: 02/24/1337, 1066, 44 BC, 1776, 12/25/800
+            </p>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Source *
+            </label>
+            <input
+              type="text"
+              value={source}
+              onChange={(e) => setSource(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Where did you learn this information? (e.g., book, website, museum)"
+              required
+            />
           </div>
           
           <div>
@@ -215,14 +371,39 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
             
             {!useImageUrl ? (
               <>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+                <div
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                  onClick={handleDropZoneClick}
+                  className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors cursor-pointer ${
+                    isDragOver 
+                      ? 'border-blue-500 bg-blue-50' 
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="space-y-2">
+                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium text-blue-600 hover:text-blue-500">
+                        Click to upload
+                      </span>
+                      {' '}or drag and drop
+                    </div>
+                    <p className="text-xs text-gray-500">PNG, JPG, GIF up to 10MB</p>
+                  </div>
+                  <input
+                    id="image-file-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    className="hidden"
+                  />
+                </div>
                 {imagePreview && (
-                  <div className="mt-2">
+                  <div className="mt-4">
                     <img 
                       src={imagePreview} 
                       alt="Preview" 
@@ -272,10 +453,31 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
               Cancel
             </button>
             <button
-              type="submit"
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-semibold"
+              type="button"
+              onClick={() => {
+                const contentToValidate = {
+                  title: title.trim(),
+                  description: description.trim(),
+                  author: author.trim() || 'Anonymous',
+                  coordinates: coordinates!,
+                  category,
+                  dateHappened: dateHappened.trim(),
+                  source: source.trim()
+                };
+                const validator = ContentValidator.getInstance();
+                const validation = validator.validateContent(contentToValidate);
+                setValidationResult(validation);
+              }}
+              className="px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
             >
-              Add to Map
+              Validate
+            </button>
+            <button
+              type="submit"
+              disabled={isValidating || (validationResult && !validationResult.isValid)}
+              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold"
+            >
+              {isValidating ? 'Validating...' : 'Add to Map'}
             </button>
           </div>
         </form>

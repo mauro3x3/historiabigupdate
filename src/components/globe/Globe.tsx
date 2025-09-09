@@ -59,7 +59,19 @@ export default function GlobeComponent({ journeys, onModuleClick }: GlobeProps) 
 
   return (
     <div style={{ width: '100%', height: '100%' }}>
-      <SimpleGlobe journeys={journeys} onModuleClick={handlePointClick} />
+      <SimpleGlobe 
+        journeys={journeys} 
+        onModuleClick={handlePointClick}
+        userContent={[]}
+        showOfficialModules={true}
+        showUserContent={false}
+        showOnlyTodaysContent={false}
+        onUserContentClick={() => {}}
+        onMapClick={() => {}}
+        mapStyle="satellite"
+        isLoadingTexture={false}
+        globeTexture={null}
+      />
     </div>
   );
 } 

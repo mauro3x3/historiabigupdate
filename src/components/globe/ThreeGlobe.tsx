@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import AddContentModal, { UserGeneratedContent } from './AddContentModal';
 import UserContentModal from './UserContentModal';
 import MapboxGlobe from './MapboxGlobe';
+import NewsflashNotification from './NewsflashNotification';
+import PlayTodaySlideshow from './PlayTodaySlideshow';
+import ContentModeration from './ContentModeration';
 import { MAPBOX_CONFIG } from '../../config/mapbox';
 
 interface Module {
@@ -282,7 +285,46 @@ function SimpleGlobe({
 }
 
 export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps) {
+  console.log('🔥🔥🔥 CALENDAR FIX V2 - TIMESTAMP:', Date.now(), '🔥🔥🔥');
   const navigate = useNavigate();
+  
+  // Calendar mode state
+  const [calendarMode, setCalendarMode] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(-400); // Start with 400 BC
+  const [selectedMonth, setSelectedMonth] = useState(10);
+  const [selectedDay, setSelectedDay] = useState(8);
+  const [dateInput, setDateInput] = useState('400 BC');
+
+  // Calendar mode handlers
+  const handleDateInputChange = (value: string) => {
+    setDateInput(value);
+    const parts = value.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]);
+      const day = parseInt(parts[2]);
+      if (!isNaN(year) && !isNaN(month) && !isNaN(day)) {
+        setSelectedYear(year);
+        setSelectedMonth(month);
+        setSelectedDay(day);
+      }
+    }
+  };
+
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year);
+    setDateInput(`${year}-${selectedMonth.toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`);
+  };
+
+  const handleMonthChange = (month: number) => {
+    setSelectedMonth(month);
+    setDateInput(`${selectedYear}-${month.toString().padStart(2, '0')}-${selectedDay.toString().padStart(2, '0')}`);
+  };
+
+  const handleDayChange = (day: number) => {
+    setSelectedDay(day);
+    setDateInput(`${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`);
+  };
   
   // User content state
   const [userContent, setUserContent] = useState<UserGeneratedContent[]>([]);
@@ -290,11 +332,16 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
   const [showUserContentModal, setShowUserContentModal] = useState(false);
   const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
   const [selectedUserContent, setSelectedUserContent] = useState<UserGeneratedContent | null>(null);
+  const [showPlayToday, setShowPlayToday] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // Set to today's date
+  const [newsflashContent, setNewsflashContent] = useState<UserGeneratedContent | null>(null);
+  const [showNewsflash, setShowNewsflash] = useState(false);
+  const [showModeration, setShowModeration] = useState(false);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [showAllDotsModal, setShowAllDotsModal] = useState(false);
   
-  // Filter state
-  const [showOfficialModules, setShowOfficialModules] = useState(true);
-  const [showUserContent, setShowUserContent] = useState(true);
-  const [showOnlyTodaysContent, setShowOnlyTodaysContent] = useState(false);
+  // Filter state - removed old filtering options since we now filter by date
   const [autoRotate, setAutoRotate] = useState(false);
   const [mapStyle, setMapStyle] = useState('satellite');
   const [isLoadingTexture, setIsLoadingTexture] = useState(false);
@@ -314,6 +361,11 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
       id: Date.now().toString(),
       createdAt: new Date().toISOString()
     };
+    
+    // Show newsflash notification
+    setNewsflashContent(newContent);
+    setShowNewsflash(true);
+    
     console.log('Adding new user content:', newContent);
     setUserContent(prev => [...prev, newContent]);
     
@@ -322,6 +374,283 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
     existingContent.push(newContent);
     localStorage.setItem('userContent', JSON.stringify(existingContent));
   }, []);
+
+  const handleNewsflashClose = () => {
+    setShowNewsflash(false);
+    setNewsflashContent(null);
+  };
+
+
+  const handleNavigateToEvent = (coordinates: [number, number], event: any) => {
+    // This will be handled by the globe component to zoom to coordinates
+    console.log('Navigate to event:', coordinates, event);
+  };
+
+  const getTodaysEvents = () => {
+    const today = new Date().toDateString();
+    return userContent.filter(content => 
+      new Date(content.createdAt).toDateString() === today
+    );
+  };
+
+  // Helper function to check if a date matches an imprecise historical date
+  const matchesImpreciseDate = (historicalYear: string, selectedDate: Date) => {
+    const selectedYear = selectedDate.getFullYear();
+    
+    // Handle different date formats from the database
+    if (historicalYear.includes('BCE') || historicalYear.includes('BC')) {
+      // Extract year from strings like "c. 1406 BCE" or "1406 BC"
+      const yearMatch = historicalYear.match(/(\d+)/);
+      if (yearMatch) {
+        const historicalYearNum = parseInt(yearMatch[1]);
+        // For BCE dates, we need to convert to negative years
+        // 1406 BCE = -1406 in our calendar
+        const bceYear = -historicalYearNum;
+        return selectedYear === bceYear;
+      }
+    } else if (historicalYear.includes('AD') || historicalYear.includes('CE')) {
+      // Extract year from strings like "330 AD" or "330 CE"
+      const yearMatch = historicalYear.match(/(\d+)/);
+      if (yearMatch) {
+        const historicalYearNum = parseInt(yearMatch[1]);
+        return selectedYear === historicalYearNum;
+      }
+    } else if (historicalYear.includes('c.')) {
+      // Handle "c." (circa) dates like "c. 300-100 BC"
+      const yearMatch = historicalYear.match(/c\.\s*(\d+)/);
+      if (yearMatch) {
+        const historicalYearNum = parseInt(yearMatch[1]);
+        // Check if it's BCE or AD based on context
+        if (historicalYear.includes('BC') || historicalYear.includes('BCE')) {
+          return selectedYear === -historicalYearNum;
+        } else {
+          return selectedYear === historicalYearNum;
+        }
+      }
+    } else if (historicalYear.includes('-')) {
+      // Handle date ranges like "334-330 BC" or "100 BC-300 AD"
+      const parts = historicalYear.split('-');
+      if (parts.length === 2) {
+        const startYear = parts[0].trim();
+        const endYear = parts[1].trim();
+        
+        // Extract years and convert BCE to negative
+        const startYearNum = parseInt(startYear.match(/(\d+)/)?.[1] || '0');
+        const endYearNum = parseInt(endYear.match(/(\d+)/)?.[1] || '0');
+        
+        let startYearActual = startYearNum;
+        let endYearActual = endYearNum;
+        
+        if (startYear.includes('BC') || startYear.includes('BCE')) {
+          startYearActual = -startYearNum;
+        }
+        if (endYear.includes('BC') || endYear.includes('BCE')) {
+          endYearActual = -endYearNum;
+        }
+        
+        return selectedYear >= Math.min(startYearActual, endYearActual) && 
+               selectedYear <= Math.max(startYearActual, endYearActual);
+      }
+    } else {
+      // Handle simple year numbers like "30" or "2025"
+      const yearMatch = historicalYear.match(/(\d+)/);
+      if (yearMatch) {
+        const historicalYearNum = parseInt(yearMatch[1]);
+        // If it's a small number (likely BCE), treat as BCE
+        if (historicalYearNum < 1000 && historicalYearNum > 0) {
+          return selectedYear === -historicalYearNum || selectedYear === historicalYearNum;
+        }
+        return selectedYear === historicalYearNum;
+      }
+    }
+    
+    return false;
+  };
+
+  // Function to spread out dots with the same coordinates
+  const spreadOutDots = (items: any[], radius = 0.01) => {
+    const coordinateMap = new Map<string, any[]>();
+    
+    // Group items by their coordinates
+    items.forEach(item => {
+      const key = `${item.latitude},${item.longitude}`;
+      if (!coordinateMap.has(key)) {
+        coordinateMap.set(key, []);
+      }
+      coordinateMap.get(key)!.push(item);
+    });
+    
+    // Spread out items with the same coordinates
+    const spreadItems = [];
+    for (const [coords, itemsAtCoords] of coordinateMap) {
+      if (itemsAtCoords.length === 1) {
+        // Single item, keep original coordinates
+        spreadItems.push(itemsAtCoords[0]);
+      } else {
+        // Multiple items, spread them out in a circle
+        const [lat, lng] = coords.split(',').map(Number);
+        const angleStep = (2 * Math.PI) / itemsAtCoords.length;
+        
+        itemsAtCoords.forEach((item, index) => {
+          const angle = index * angleStep;
+          const offsetLat = lat + (radius * Math.cos(angle));
+          const offsetLng = lng + (radius * Math.sin(angle));
+          
+          spreadItems.push({
+            ...item,
+            latitude: offsetLat,
+            longitude: offsetLng,
+            originalLatitude: lat,
+            originalLongitude: lng
+          });
+        });
+      }
+    }
+    
+    return spreadItems;
+  };
+
+  // Filter content by selected date (both official modules and user content)
+  const getFilteredContent = () => {
+    const selectedDateObj = new Date(selectedDate);
+    const selectedYear = selectedDateObj.getFullYear();
+    
+    // Filter user content by exact date
+    const filteredUserContent = userContent.filter(content => {
+      const contentDate = new Date(content.dateHappened);
+      const contentDateString = contentDate.toDateString();
+      const selectedDateString = selectedDateObj.toDateString();
+      
+      console.log(`Comparing content date "${content.dateHappened}" (${contentDateString}) with selected date "${selectedDate}" (${selectedDateString})`);
+      
+      return contentDateString === selectedDateString;
+    });
+    
+    // Filter official modules by imprecise date matching
+    const filteredOfficialModules = journeys.flatMap(journey => 
+      journey.modules.filter(module => {
+        if (module.year) {
+          const matches = matchesImpreciseDate(module.year, selectedDateObj);
+          if (matches) {
+            console.log(`Module "${module.title}" with year "${module.year}" matches selected year ${selectedYear}`);
+          }
+          return matches;
+        }
+        return false;
+      })
+    );
+    
+    // Spread out dots with the same coordinates
+    const spreadOfficialModules = spreadOutDots(filteredOfficialModules);
+    const spreadUserContent = spreadOutDots(filteredUserContent);
+    
+    console.log(`Selected year: ${selectedYear}, Found ${filteredOfficialModules.length} official modules, ${filteredUserContent.length} user content`);
+    console.log('All user content:', userContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates })));
+    console.log('Official modules:', filteredOfficialModules.map(m => ({ title: m.title, year: m.year })));
+    console.log('Filtered user content:', filteredUserContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates })));
+    
+    return {
+      userContent: spreadUserContent,
+      officialModules: spreadOfficialModules
+    };
+  };
+
+  // Format date for display
+  const formatDisplayDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleDateString('en-US', { month: 'long' });
+    const year = date.getFullYear();
+    
+    // Add ordinal suffix to day
+    const getOrdinalSuffix = (day: number) => {
+      if (day >= 11 && day <= 13) return 'th';
+      switch (day % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    };
+    
+    return `${day}${getOrdinalSuffix(day)} ${month} ${year}`;
+  };
+
+  // Navigate to previous day
+  const goToPreviousDay = () => {
+    const currentDate = new Date(selectedDate);
+    currentDate.setDate(currentDate.getDate() - 1);
+    setSelectedDate(currentDate.toISOString().split('T')[0]);
+  };
+
+  // Navigate to next day
+  const goToNextDay = () => {
+    const currentDate = new Date(selectedDate);
+    currentDate.setDate(currentDate.getDate() + 1);
+    setSelectedDate(currentDate.toISOString().split('T')[0]);
+  };
+
+  // Go to today
+  const goToToday = () => {
+    setSelectedDate(new Date().toISOString().split('T')[0]);
+  };
+
+  // Go to random date in history
+  const goToRandomDate = () => {
+    // Random date between 1000 BC and 2024 AD
+    const minYear = -1000; // 1000 BC
+    const maxYear = 2024;
+    const randomYear = Math.floor(Math.random() * (maxYear - minYear + 1)) + minYear;
+    const randomMonth = Math.floor(Math.random() * 12) + 1;
+    const randomDay = Math.floor(Math.random() * 28) + 1; // Use 28 to avoid month length issues
+    
+    const randomDate = new Date(randomYear, randomMonth - 1, randomDay);
+    setSelectedDate(randomDate.toISOString().split('T')[0]);
+  };
+
+  const handleRemoveContent = (contentId: string) => {
+    setUserContent(prev => prev.filter(content => content.id !== contentId));
+    // Update localStorage
+    const updatedContent = userContent.filter(content => content.id !== contentId);
+    localStorage.setItem('userContent', JSON.stringify(updatedContent));
+  };
+
+  const handleApproveContent = (contentId: string) => {
+    setUserContent(prev => prev.map(content => 
+      content.id === contentId 
+        ? { ...content, isApproved: true }
+        : content
+    ));
+  };
+
+  const handleFlagContent = (contentId: string) => {
+    setUserContent(prev => prev.map(content => 
+      content.id === contentId 
+        ? { ...content, flags: (content.flags || 0) + 1 }
+        : content
+    ));
+  };
+
+  const handleModerationClick = () => {
+    setShowPasswordPrompt(true);
+  };
+
+  const handlePasswordSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (adminPassword === 'doflamingo') {
+      setShowPasswordPrompt(false);
+      setShowModeration(true);
+      setAdminPassword('');
+    } else {
+      alert('Incorrect password');
+      setAdminPassword('');
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordPrompt(false);
+    setAdminPassword('');
+  };
 
   const handleUserContentClick = useCallback((content: UserGeneratedContent) => {
     setSelectedUserContent(content);
@@ -354,30 +683,90 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
       return [];
     }
     
-    const validModules = journeys.flatMap(journey => journey.modules.filter(validModule));
+    let validModules = journeys.flatMap(journey => journey.modules.filter(validModule));
+    
+    // Apply calendar mode filtering
+    if (calendarMode) {
+      console.log('🔍 Filtering for year:', selectedYear);
+      validModules = validModules.filter(module => {
+        const yearString = module.year || '';
+        console.log('🔍 Checking module:', module.title, 'year string:', yearString);
+        
+        // Extract year from various formats
+        let moduleYear = null;
+        
+        if (yearString.includes('BC')) {
+          const bcMatch = yearString.match(/(\d+)/);
+          if (bcMatch) {
+            moduleYear = -parseInt(bcMatch[1]); // Convert BC to negative
+          }
+        } else if (yearString.includes('AD')) {
+          const adMatch = yearString.match(/(\d+)/);
+          if (adMatch) {
+            moduleYear = parseInt(adMatch[1]);
+          }
+        } else if (/^\d+$/.test(yearString)) {
+          // Simple number like "680" - assume AD if positive year selected
+          moduleYear = parseInt(yearString);
+        } else if (yearString.includes('c.')) {
+          const circaMatch = yearString.match(/c\.\s*(\d+)/);
+          if (circaMatch) {
+            const circaYear = parseInt(circaMatch[1]);
+            moduleYear = yearString.includes('BC') ? -circaYear : circaYear;
+          }
+        }
+        
+        console.log('🔍 Extracted year:', moduleYear, 'selected year:', selectedYear);
+        
+        // Check if module year matches selected year
+        if (moduleYear !== null) {
+          if (selectedYear < 0) {
+            // Looking for BC dates - check if module is within 50 years
+            const matches = Math.abs(moduleYear - selectedYear) <= 50;
+            console.log('🔍 BC match:', matches);
+            return matches;
+          } else {
+            // Looking for AD dates - exact match
+            const matches = moduleYear === selectedYear;
+            console.log('🔍 AD match:', matches);
+            return matches;
+          }
+        }
+        
+        console.log('🔍 No match');
+        return false;
+      });
+      
+      console.log('🔍 Final filtered count:', validModules.length);
+    }
+    
     return validModules;
-  }, [journeys]);
+  }, [journeys, calendarMode, selectedYear, selectedMonth, selectedDay]);
 
   return (
     <>
       <div style={{ width: '100%', height: '100%', position: 'relative' }}>
         <MapboxGlobe
-          journeys={journeys}
+          journeys={[{ id: 'filtered', title: 'Filtered Modules', modules: getFilteredContent().officialModules }]}
           onModuleClick={onModuleClick}
-          userContent={userContent}
-          showOfficialModules={showOfficialModules}
-          showUserContent={showUserContent}
-          showOnlyTodaysContent={showOnlyTodaysContent}
+          userContent={getFilteredContent().userContent}
+          showOfficialModules={true}
+          showUserContent={true}
+          showOnlyTodaysContent={false}
           onUserContentClick={handleUserContentClick}
           onMapClick={handleMapClick}
           mapStyle={mapStyle}
           isLoadingTexture={isLoadingTexture}
           globeTexture={globeTexture}
+          calendarMode={calendarMode}
+          selectedYear={selectedYear}
+          selectedMonth={selectedMonth}
+          selectedDay={selectedDay}
         />
       </div>
       
       {/* Enhanced Control Panel */}
-      <div className="absolute top-4 left-4 bg-white rounded-xl shadow-xl border border-gray-200 z-10 max-w-sm">
+      <div className="absolute top-20 left-4 bg-white rounded-xl shadow-xl border border-gray-200 z-10 max-w-sm">
         {/* Header */}
         <div className="bg-blue-600 rounded-t-xl p-4 text-white">
           <div className="flex items-center justify-between">
@@ -399,145 +788,101 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
         </div>
 
         {/* Content */}
-        <div className="p-4 space-y-4">
-          {/* Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-blue-600">{modulesToShow.length}</div>
-              <div className="text-xs text-blue-500">Official Modules</div>
+        <div className="p-4 pt-6 space-y-4">
+          {/* Total Historical Dots */}
+          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 text-center cursor-pointer hover:from-blue-100 hover:to-purple-100 transition-colors"
+               onClick={() => setShowAllDotsModal(true)}>
+            <div className="text-3xl font-bold text-blue-700 mb-1">
+              {getFilteredContent().userContent.length + getFilteredContent().officialModules.length}
             </div>
-            <div className="bg-blue-50 rounded-lg p-3 text-center">
-              <div className="text-2xl font-bold text-blue-600">{userContent.length}</div>
-              <div className="text-xs text-blue-500">User Content</div>
-            </div>
+            <div className="text-sm text-blue-600 font-medium">Total Historical Dots</div>
+            <div className="text-xs text-gray-500 mt-1">Click to view all</div>
           </div>
 
-          {/* Filter Controls */}
+
+          {/* Date Selector */}
           <div className="space-y-3">
-            <h4 className="font-medium text-gray-900 text-sm">Content Filter</h4>
+            <h4 className="font-medium text-gray-900 text-sm">Current Date</h4>
             
-            {/* Show/Hide Official Modules */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showOfficialModules}
-                  onChange={(e) => {
-                    setShowOfficialModules(e.target.checked);
-                  }}
-                  className="mr-2 rounded"
-                />
-                Show Official Modules
-              </label>
-            </div>
-
-            {/* Show/Hide User Content */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showUserContent}
-                  onChange={(e) => {
-                    setShowUserContent(e.target.checked);
-                  }}
-                  className="mr-2 rounded"
-                />
-                Show User Content
-              </label>
-            </div>
-
-            {/* Show Only Today's Content */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={showOnlyTodaysContent}
-                  onChange={(e) => {
-                    setShowOnlyTodaysContent(e.target.checked);
-                  }}
-                  className="mr-2 rounded"
-                />
-                Show Only Today's Content
-              </label>
-            </div>
-
-            {/* Auto Rotate */}
-            <div className="flex items-center justify-between">
-              <label className="flex items-center text-sm text-gray-700">
-                <input
-                  type="checkbox"
-                  checked={autoRotate}
-                  onChange={(e) => {
-                    setAutoRotate(e.target.checked);
-                  }}
-                  className="mr-2 rounded"
-                />
-                Auto Rotate Globe
-              </label>
-            </div>
-          </div>
-
-          {/* Map Style Selector */}
-          <div className="space-y-3">
-            <h4 className="font-medium text-gray-900 text-sm">Map Style</h4>
-            <select
-              value={mapStyle}
-              onChange={(e) => setMapStyle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="satellite">Satellite</option>
-              <option value="satelliteStreets">Satellite with Streets</option>
-              <option value="outdoors">Outdoors</option>
-              <option value="light">Light</option>
-              <option value="dark">Dark</option>
-            </select>
-            {isLoadingTexture && (
-              <div className="flex items-center gap-2 text-sm text-blue-600">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                Loading high-quality texture...
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-900">
+                  {formatDisplayDate(selectedDate)}
+                </div>
+                <div className="text-sm text-blue-600 mt-1">
+                  {getFilteredContent().userContent.length} event{getFilteredContent().userContent.length !== 1 ? 's' : ''} on this date
+                </div>
               </div>
-            )}
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={goToPreviousDay}
+                className="flex-1 btn-secondary btn-small"
+              >
+                ← Previous
+              </button>
+              <button
+                onClick={goToToday}
+                className="btn-primary btn-small"
+              >
+                Today
+              </button>
+              <button
+                onClick={goToNextDay}
+                className="flex-1 btn-secondary btn-small"
+              >
+                Next →
+              </button>
+            </div>
+            
+            <button
+              onClick={goToRandomDate}
+              className="w-full btn-primary btn-small flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+              </svg>
+              Random Date
+            </button>
+            
+            <div>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
           </div>
 
           {/* Quick Actions */}
           <div className="space-y-2">
             <h4 className="font-medium text-gray-900 text-sm">Quick Actions</h4>
             
+
             <button
-              onClick={() => {
-                const testContent: UserGeneratedContent = {
-                  id: 'test-' + Date.now(),
-                  title: 'Test Historical Event',
-                  description: 'This is a test event to verify dots are working',
-                  author: 'Test User',
-                  createdAt: new Date().toISOString(),
-                  coordinates: [0, 0], // Center of map
-                  category: 'Historical Event'
-                };
-                setUserContent(prev => [...prev, testContent]);
-                console.log('Added test content:', testContent);
-              }}
-              className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+              onClick={() => setShowPlayToday(true)}
+              disabled={getFilteredContent().userContent.length === 0}
+              className="w-full btn-primary btn-small flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
               </svg>
-              Add Test Dot
+              Play Selected Date ({getFilteredContent().userContent.length})
             </button>
 
             <button
-              onClick={() => {
-                setUserContent([]);
-                localStorage.removeItem('userContent');
-                console.log('Cleared all user content');
-              }}
-              className="w-full px-3 py-2 bg-red-500 text-white text-sm rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+              onClick={handleModerationClick}
+              className="w-full btn-primary btn-small flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                <path fillRule="evenodd" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" clipRule="evenodd" />
               </svg>
-              Clear All User Content
+              Moderate Content ({userContent.length})
             </button>
+
+            {/* Clear All User Content button removed */}
           </div>
 
           {/* Instructions */}
@@ -555,6 +900,7 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
         onClose={() => setShowAddContentModal(false)}
         coordinates={clickedCoordinates}
         onSubmit={handleUserContentSubmit}
+        defaultDate={selectedDate}
       />
       
       {/* User Content Modal */}
@@ -565,6 +911,158 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
           setSelectedUserContent(null);
         }}
       />
+
+      {/* Password Prompt */}
+      {showPasswordPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div className="bg-orange-600 text-white p-6 rounded-t-xl">
+              <div className="flex items-center gap-3">
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                </svg>
+                <div>
+                  <h2 className="text-xl font-bold">Admin Access Required</h2>
+                  <p className="text-orange-100 text-sm">Enter password to access moderation panel</p>
+                </div>
+              </div>
+            </div>
+            
+            <form onSubmit={handlePasswordSubmit} className="p-6">
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={adminPassword}
+                  onChange={(e) => setAdminPassword(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  placeholder="Enter admin password"
+                  autoFocus
+                />
+              </div>
+              
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={handlePasswordCancel}
+                  className="flex-1 px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Access Panel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Newsflash Notification */}
+      <NewsflashNotification
+        content={newsflashContent}
+        onClose={handleNewsflashClose}
+      />
+
+
+      {/* Play Today Slideshow */}
+      <PlayTodaySlideshow
+        isOpen={showPlayToday}
+        onClose={() => setShowPlayToday(false)}
+        events={getFilteredContent().userContent}
+        onNavigateToEvent={handleNavigateToEvent}
+      />
+
+      {/* Content Moderation */}
+      {showModeration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">Content Moderation</h2>
+              <button
+                onClick={() => {
+                  setShowModeration(false);
+                  setAdminPassword('');
+                }}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold transition-colors"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <ContentModeration
+                userContent={userContent}
+                onRemoveContent={handleRemoveContent}
+                onApproveContent={handleApproveContent}
+                onFlagContent={handleFlagContent}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* All Dots Modal */}
+      {showAllDotsModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-xl font-bold">All Historical Dots for {formatDisplayDate(selectedDate)}</h3>
+              <button
+                onClick={() => setShowAllDotsModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              {/* Official Modules */}
+              {getFilteredContent().officialModules.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-lg mb-2 text-blue-700">Official Modules ({getFilteredContent().officialModules.length})</h4>
+                  <div className="space-y-2">
+                    {getFilteredContent().officialModules.map((module, index) => (
+                      <div key={index} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                        <div className="font-medium text-blue-900">{module.title}</div>
+                        <div className="text-sm text-blue-700">Year: {module.year}</div>
+                        <div className="text-sm text-gray-600">Location: {module.latitude}, {module.longitude}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* User Content */}
+              {getFilteredContent().userContent.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-lg mb-2 text-green-700">User Content ({getFilteredContent().userContent.length})</h4>
+                  <div className="space-y-2">
+                    {getFilteredContent().userContent.map((content, index) => (
+                      <div key={index} className="p-3 bg-green-50 rounded-lg border border-green-200">
+                        <div className="font-medium text-green-900">{content.title}</div>
+                        <div className="text-sm text-green-700">Date: {content.dateHappened}</div>
+                        <div className="text-sm text-gray-600">Location: {content.latitude}, {content.longitude}</div>
+                        <div className="text-sm text-gray-600">Source: {content.source}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {getFilteredContent().officialModules.length === 0 && getFilteredContent().userContent.length === 0 && (
+                <div className="text-center text-gray-500 py-8">
+                  No historical dots found for this date.
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Check, Lock, BookOpen, Package, BookText, Star, Shield, Zap } from 'lucide-react';
+import { Check, Lock, BookOpen, BookText, Star, Shield, Zap } from 'lucide-react';
 
 const NODE_SIZE = 80;
-const ROW_HEIGHT = 140;
+const ROW_HEIGHT = 120;
 
 export default function LearningPath({ chapters = [], onLessonClick }) {
   // Section/unit info for top bar (use first chapter as example)
@@ -76,25 +76,34 @@ export default function LearningPath({ chapters = [], onLessonClick }) {
 
   // Render the learning path
   return (
-    <div className="relative w-full max-w-4xl mx-auto py-8">
-      {/* Top Bar - Duolingo Style */}
-      <div className="w-full flex items-center justify-between rounded-2xl px-8 py-6 mb-12 shadow-2xl bg-gradient-to-r from-green-500 to-green-600 border-2 border-green-400 sticky top-4 z-30" style={{ minHeight: 80 }}>
-        <div className="flex flex-col">
-          <span className="uppercase text-sm font-bold text-green-100 tracking-widest mb-2">
-            {sectionTitle}
-          </span>
-          <span className="text-3xl font-extrabold text-white drop-shadow-lg">{activeTitle}</span>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="bg-white/20 rounded-full px-4 py-2 text-white font-semibold">
-            <Star className="w-5 h-5 inline mr-2" />
-            {lessons.filter(l => l.status === 'completed').length}/{lessons.length}
+    <>
+      {/* Top Bar - Duolingo Style - Sticky Header */}
+      <div className="fixed top-4 left-0 right-0 z-50 px-4 py-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="w-full flex items-center justify-between rounded-2xl px-8 py-6 shadow-2xl bg-gradient-to-r from-green-500 to-green-600 border-2 border-green-400" style={{ minHeight: 80 }}>
+            <div className="flex flex-col">
+              <span className="uppercase text-sm font-bold text-green-100 tracking-widest mb-2">
+                {sectionTitle}
+              </span>
+              <span className="text-3xl font-extrabold text-white drop-shadow-lg">{activeTitle}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <div className="bg-white/20 rounded-full px-4 py-2 text-white font-semibold">
+                <Star className="w-5 h-5 inline mr-2" />
+                {lessons.filter(l => l.status === 'completed').length}/{lessons.length}
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
+      {/* Spacer to account for fixed header */}
+      <div className="h-36"></div>
+
+      <div className="relative w-full max-w-4xl mx-auto py-8">
+
       {/* Main Learning Path - Christian Cross or Regular Curved Path */}
-      <div className="flex justify-center">
+      <div className="flex justify-center w-full">
         <div className="relative">
           {isChristianContent && crossLayout ? (
             /* Christian Cross Path */
@@ -139,54 +148,38 @@ export default function LearningPath({ chapters = [], onLessonClick }) {
               />
             </svg>
           ) : (
-            /* Regular Curved Path */
-            <svg width="400" height={lessons.length * ROW_HEIGHT + 100} className="absolute inset-0 pointer-events-none">
+            /* Straight Line with Horizontal Connections - Clean and Effective */
+            <svg width="100%" height={lessons.length * ROW_HEIGHT + 100} className="absolute inset-0 pointer-events-none">
               <defs>
                 <linearGradient id="pathGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#22c55e" />
-                  <stop offset="50%" stopColor="#16a34a" />
-                  <stop offset="100%" stopColor="#15803d" />
+                  <stop offset="0%" stopColor="#58CC02" />
+                  <stop offset="100%" stopColor="#58CC02" />
                 </linearGradient>
-                <filter id="glow">
-                  <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                  <feMerge> 
-                    <feMergeNode in="coloredBlur"/>
-                    <feMergeNode in="SourceGraphic"/>
-                  </feMerge>
-                </filter>
               </defs>
-              {/* Create a smooth, elegant curved path with better curves */}
-              <path
-                d={(() => {
-                  let path = `M 200 40`;
-                  lessons.forEach((_, idx) => {
-                    const y = 40 + idx * ROW_HEIGHT;
-                    // Create a more natural, flowing curve pattern
-                    const waveOffset = Math.sin(idx * 0.6) * 35;
-                    const controlY = y - ROW_HEIGHT * 0.3;
-                    path += ` Q ${200 + waveOffset} ${controlY} ${200 + waveOffset} ${y}`;
-                  });
-                  return path;
-                })()}
-                fill="none"
-                stroke="url(#pathGradient)"
-                strokeWidth="12"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                filter="url(#glow)"
-                opacity="1"
-                className="animate-path-glow"
-              />
               
-              {/* Fallback straight path in case the curved path fails */}
-              <path
-                d={`M 200 40 L 200 ${40 + lessons.length * ROW_HEIGHT}`}
-                fill="none"
-                stroke="#22c55e"
+              {/* Main vertical line - centered */}
+              <line
+                x1="45%" y1="40"
+                x2="45%" y2={40 + lessons.length * ROW_HEIGHT}
+                stroke="url(#pathGradient)"
                 strokeWidth="8"
                 strokeLinecap="round"
-                opacity="0.5"
               />
+              
+              {/* Horizontal connecting lines to lesson cards */}
+              {lessons.map((_, idx) => {
+                const y = 40 + idx * ROW_HEIGHT;
+                return (
+                  <line
+                    key={idx}
+                    x1="45%" y1={y}
+                    x2="55%" y2={y}
+                    stroke="url(#pathGradient)"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                  />
+                );
+              })}
             </svg>
           )}
           
@@ -203,10 +196,9 @@ export default function LearningPath({ chapters = [], onLessonClick }) {
               x = crossLayout[idx].x;
               y = crossLayout[idx].y;
             } else {
-              // Position nodes along the regular curved path
+              // Simple straight line positioning - centered
               y = 40 + idx * ROW_HEIGHT;
-              const waveOffset = Math.sin(idx * 0.6) * 35;
-              x = 200 + waveOffset;
+              x = '45%'; // Moved slightly left for better centering
             }
             
             // Node styling based on status - Clean Duolingo style
@@ -225,7 +217,11 @@ export default function LearningPath({ chapters = [], onLessonClick }) {
             }
 
             return (
-              <div key={lesson.id} className="absolute" style={{ left: x - 40, top: y - 40 }}>
+              <div key={lesson.id} className="absolute" style={{ 
+                left: typeof x === 'string' ? x : x - 40, 
+                top: y - 40,
+                transform: typeof x === 'string' ? 'translateX(-50%)' : 'none'
+              }}>
                 {/* Node - Clean circular design */}
                 <button
                   className={`w-20 h-20 rounded-full border-4 ${nodeClasses} flex items-center justify-center transition-all duration-300 focus:outline-none ${
@@ -243,7 +239,7 @@ export default function LearningPath({ chapters = [], onLessonClick }) {
                   {icon}
                 </button>
                 
-                {/* Lesson Label - Minimal and clean */}
+                {/* Simple Lesson Label - Like Duolingo */}
                 <div className={`absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-white rounded-lg px-3 py-2 shadow-md border border-gray-200 min-w-[160px] max-w-[200px] ${
                   isCurrent ? 'border-green-300 shadow-green-200/50' : ''
                 }`}>
@@ -271,73 +267,15 @@ export default function LearningPath({ chapters = [], onLessonClick }) {
             );
           })}
           
-          {/* Final Reward Node */}
-          {isChristianContent && crossLayout ? (
-            /* Christian Cross Completion Reward - Center of cross */
-            <div className="absolute" style={{ left: 200 - 48, top: 200 - 48 }}>
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 border-4 border-yellow-500 shadow-lg flex items-center justify-center">
-                <Package className="w-12 h-12 text-yellow-700" />
-              </div>
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-white rounded-lg px-3 py-2 shadow-md border border-yellow-200 min-w-[160px]">
-                <div className="font-semibold text-gray-900 text-sm mb-1">Cross Complete!</div>
-                <div className="text-xs text-gray-600">Faith strengthened!</div>
-              </div>
-            </div>
-          ) : (
-            /* Regular Path Completion Reward */
-            <div className="absolute" style={{ left: 200 - 48, top: 40 + lessons.length * ROW_HEIGHT }}>
-              <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-yellow-400 to-orange-500 border-4 border-yellow-500 shadow-lg flex items-center justify-center">
-                <Package className="w-12 h-12 text-yellow-700" />
-              </div>
-              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-4 bg-white rounded-lg px-3 py-2 shadow-md border border-yellow-200 min-w-[160px]">
-                <div className="font-semibold text-gray-900 text-sm mb-1">Complete!</div>
-                <div className="text-xs text-gray-600">Great job!</div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
-      {/* Free Jumping Companion - Positioned to the right of the path */}
-      <div className="absolute right-16 top-1/2 transform -translate-y-1/2 z-20">
-        <div className="w-24 h-24 animate-gentle-bounce">
-          <img 
-            src="/images/firstgif.gif" 
-            alt="Jumping Companion" 
-            className="w-full h-full object-contain"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.style.display = 'none';
-              const nextSibling = target.nextSibling as HTMLElement;
-              if (nextSibling) {
-                nextSibling.style.display = 'block';
-              }
-            }}
-          />
-          <span className="text-6xl hidden">🎉</span>
-        </div>
       </div>
-    </div>
+    </>
   );
 }
-
 // Add custom CSS animations
 const styles = `
-  @keyframes gentle-bounce {
-    0%, 100% { 
-      transform: translateY(0px) scale(1); 
-    }
-    25% { 
-      transform: translateY(-8px) scale(1.05); 
-    }
-    50% { 
-      transform: translateY(-12px) scale(1.1); 
-    }
-    75% { 
-      transform: translateY(-6px) scale(1.05); 
-    }
-  }
-  
   @keyframes path-glow {
     0%, 100% { 
       opacity: 0.9;
@@ -347,10 +285,6 @@ const styles = `
       opacity: 1;
       filter: drop-shadow(0 0 12px rgba(34, 197, 94, 0.8));
     }
-  }
-  
-  .animate-gentle-bounce {
-    animation: gentle-bounce 2s ease-in-out infinite;
   }
   
   .animate-path-glow {

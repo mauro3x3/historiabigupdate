@@ -39,6 +39,8 @@ import Globe from './pages/globe';
 import Museum from './pages/Museum';
 import Layout from './components/layout/Layout';
 import ContentReviewPanel from './components/admin/ContentReviewPanel';
+import Bookmarks from './pages/Bookmarks';
+import Store from './pages/Store';
 
 const queryClient = new QueryClient();
 
@@ -173,6 +175,20 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <Layout>
             <Museum />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/bookmarks" element={
+        <ProtectedRoute>
+          <Layout>
+            <Bookmarks />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/store" element={
+        <ProtectedRoute>
+          <Layout>
+            <Store />
           </Layout>
         </ProtectedRoute>
       } />

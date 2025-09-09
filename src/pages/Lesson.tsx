@@ -183,6 +183,22 @@ const LessonPage = () => {
   const storyRef = useRef<HTMLDivElement>(null);
   const [storyFont, setStoryFont] = useState<string>(() => localStorage.getItem('lessonFont') || 'serif');
   
+  // Admin editing state
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [showPasswordPrompt, setShowPasswordPrompt] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [editingText, setEditingText] = useState(false);
+  const [selectedText, setSelectedText] = useState('');
+  const [editStartIndex, setEditStartIndex] = useState(0);
+  const [editEndIndex, setEditEndIndex] = useState(0);
+  const [originalText, setOriginalText] = useState('');
+  
+  // Card resizing state
+  const [cardWidth, setCardWidth] = useState(768); // Default max-w-3xl (768px)
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeStartX, setResizeStartX] = useState(0);
+  const [resizeStartWidth, setResizeStartWidth] = useState(0);
+  
   const {
     lesson,
     questions,
@@ -217,6 +233,129 @@ const LessonPage = () => {
     isAnswerCorrect,
     selectedAnswer
   );
+
+  // Admin functions
+  const handlePasswordSubmit = () => {
+    if (adminPassword === 'doflamingo') {
+      setIsAdminMode(true);
+      setShowPasswordPrompt(false);
+      setAdminPassword('');
+      toast.success('Admin mode enabled');
+    } else {
+      toast.error('Incorrect password');
+      setAdminPassword('');
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    setShowPasswordPrompt(false);
+    setAdminPassword('');
+  };
+
+  const handleTextSelection = () => {
+    if (!isAdminMode) return;
+    
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim()) {
+      setSelectedText(selection.toString());
+      setOriginalText(selection.toString());
+      setEditStartIndex(selection.anchorOffset);
+      setEditEndIndex(selection.focusOffset);
+    }
+  };
+
+  const handleRightClick = (e: React.MouseEvent) => {
+    if (!isAdminMode) return;
+    
+    e.preventDefault();
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim()) {
+      setSelectedText(selection.toString());
+      setOriginalText(selection.toString());
+      setEditStartIndex(selection.anchorOffset);
+      setEditEndIndex(selection.focusOffset);
+      setEditingText(true);
+    }
+  };
+
+  const handleTextEdit = (newText: string) => {
+    setSelectedText(newText);
+  };
+
+  const saveTextChanges = async () => {
+    if (!lesson || !storyRef.current) return;
+
+    try {
+      const { error } = await supabase
+        .from('modules')
+        .update({ 
+          story_content: storyRef.current.innerHTML 
+        })
+        .eq('id', parseInt(lesson.id));
+
+      if (error) {
+        console.error('Error saving text:', error);
+        toast.error('Failed to save changes');
+      } else {
+        toast.success('Text saved successfully');
+        setEditingText(false);
+        setSelectedText('');
+      }
+    } catch (error) {
+      console.error('Error saving text:', error);
+      toast.error('Failed to save changes');
+    }
+  };
+
+  const cancelTextEdit = () => {
+    if (storyRef.current) {
+      storyRef.current.innerHTML = originalText;
+    }
+    setEditingText(false);
+    setSelectedText('');
+  };
+
+  // Card resizing functions
+  const handleResizeStart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+    setResizeStartX(e.clientX);
+    setResizeStartWidth(cardWidth);
+  };
+
+  const handleResizeMove = (e: MouseEvent) => {
+    if (!isResizing) return;
+    
+    const deltaX = e.clientX - resizeStartX;
+    const newWidth = Math.max(400, Math.min(1600, resizeStartWidth + deltaX)); // Min 400px, Max 1600px
+    setCardWidth(newWidth);
+  };
+
+  const handleResizeEnd = () => {
+    setIsResizing(false);
+  };
+
+  // Add event listeners for resizing
+  useEffect(() => {
+    if (isResizing) {
+      document.addEventListener('mousemove', handleResizeMove);
+      document.addEventListener('mouseup', handleResizeEnd);
+      document.body.style.cursor = 'ew-resize';
+      document.body.style.userSelect = 'none';
+    } else {
+      document.removeEventListener('mousemove', handleResizeMove);
+      document.removeEventListener('mouseup', handleResizeEnd);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleResizeMove);
+      document.removeEventListener('mouseup', handleResizeEnd);
+      document.body.style.cursor = '';
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, resizeStartX, resizeStartWidth]);
   
   // Animate story text
   useEffect(() => {
@@ -399,15 +538,28 @@ const LessonPage = () => {
   let storyPhaseContent = null;
   if (showStoryPhase) {
     storyPhaseContent = (
-      <div className="min-h-screen bg-gradient-to-b from-yellow-50 via-white to-blue-100 flex flex-col items-center justify-center relative">
-        {/* Step badge */}
-        <div className="absolute top-8 left-1/2 -translate-x-1/2 z-10">
-          <span className="inline-block bg-green-100 text-green-800 text-sm font-semibold px-4 py-1 rounded-full shadow border border-green-200">Step 1 of 2: Story</span>
-        </div>
+      <div className="min-h-screen bg-gray-200 flex flex-col items-center justify-center relative">
         <div
-          className="max-w-xl w-full mx-auto p-8 bg-white/90 rounded-3xl shadow-2xl flex flex-col items-center border border-blue-100 backdrop-blur-md"
-          style={{ backgroundImage: 'radial-gradient(circle at 80% 20%, #e0e7ff 10%, transparent 80%)' }}
+          className="mx-auto p-8 bg-gray-200 rounded-3xl shadow-2xl flex flex-col items-center border border-gray-400 relative"
+          style={{ width: `${cardWidth}px` }}
         >
+          {/* Resize handle */}
+          <div
+            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize hover:bg-blue-300 transition-colors group"
+            onMouseDown={handleResizeStart}
+            style={{ 
+              background: isResizing ? '#60a5fa' : 'transparent',
+              borderRadius: '0 1.5rem 1.5rem 0'
+            }}
+            title="Drag to resize card"
+          >
+            {/* Resize indicator dots */}
+            <div className="absolute right-1 top-1/2 transform -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="w-1 h-1 bg-blue-500 rounded-full mb-1"></div>
+              <div className="w-1 h-1 bg-blue-500 rounded-full mb-1"></div>
+              <div className="w-1 h-1 bg-blue-500 rounded-full"></div>
+            </div>
+          </div>
           {mainImage && (
              <img
                src={mainImage}
@@ -417,12 +569,16 @@ const LessonPage = () => {
              />
            )}
           <div className="flex justify-center w-full mb-4">
-            <ReadAloudButton text={lesson.story_content || lesson.description || ''} onFontChange={setStoryFont} />
+            <ReadAloudButton text={lesson.story_content || lesson.description || ''} />
           </div>
           <div
             ref={storyRef}
-            className={`w-full prose prose-lg max-w-none mb-8 min-h-[200px] text-center text-gray-800 relative ${storyFont === 'serif' ? 'font-serif' : storyFont === 'sans-serif' ? 'font-sans' : storyFont === 'opendyslexic' ? 'font-opendyslexic' : storyFont ? `font-${storyFont}` : ''}`}
+            className={`w-full prose prose-lg max-w-none mb-8 min-h-[200px] text-center text-gray-800 relative ${storyFont === 'serif' ? 'font-serif' : storyFont === 'sans-serif' ? 'font-sans' : storyFont === 'opendyslexic' ? 'font-opendyslexic' : storyFont ? `font-${storyFont}` : ''} ${isAdminMode ? 'cursor-text select-text' : ''}`}
             style={{ fontSize: 20, lineHeight: 1.7 }}
+            onMouseUp={handleTextSelection}
+            onContextMenu={handleRightClick}
+            contentEditable={isAdminMode}
+            suppressContentEditableWarning={true}
           >
             {isTyping ? (
               <span>{animatedStory}<span className="type-cursor">|</span></span>
@@ -509,12 +665,29 @@ const LessonPage = () => {
              <LessonHeader title={lesson?.title || 'Loading...'} />
        {/* Fixed back button to navigate to globe instead of navigate(-1) */}
        <button
-         className="absolute top-20 left-6 bg-white rounded-full px-6 py-2 shadow-md text-timelingo-purple font-bold text-lg flex items-center gap-2 hover:bg-purple-50 transition z-20"
+         className="absolute top-20 left-6 bg-white rounded-full px-6 py-2 shadow-md text-black font-bold text-lg flex items-center gap-2 hover:bg-gray-50 transition z-20"
          onClick={() => navigate('/globe')}
          data-testid="lesson-back-btn"
        >
          <span className="mr-2">&larr;</span> Back to Globe
        </button>
+       
+       {/* Admin Mode Button */}
+       {!isAdminMode && (
+         <button
+           className="absolute top-20 right-6 bg-orange-500 text-white rounded-full px-4 py-2 shadow-md font-bold text-sm hover:bg-orange-600 transition z-20"
+           onClick={() => setShowPasswordPrompt(true)}
+         >
+           Admin
+         </button>
+       )}
+       
+       {/* Admin Mode Indicator */}
+       {isAdminMode && (
+         <div className="absolute top-20 right-6 bg-green-500 text-white rounded-full px-4 py-2 shadow-md font-bold text-sm z-20">
+           Admin Mode
+         </div>
+       )}
       {/* Story phase content, if active */}
       {showStoryPhase ? (
         storyPhaseContent
@@ -630,6 +803,72 @@ const LessonPage = () => {
           >
             ×
           </button>
+        </div>
+      )}
+
+      {/* Password Prompt Modal */}
+      {showPasswordPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Admin Access</h3>
+            <p className="text-gray-600 mb-4">Enter the admin password to enable text editing:</p>
+            <input
+              type="password"
+              value={adminPassword}
+              onChange={(e) => setAdminPassword(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4"
+              placeholder="Enter password"
+              onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handlePasswordSubmit}
+                className="flex-1 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                Submit
+              </button>
+              <button
+                onClick={handlePasswordCancel}
+                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Text Editing Modal */}
+      {editingText && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-2xl w-full mx-4">
+            <h3 className="text-lg font-bold mb-4">Edit Text</h3>
+            <p className="text-gray-600 mb-2">Selected text:</p>
+            <div className="bg-gray-100 p-3 rounded-lg mb-4 text-sm">
+              {originalText}
+            </div>
+            <p className="text-gray-600 mb-2">Edit text:</p>
+            <textarea
+              value={selectedText}
+              onChange={(e) => handleTextEdit(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-4 min-h-[100px]"
+              placeholder="Enter new text..."
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={saveTextChanges}
+                className="flex-1 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+              >
+                Save Changes
+              </button>
+              <button
+                onClick={cancelTextEdit}
+                className="flex-1 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

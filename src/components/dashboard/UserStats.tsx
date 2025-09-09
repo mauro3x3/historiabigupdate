@@ -12,7 +12,6 @@ import { unlockAchievement } from '@/integrations/supabase/achievements';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { useDragAndDrop } from '@/hooks/track-tabs/useDragAndDrop';
 import { useUserAchievements } from '@/hooks/useUserAchievements';
-import { useUserBadges } from '@/hooks/useUserBadges';
 import { useUserFriends } from '@/hooks/useUserFriends';
 import { useUserActivity } from '@/hooks/useUserActivity';
 import { useFeaturedCourses } from '@/hooks/useFeaturedCourses';
@@ -192,7 +191,7 @@ export default function UserStats(props: UserStatsProps) {
   const { userId, learningTrack } = props;
   const isPublic = !!userId;
   const { user, xp: myXp, streak: myStreak, completedEras: myCompletedEras, preferredEra: myPreferredEra, setPreferredEra: setMyPreferredEra } = useUser();
-  const { xp, streak, completedEras, preferredEra, username, avatar_base, featured_eras, badges, achievements, created_at } = useUserProfile(userId || user?.id);
+  const { xp, streak, completedEras, preferredEra, username, avatar_base, featured_eras, achievements, created_at } = useUserProfile(userId || user?.id);
   // Use the correct data depending on view
   const displayXp = isPublic ? xp : myXp;
   const displayStreak = isPublic ? streak : myStreak;
@@ -201,7 +200,6 @@ export default function UserStats(props: UserStatsProps) {
   const displayUsername = isPublic ? username : (user?.username || user?.email?.split('@')[0] || 'Historian');
   const displayAvatar = isPublic ? avatar_base : (user?.user_metadata?.avatar_base || 'ghost');
   const displayFeaturedEras = (isPublic ? featured_eras : undefined) || [];
-  const displayBadges = (isPublic ? badges : undefined) || [];
   const displayAchievements = (isPublic ? achievements : undefined) || [];
   const displayCreatedAt = isPublic ? created_at : user?.created_at;
   const navigate = useNavigate();
@@ -607,7 +605,6 @@ export default function UserStats(props: UserStatsProps) {
                 <div className="flex gap-4 mb-4">
                   <button className={`px-3 py-1 rounded ${profileTab === 'avatar' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-timelingo-navy/40 text-white'}`} onClick={() => setProfileTab('avatar')}>Avatar</button>
                   <button className={`px-3 py-1 rounded ${profileTab === 'courses' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-timelingo-navy/40 text-white'}`} onClick={() => setProfileTab('courses')}>Featured Courses</button>
-                  <button className={`px-3 py-1 rounded ${profileTab === 'badges' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-timelingo-navy/40 text-white'}`} onClick={() => setProfileTab('badges')}>Badges</button>
                   <button className={`px-3 py-1 rounded ${profileTab === 'username' ? 'bg-timelingo-gold text-timelingo-navy font-bold' : 'bg-timelingo-navy/40 text-white'}`} onClick={() => setProfileTab('username')}>Change Username</button>
                 </div>
                 {/* Avatar Tab */}
@@ -671,20 +668,6 @@ export default function UserStats(props: UserStatsProps) {
                     <div className="flex gap-2 mt-4 justify-end">
                       <button className="px-5 py-2 rounded-full bg-gray-200 text-timelingo-navy font-semibold shadow hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-400 transition-colors" onClick={() => setShowProfileModal(false)}>Cancel</button>
                       <button className="px-5 py-2 rounded-full bg-timelingo-gold text-timelingo-navy font-bold shadow hover:bg-yellow-400 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors" onClick={handleSaveFeaturedEras} disabled={savingFeaturedEras || selectedFeaturedEras.length === 0}>{savingFeaturedEras ? 'Saving...' : 'Save'}</button>
-                    </div>
-                  </div>
-                )}
-                {/* Badges Tab */}
-                {profileTab === 'badges' && (
-                  <div>
-                    <div className="mb-2 text-sm text-white/80">Your badges:</div>
-                    <div className="flex gap-4 flex-wrap">
-                      {displayBadges?.length > 0 ? displayBadges.map((b) => (
-                        <div key={b.badge_id} className={`w-16 h-16 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group ${!b.date_earned ? 'grayscale opacity-60' : ''}`}>
-                          <img src={b.badge?.icon_url || '/default-badge.png'} alt={b.badge?.name} className="w-8 h-8 mb-1" />
-                          <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{b.badge?.name}</span>
-                        </div>
-                      )) : <div className="text-white/70 text-sm">No badges yet. Keep going to unlock some!</div>}
                     </div>
                   </div>
                 )}
@@ -763,37 +746,14 @@ export default function UserStats(props: UserStatsProps) {
             ))}
           </div>
         </div>
-        {/* Achievements Section */}
-        {(!achievementsLoading && displayAchievements?.length > 0) && (
-        <div className="w-full max-w-5xl mb-8 px-10">
-          <h3 className="text-xl font-bold text-white mb-3">Achievements</h3>
-          <div className="flex flex-row gap-4 flex-wrap">
-            {displayAchievements.map(a => (
-              <div key={a.achievement_id} className="flex flex-col items-center bg-white/10 rounded-xl p-4 shadow border border-white/10 min-w-[120px]">
-                <img src={a.achievement?.icon_url || '/default-badge.png'} alt={a.achievement?.name} className="w-10 h-10 mb-2" />
-                <span className="font-semibold text-white">{a.achievement?.name}</span>
-                <span className="text-xs text-white/70">{a.achievement?.description}</span>
-                <span className="text-xs text-yellow-300 mt-1">Earned: {a.date_earned ? new Date(a.date_earned).toLocaleDateString() : '-'}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        )}
-        {(!achievementsLoading && displayAchievements?.length === 0) && (
-          <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">No achievements yet. Start learning to earn some!</div>
-        )}
-        {achievementsLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading achievements...</div>}
-        {achievementsError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{achievementsError}</div>}
-        {/* Badges Section */}
-        {/* Removed bottom badges section from profile page. Only show badges in the sidebar/right section. */}
         {/* Friends Section */}
         {friendsLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading friends...</div>}
         {friendsError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{friendsError}</div>}
-        {(!friendsLoading && displayBadges?.length > 0) && (
+        {(!friendsLoading && friends?.length > 0) && (
           <div className="w-full max-w-5xl mb-8 px-10">
             <h3 className="text-xl font-bold text-white mb-3">Friends</h3>
             <div className="flex flex-col gap-2">
-              {displayBadges.map((f, idx) => (
+              {friends.map((f, idx) => (
                 <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
                   <img src={ALL_COURSES.find(opt => opt.title === f.friend?.avatar_base)?.src || ALL_COURSES[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
                   <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
@@ -803,29 +763,10 @@ export default function UserStats(props: UserStatsProps) {
             </div>
           </div>
         )}
-        {(!friendsLoading && (!displayBadges || displayBadges.length === 0)) && (
-          <></>
-        )}
       </div>
       {/* Sidebar (desktop) or below (mobile) */}
       <aside className="w-full lg:w-[320px] flex-shrink-0 mt-10 lg:mt-0 lg:ml-8 px-6 lg:px-0 sticky top-10 z-30">
         <div className="rounded-2xl bg-white/20 backdrop-blur-2xl shadow-2xl border border-timelingo-gold/30 p-6 flex flex-col gap-8 transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(255,215,0,0.10)]">
-          {/* Badges */}
-          {displayBadges?.length > 0 ? (
-            <div>
-              <h4 className="text-lg font-bold text-white mb-3">Badges</h4>
-              <div className="flex flex-wrap gap-3">
-                {displayBadges.map((b, idx) => (
-                  <div key={b.badge_id} className={`w-14 h-14 rounded-full bg-gradient-to-br from-timelingo-gold/80 to-yellow-200/80 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 text-2xl font-bold cursor-pointer transition-transform hover:scale-110 hover:shadow-2xl hover:border-timelingo-gold/80 relative group ${!b.date_earned ? 'grayscale opacity-60' : ''}`}>
-                    <img src={b.badge?.icon_url || '/default-badge.png'} alt={b.badge?.name} className="w-8 h-8 mb-1" />
-                    <span className="absolute left-1/2 -translate-x-1/2 top-full mt-2 px-2 py-1 rounded bg-black/80 text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-20">{b.badge?.name}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="text-white/70 text-sm">No badges yet. Keep going to unlock some!</div>
-          )}
           {/* Achievement Progress (replaces Groups) */}
           {featuredEraObjects.length > 0 && (
             <div>
@@ -853,10 +794,10 @@ export default function UserStats(props: UserStatsProps) {
           <div>
             <h4 className="text-lg font-bold text-white mb-3">Friends</h4>
             <div className="flex flex-col gap-2">
-              {displayBadges?.length === 0 && (
+              {friends?.length === 0 && (
                 <div className="text-white/70 text-xs">No friends yet.</div>
               )}
-              {displayBadges?.map((f, idx) => (
+              {friends?.map((f, idx) => (
                 <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
                   <img src={ALL_COURSES.find(opt => opt.title === f.friend?.avatar_base)?.src || ALL_COURSES[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
                   <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>

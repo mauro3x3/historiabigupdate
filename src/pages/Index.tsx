@@ -57,8 +57,7 @@ const LandingPage = () => {
                 Get Started
               </Button>
               <Button
-                variant="outline"
-                className="text-timelingo-purple text-lg font-bold rounded-full py-3 border-2 border-timelingo-purple bg-white hover:bg-purple-50 shadow"
+                className="bg-timelingo-purple hover:bg-yellow-400 text-white text-lg font-bold rounded-full py-3 shadow-lg"
                 onClick={() => navigate('/auth?tab=login')}
               >
                 I Already Have an Account
