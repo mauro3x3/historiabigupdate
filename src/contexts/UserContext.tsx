@@ -1,8 +1,8 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { HistoryEra, UserPreferences } from '@/types';
-import { supabase } from '@/integrations/supabase/client';
+import { HistoryEra, UserPreferences } from '../types';
+import { supabase } from '../integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { unlockAchievement } from '@/integrations/supabase/achievements';
+import { unlockAchievement } from '../integrations/supabase/achievements';
 import { toast } from 'sonner';
 
 interface UserContextType {

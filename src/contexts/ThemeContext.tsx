@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { HistoryEra } from '@/types';
+import { HistoryEra } from '../types';
 
 interface ThemeColors {
   primary: string;

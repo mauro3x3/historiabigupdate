@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button } from '../components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
 // Automatically import all background images in /public/images/ that start with 'background'
