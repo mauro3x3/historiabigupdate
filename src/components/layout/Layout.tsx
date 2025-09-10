@@ -1,17 +1,9 @@
 import React from 'react';
+import Sidebar from '../ui/Sidebar';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
-
-// Temporary placeholder for Sidebar
-const Sidebar = () => (
-  <div className="fixed left-0 top-0 h-full w-64 bg-gray-900 text-white border-r border-gray-700 z-50">
-    <div className="p-6 border-b border-gray-700">
-      <span className="text-xl font-bold">Historia</span>
-    </div>
-  </div>
-);
 
 export default function Layout({ children }: LayoutProps) {
   return (
