@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Bookmark, MapPin, Calendar, User, Trash2, ExternalLink } from 'lucide-react';
 import { getUserBookmarks, removeBookmark } from '@/services/bookmarkService';
 import { getUserContent } from '@/services/userContentService';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface BookmarkItem {
   id: string;
@@ -85,12 +86,10 @@ export default function BookmarksPage() {
     }
   };
 
+  const { formatDate: settingsFormatDate } = useSettings();
+  
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
+    return settingsFormatDate(dateString);
   };
 
   if (loading) {

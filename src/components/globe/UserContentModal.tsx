@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bookmark, Flag, Check } from 'lucide-react';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface UserContent {
   id: string;
@@ -19,6 +20,7 @@ interface UserContentModalProps {
 }
 
 export default function UserContentModal({ content, onClose }: UserContentModalProps) {
+  const { formatDate } = useSettings();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -141,7 +143,7 @@ export default function UserContentModal({ content, onClose }: UserContentModalP
                   Community Story
                 </span>
                 <span className="text-blue-100 text-sm">
-                  Added {new Date(content.createdAt).toLocaleDateString()}
+                  Added {formatDate(content.createdAt)}
                 </span>
               </div>
               <h1 className="text-3xl font-bold mb-2">{content.title}</h1>

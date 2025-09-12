@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AlertTriangle, CheckCircle } from 'lucide-react';
 import ContentValidator from './ContentValidator';
+import { useSettings } from '@/contexts/SettingsContext';
 
 export interface UserGeneratedContent {
   id: string;
@@ -24,6 +25,7 @@ interface AddContentModalProps {
 }
 
 export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit, defaultDate }: AddContentModalProps) {
+  const { dateFormat } = useSettings();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState('Historical Event');
@@ -303,7 +305,11 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
                   const month = (today.getMonth() + 1).toString().padStart(2, '0');
                   const day = today.getDate().toString().padStart(2, '0');
                   const year = today.getFullYear();
-                  setDateHappened(`${month}/${day}/${year}`);
+                  // Use European format (DD/MM/YYYY) by default, or American if user prefers
+                  const formattedDate = dateFormat === 'european' 
+                    ? `${day}/${month}/${year}` 
+                    : `${month}/${day}/${year}`;
+                  setDateHappened(formattedDate);
                 }}
                 className="px-3 py-2 bg-blue-100 hover:bg-blue-200 text-blue-700 text-sm font-medium rounded-md transition-colors whitespace-nowrap"
               >
@@ -311,7 +317,7 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
               </button>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Examples: 02/24/1337, 1066, 44 BC, 1776, 12/25/800
+              Examples: {dateFormat === 'european' ? '24/02/1337, 1066, 44 BC, 1776, 25/12/800' : '02/24/1337, 1066, 44 BC, 1776, 12/25/800'}
             </p>
           </div>
           

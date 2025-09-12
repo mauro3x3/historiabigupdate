@@ -4,6 +4,7 @@ import { Bookmark, Star, Clock, ExternalLink, MapPin, User, Calendar, Trash2 } f
 import { supabase } from '@/integrations/supabase/client';
 import { getUserBookmarks, removeBookmark } from '@/services/bookmarkService';
 import { getUserContent } from '@/services/userContentService';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface BookmarkedItem {
   id: string;
@@ -24,6 +25,7 @@ interface BookmarkedItem {
 
 const Bookmarks = () => {
   const { user } = useUser();
+  const { formatDate } = useSettings();
   const [bookmarks, setBookmarks] = useState<BookmarkedItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -275,7 +277,7 @@ const Bookmarks = () => {
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         <span>
-                          {new Date(bookmark.created_at).toLocaleDateString()}
+                          {formatDate(bookmark.created_at)}
                         </span>
                       </div>
                       <a

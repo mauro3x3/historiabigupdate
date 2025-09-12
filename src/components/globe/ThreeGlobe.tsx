@@ -978,6 +978,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
                 className="w-full px-2 py-1 text-sm border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                title={formatDisplayDate(selectedDate)}
               />
             </div>
           </div>
