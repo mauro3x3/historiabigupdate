@@ -537,12 +537,68 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
     const selectedDateObj = new Date(selectedDate);
     const selectedYear = selectedDateObj.getFullYear();
     
-    // Show all user content regardless of date (for now)
-    // TODO: Add proper date filtering options later
-    const filteredUserContent = userContent;
+    // Filter user content by date
+    const filteredUserContent = userContent.filter(content => {
+      if (!content.dateHappened) return false;
+      
+      // Parse the date from various formats
+      let contentDate: Date;
+      const dateStr = content.dateHappened.trim();
+      
+      // Handle different date formats
+      if (dateStr.includes('/')) {
+        // Handle MM/DD/YYYY or DD/MM/YYYY format
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+          const month = parseInt(parts[0]);
+          const day = parseInt(parts[1]);
+          const year = parseInt(parts[2]);
+          
+          // Check if it's MM/DD/YYYY (American) or DD/MM/YYYY (European)
+          // If month > 12, it's definitely DD/MM/YYYY
+          if (month > 12) {
+            contentDate = new Date(year, day - 1, month); // DD/MM/YYYY
+          } else if (day > 12) {
+            contentDate = new Date(year, month - 1, day); // MM/DD/YYYY
+          } else {
+            // Ambiguous case - assume American format for now
+            contentDate = new Date(year, month - 1, day); // MM/DD/YYYY
+          }
+        } else {
+          return false;
+        }
+      } else if (dateStr.includes('-')) {
+        // Handle YYYY-MM-DD format
+        contentDate = new Date(dateStr);
+      } else {
+        // Handle year-only format (e.g., "1066", "44 BC")
+        const year = parseInt(dateStr.replace(/[^\d-]/g, ''));
+        if (!isNaN(year)) {
+          contentDate = new Date(year, 0, 1); // January 1st of that year
+        } else {
+          return false;
+        }
+      }
+      
+      if (isNaN(contentDate.getTime())) return false;
+      
+      // Check if the content date matches the selected date
+      const contentYear = contentDate.getFullYear();
+      const contentMonth = contentDate.getMonth();
+      const contentDay = contentDate.getDate();
+      
+      const selectedYear = selectedDateObj.getFullYear();
+      const selectedMonth = selectedDateObj.getMonth();
+      const selectedDay = selectedDateObj.getDate();
+      
+      // Match exact date
+      return contentYear === selectedYear && 
+             contentMonth === selectedMonth && 
+             contentDay === selectedDay;
+    });
     
-    console.log(`🗓️ Date filtering: Selected date "${selectedDate}", showing all ${userContent.length} user content items`);
-    console.log(`🗓️ User content items:`, userContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates })));
+    console.log(`🗓️ Date filtering: Selected date "${selectedDate}", showing ${filteredUserContent.length} of ${userContent.length} user content items`);
+    console.log(`🗓️ Filtered user content:`, filteredUserContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates })));
     
     // Filter official modules by imprecise date matching
     const filteredOfficialModules = journeys.flatMap(journey => 
