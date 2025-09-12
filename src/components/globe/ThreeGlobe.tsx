@@ -114,6 +114,12 @@ function SimpleGlobe({
 
   // Create points data for the globe
   const globeData = useMemo(() => {
+    console.log('🗺️ ThreeGlobe: Creating globe data...');
+    console.log('📊 ThreeGlobe: Modules to show:', modulesToShow.length);
+    console.log('📊 ThreeGlobe: User content to show:', filteredUserContent.length);
+    console.log('📊 ThreeGlobe: Show official modules:', showOfficialModules);
+    console.log('📊 ThreeGlobe: Show user content:', showUserContent);
+    
     const allPoints = [
       ...(showOfficialModules ? modulesToShow.map(module => ({
         lat: module.latitude,
@@ -126,18 +132,21 @@ function SimpleGlobe({
         completed: module.completed,
         journeyId: module.journey_id
       })) : []),
-      ...(showUserContent ? filteredUserContent.map(content => ({
-        lat: content.coordinates[1],
-        lng: content.coordinates[0],
-        size: 0.4,
-        color: getCategoryColor(content.category),
-        type: 'user-content',
-        id: content.id,
-        title: content.title,
-        author: content.author,
-        category: content.category,
-        imageUrl: content.imageUrl
-      })) : []),
+      ...(showUserContent ? filteredUserContent.map(content => {
+        console.log('📍 ThreeGlobe: Adding user content dot:', content.title, 'at', content.coordinates);
+        return {
+          lat: content.coordinates[1],
+          lng: content.coordinates[0],
+          size: 0.4,
+          color: getCategoryColor(content.category),
+          type: 'user-content',
+          id: content.id,
+          title: content.title,
+          author: content.author,
+          category: content.category,
+          imageUrl: content.imageUrl
+        };
+      }) : []),
       // Test points at known locations for verification
       {
         lat: 0, // Equator, Prime Meridian (Gulf of Guinea) - should be in front
@@ -356,24 +365,30 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
     setIsLoadingTexture(false);
   }, [mapStyle]);
 
-  const handleUserContentSubmit = useCallback((content: Omit<UserGeneratedContent, 'id' | 'createdAt'>) => {
-    const newContent: UserGeneratedContent = {
-      ...content,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
-    
-    // Show newsflash notification
-    setNewsflashContent(newContent);
-    setShowNewsflash(true);
-    
-    console.log('Adding new user content:', newContent);
-    setUserContent(prev => [...prev, newContent]);
-    
-    // Save to localStorage
-    const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
-    existingContent.push(newContent);
-    localStorage.setItem('userContent', JSON.stringify(existingContent));
+  const handleUserContentSubmit = useCallback(async (content: Omit<UserGeneratedContent, 'id' | 'createdAt'>) => {
+    try {
+      const { saveUserContent } = await import('@/services/userContentService');
+      const newContent = await saveUserContent(content);
+      
+      // Show newsflash notification
+      setNewsflashContent(newContent);
+      setShowNewsflash(true);
+      
+      console.log('Adding new user content:', newContent);
+      setUserContent(prev => [...prev, newContent]);
+    } catch (error) {
+      console.error('Failed to save user content:', error);
+      // Fallback to local state if save fails
+      const newContent: UserGeneratedContent = {
+        ...content,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString()
+      };
+      
+      setNewsflashContent(newContent);
+      setShowNewsflash(true);
+      setUserContent(prev => [...prev, newContent]);
+    }
   }, []);
 
   const handleNewsflashClose = () => {
@@ -516,16 +531,12 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
     const selectedDateObj = new Date(selectedDate);
     const selectedYear = selectedDateObj.getFullYear();
     
-    // Filter user content by exact date
-    const filteredUserContent = userContent.filter(content => {
-      const contentDate = new Date(content.dateHappened);
-      const contentDateString = contentDate.toDateString();
-      const selectedDateString = selectedDateObj.toDateString();
-      
-      console.log(`Comparing content date "${content.dateHappened}" (${contentDateString}) with selected date "${selectedDate}" (${selectedDateString})`);
-      
-      return contentDateString === selectedDateString;
-    });
+    // Show all user content regardless of date (for now)
+    // TODO: Add proper date filtering options later
+    const filteredUserContent = userContent;
+    
+    console.log(`🗓️ Date filtering: Selected date "${selectedDate}", showing all ${userContent.length} user content items`);
+    console.log(`🗓️ User content items:`, userContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates })));
     
     // Filter official modules by imprecise date matching
     const filteredOfficialModules = journeys.flatMap(journey => 
@@ -663,11 +674,57 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
     setShowAddContentModal(true);
   }, []);
 
-  // Load existing user content on component mount
+  // Load existing user content on component mount and set up real-time updates
   useEffect(() => {
-    const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
-    console.log('Loading existing user content:', existingContent);
-    setUserContent(existingContent);
+    console.log('🚀 ThreeGlobe: useEffect triggered for user content loading');
+    
+    const loadUserContent = async () => {
+      try {
+        console.log('🔄 ThreeGlobe: Loading user content...');
+        const { getUserContent } = await import('@/services/userContentService');
+        console.log('🔄 ThreeGlobe: getUserContent function imported');
+        const content = await getUserContent();
+        console.log('✅ ThreeGlobe: User content loaded:', content);
+        console.log('📊 ThreeGlobe: Number of user dots:', content.length);
+        setUserContent(content);
+      } catch (error) {
+        console.error('❌ ThreeGlobe: Failed to load user content:', error);
+        console.error('❌ ThreeGlobe: Error details:', error);
+        // Fallback to localStorage
+        const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+        console.log('🔄 ThreeGlobe: Fallback to localStorage:', existingContent);
+        setUserContent(existingContent);
+      }
+    };
+    
+    console.log('🔄 ThreeGlobe: About to call loadUserContent');
+    loadUserContent();
+
+    // Set up real-time subscription for live updates
+    const setupRealtimeSubscription = async () => {
+      try {
+        const { subscribeToUserContent } = await import('@/services/userContentService');
+        const subscription = subscribeToUserContent((content) => {
+          console.log('Real-time update received:', content);
+          setUserContent(content);
+        });
+        
+        // Cleanup subscription on unmount
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Failed to set up real-time subscription:', error);
+      }
+    };
+
+    const cleanup = setupRealtimeSubscription();
+    
+    return () => {
+      if (cleanup) {
+        cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+      }
+    };
   }, []);
 
   // Only include modules with valid lat/lng

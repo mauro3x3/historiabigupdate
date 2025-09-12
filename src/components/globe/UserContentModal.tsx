@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { Bookmark, Flag, Check } from 'lucide-react';
 
 interface UserContent {
   id: string;
@@ -17,6 +18,65 @@ interface UserContentModalProps {
 }
 
 export default function UserContentModal({ content, onClose }: UserContentModalProps) {
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [reportReason, setReportReason] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+
+  // Check if content is bookmarked on load
+  useEffect(() => {
+    const checkBookmarkStatus = async () => {
+      try {
+        const { isBookmarked: checkBookmark } = await import('@/services/bookmarkService');
+        const bookmarked = await checkBookmark(content.id, 'user_content');
+        setIsBookmarked(bookmarked);
+      } catch (error) {
+        console.error('Failed to check bookmark status:', error);
+      }
+    };
+
+    if (content) {
+      checkBookmarkStatus();
+    }
+  }, [content]);
+
+  const handleBookmarkToggle = async () => {
+    try {
+      const { addBookmark, removeBookmark } = await import('@/services/bookmarkService');
+      
+      if (isBookmarked) {
+        await removeBookmark(content.id, 'user_content');
+        setIsBookmarked(false);
+      } else {
+        await addBookmark(content.id, 'user_content');
+        setIsBookmarked(true);
+      }
+    } catch (error) {
+      console.error('Failed to toggle bookmark:', error);
+    }
+  };
+
+  const handleReport = async () => {
+    if (!reportReason.trim()) return;
+
+    try {
+      const { reportContent } = await import('@/services/bookmarkService');
+      await reportContent(content.id, 'user_content', reportReason, reportDescription);
+      
+      setIsReporting(false);
+      setShowReportModal(false);
+      setReportReason('');
+      setReportDescription('');
+      
+      // Show success message
+      alert('Content reported successfully. Thank you for helping keep the community safe!');
+    } catch (error) {
+      console.error('Failed to report content:', error);
+      alert('Failed to report content. Please try again.');
+    }
+  };
+
   if (!content) {
     return null;
   }
@@ -133,6 +193,28 @@ export default function UserContentModal({ content, onClose }: UserContentModalP
                 </svg>
                 More Stories
               </button>
+              
+              {/* Bookmark Button */}
+              <button
+                onClick={handleBookmarkToggle}
+                className={`px-4 py-2 border rounded-lg transition-colors flex items-center gap-2 ${
+                  isBookmarked 
+                    ? 'bg-yellow-100 border-yellow-300 text-yellow-700 hover:bg-yellow-200' 
+                    : 'text-gray-600 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-current' : ''}`} />
+                {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+              </button>
+              
+              {/* Report Button */}
+              <button
+                onClick={() => setShowReportModal(true)}
+                className="px-4 py-2 text-red-600 border border-red-300 rounded-lg hover:bg-red-50 transition-colors flex items-center gap-2"
+              >
+                <Flag className="w-4 h-4" />
+                Report
+              </button>
             </div>
             <button
               onClick={onClose}
@@ -143,6 +225,92 @@ export default function UserContentModal({ content, onClose }: UserContentModalP
           </div>
         </div>
       </div>
+      
+      {/* Report Modal */}
+      {showReportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-60">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4">
+            <div className="bg-red-600 rounded-t-xl p-6 text-white">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold">Report Content</h2>
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="text-white hover:text-red-100 text-2xl font-bold transition-colors"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              <p className="text-gray-600 mb-4">
+                Help us keep the community safe by reporting inappropriate content.
+              </p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason for reporting *
+                  </label>
+                  <select
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    required
+                  >
+                    <option value="">Select a reason</option>
+                    <option value="inappropriate">Inappropriate content</option>
+                    <option value="spam">Spam or misleading</option>
+                    <option value="harassment">Harassment or bullying</option>
+                    <option value="false_info">False information</option>
+                    <option value="offensive">Offensive language</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Additional details (optional)
+                  </label>
+                  <textarea
+                    value={reportDescription}
+                    onChange={(e) => setReportDescription(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500"
+                    placeholder="Please provide more details about why you're reporting this content..."
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end gap-3 mt-6">
+                <button
+                  onClick={() => setShowReportModal(false)}
+                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleReport}
+                  disabled={!reportReason.trim() || isReporting}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                >
+                  {isReporting ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Reporting...
+                    </>
+                  ) : (
+                    <>
+                      <Flag className="w-4 h-4" />
+                      Submit Report
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

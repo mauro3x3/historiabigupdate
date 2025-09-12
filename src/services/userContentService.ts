@@ -1,27 +1,161 @@
 import { UserGeneratedContent } from '@/components/globe/AddContentModal';
+import { supabase } from '@/integrations/supabase/client';
+import { useUser } from '@/hooks/useUser';
 
 // Service for managing user-generated content
 export const saveUserContent = async (content: Omit<UserGeneratedContent, 'id' | 'createdAt'>): Promise<UserGeneratedContent> => {
-  // For now, we'll just return the content with generated ID and timestamp
-  // In a real app, this would save to a database
-  const newContent: UserGeneratedContent = {
-    ...content,
-    id: Date.now().toString(),
-    createdAt: new Date().toISOString()
-  };
-  
-  // Store in localStorage for persistence
-  const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
-  existingContent.push(newContent);
-  localStorage.setItem('userContent', JSON.stringify(existingContent));
-  
-  return newContent;
+  try {
+    // Get current user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError || !user) {
+      throw new Error('User not authenticated');
+    }
+
+    // Prepare data for database
+    const contentData = {
+      user_id: user.id,
+      title: content.title,
+      description: content.description,
+      category: content.category,
+      coordinates: content.coordinates, // [longitude, latitude]
+      image_url: content.imageUrl,
+      author: content.author,
+      is_approved: true,
+      is_public: true
+    };
+
+    // Insert into database
+    const { data, error } = await supabase
+      .from('userdots')
+      .insert(contentData)
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error saving user content:', error);
+      throw error;
+    }
+
+    // Convert database format back to UserGeneratedContent format
+    const newContent: UserGeneratedContent = {
+      id: data.id,
+      title: data.title,
+      description: data.description,
+      author: data.author,
+      createdAt: data.created_at,
+      coordinates: data.coordinates,
+      category: data.category,
+      imageUrl: data.image_url,
+      dateHappened: content.dateHappened, // Store in description or separate field
+      source: content.source // Store in description or separate field
+    };
+
+    return newContent;
+  } catch (error) {
+    console.error('Failed to save user content:', error);
+    // Fallback to localStorage if database fails
+    const newContent: UserGeneratedContent = {
+      ...content,
+      id: Date.now().toString(),
+      createdAt: new Date().toISOString()
+    };
+    
+    const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+    existingContent.push(newContent);
+    localStorage.setItem('userContent', JSON.stringify(existingContent));
+    
+    return newContent;
+  }
 };
 
 export const getUserContent = async (): Promise<UserGeneratedContent[]> => {
-  // Retrieve from localStorage
-  const content = JSON.parse(localStorage.getItem('userContent') || '[]');
-  return content;
+  console.log('🔍 getUserContent called - starting fetch...');
+  
+  try {
+    console.log('🔍 Fetching user content from userdots table...');
+    console.log('🔍 Supabase client:', supabase);
+    
+    // First, let's try a simple query without filters to see if we can connect
+    const { data: allData, error: allError } = await supabase
+      .from('userdots')
+      .select('*');
+    
+    console.log('🔍 All userdots data (no filters):', allData);
+    console.log('🔍 All userdots error:', allError);
+    
+    // Now try with filters
+    const { data, error } = await supabase
+      .from('userdots')
+      .select('*')
+      .eq('is_public', true)
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false });
+
+    console.log('🔍 Filtered query result:', { data, error });
+
+    if (error) {
+      console.error('❌ Error fetching user content:', error);
+      throw error;
+    }
+
+    console.log('📊 Raw database data:', data);
+    console.log('📊 Number of records:', data?.length || 0);
+
+    if (!data || data.length === 0) {
+      console.log('⚠️ No user content found in database');
+      return [];
+    }
+
+    // Convert database format to UserGeneratedContent format
+    const content: UserGeneratedContent[] = data.map(item => {
+      console.log('🔄 Converting item:', item);
+      return {
+        id: item.id.toString(), // Convert to string
+        title: item.title,
+        description: item.description,
+        author: item.author,
+        createdAt: item.created_at,
+        coordinates: item.coordinates,
+        category: item.category,
+        imageUrl: item.image_url,
+        dateHappened: item.date_happened || '', // Use the actual field
+        source: item.source || '' // Use the actual field
+      };
+    });
+
+    console.log('✅ Converted user content:', content);
+    return content;
+  } catch (error) {
+    console.error('❌ Failed to fetch user content from database:', error);
+    console.error('❌ Error details:', error);
+    // Fallback to localStorage
+    const content = JSON.parse(localStorage.getItem('userContent') || '[]');
+    console.log('🔄 Fallback to localStorage:', content);
+    return content;
+  }
+};
+
+// Real-time subscription for live updates
+export const subscribeToUserContent = (onUpdate: (content: UserGeneratedContent[]) => void) => {
+  const subscription = supabase
+    .channel('user_content_changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'userdots'
+      },
+      async () => {
+        // Refetch all content when any change occurs
+        const content = await getUserContent();
+        onUpdate(content);
+      }
+    )
+    .subscribe();
+
+  return subscription;
 };
 
 // Interface for the backend response

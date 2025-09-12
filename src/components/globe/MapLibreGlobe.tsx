@@ -76,19 +76,22 @@ export default function MapLibreGlobe({ journeys, onModuleClick }: MapLibreGlobe
     setShowAddContentModal(true);
   }, []);
 
-  const handleUserContentSubmit = useCallback((content: Omit<UserGeneratedContent, 'id' | 'createdAt'>) => {
-    const newContent: UserGeneratedContent = {
-      ...content,
-      id: Date.now().toString(),
-      createdAt: new Date().toISOString()
-    };
-    console.log('Adding new user content:', newContent);
-    setUserContent(prev => [...prev, newContent]);
-    
-    // Save to localStorage
-    const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
-    existingContent.push(newContent);
-    localStorage.setItem('userContent', JSON.stringify(existingContent));
+  const handleUserContentSubmit = useCallback(async (content: Omit<UserGeneratedContent, 'id' | 'createdAt'>) => {
+    try {
+      const { saveUserContent } = await import('@/services/userContentService');
+      const newContent = await saveUserContent(content);
+      console.log('Adding new user content:', newContent);
+      setUserContent(prev => [...prev, newContent]);
+    } catch (error) {
+      console.error('Failed to save user content:', error);
+      // Fallback to local state if save fails
+      const newContent: UserGeneratedContent = {
+        ...content,
+        id: Date.now().toString(),
+        createdAt: new Date().toISOString()
+      };
+      setUserContent(prev => [...prev, newContent]);
+    }
   }, []);
 
   const handleUserContentClick = useCallback((content: UserGeneratedContent) => {
@@ -122,11 +125,49 @@ export default function MapLibreGlobe({ journeys, onModuleClick }: MapLibreGlobe
 
 
 
-  // Load existing user content on component mount
+  // Load existing user content on component mount and set up real-time updates
   useEffect(() => {
-    const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
-    console.log('Loading existing user content:', existingContent);
-    setUserContent(existingContent);
+    const loadUserContent = async () => {
+      try {
+        const { getUserContent } = await import('@/services/userContentService');
+        const content = await getUserContent();
+        console.log('Loading existing user content:', content);
+        setUserContent(content);
+      } catch (error) {
+        console.error('Failed to load user content:', error);
+        // Fallback to localStorage
+        const existingContent = JSON.parse(localStorage.getItem('userContent') || '[]');
+        setUserContent(existingContent);
+      }
+    };
+    
+    loadUserContent();
+
+    // Set up real-time subscription for live updates
+    const setupRealtimeSubscription = async () => {
+      try {
+        const { subscribeToUserContent } = await import('@/services/userContentService');
+        const subscription = subscribeToUserContent((content) => {
+          console.log('Real-time update received:', content);
+          setUserContent(content);
+        });
+        
+        // Cleanup subscription on unmount
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Failed to set up real-time subscription:', error);
+      }
+    };
+
+    const cleanup = setupRealtimeSubscription();
+    
+    return () => {
+      if (cleanup) {
+        cleanup.then(cleanupFn => cleanupFn && cleanupFn());
+      }
+    };
   }, []);
 
   // Initialize map only once
@@ -472,7 +513,9 @@ export default function MapLibreGlobe({ journeys, onModuleClick }: MapLibreGlobe
                   author: 'Test User',
                   createdAt: new Date().toISOString(),
                   coordinates: [0, 0], // Center of map
-                  category: 'Historical Event'
+                  category: 'Historical Event',
+                  dateHappened: '2024',
+                  source: 'Test data'
                 };
                 setUserContent(prev => [...prev, testContent]);
                 console.log('Added test content:', testContent);
