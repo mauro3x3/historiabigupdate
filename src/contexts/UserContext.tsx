@@ -17,6 +17,7 @@ interface UserContextType {
   preferredEra: HistoryEra | null;
   setPreferredEra: (era: HistoryEra | null) => void;
   isOnboarded: boolean;
+  isLoading: boolean;
   preferences: UserPreferences | null;
   updatePreferences: (prefs: Partial<UserPreferences>) => void;
   completeOnboarding: () => void;
@@ -31,51 +32,57 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [completedEras, setCompletedEras] = useState<string[]>([]);
   const [preferredEra, setPreferredEra] = useState<HistoryEra | null>(null);
   const [isOnboarded, setIsOnboarded] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   
   useEffect(() => {
     const fetchUserDetails = async () => {
-      const { data: { user: supaUser } } = await supabase.auth.getUser();
-      
-      if (supaUser) {
-        setUser(supaUser);
+      try {
+        const { data: { user: supaUser } } = await supabase.auth.getUser();
         
-        // Fetch user profile data
-        try {
-          const { data: profileData, error: profileError } = await supabase
-            .from('user_profiles')
-            .select('*')
-            .eq('id', supaUser.id)
-            .single();
-            
-          if (profileError) {
-            console.error("Error fetching user profile:", profileError);
-          }
+        if (supaUser) {
+          setUser(supaUser);
           
-          if (profileData) {
-            setXp(profileData.xp || 0);
-            setStreak(profileData.streak || 0);
-            setCompletedEras(profileData.completed_eras || []);
-            if (profileData.preferred_era) {
-              setPreferredEra(profileData.preferred_era as HistoryEra);
+          // Fetch user profile data
+          try {
+            const { data: profileData, error: profileError } = await supabase
+              .from('user_profiles')
+              .select('*')
+              .eq('id', supaUser.id)
+              .single();
+              
+            if (profileError) {
+              console.error("Error fetching user profile:", profileError);
             }
-            // Set onboarded state based on is_onboarded field
-            setIsOnboarded(!!profileData.is_onboarded);
-            // Set preferences
-            if (profileData.preferred_era) {
-              setPreferences({
-                interests: ['ancient-history'],
-                era: profileData.preferred_era as HistoryEra,
-                learningStyle: 'reading',
-                dailyLearningTime: '15-min',
-                reminderMethod: 'none',
-                reminderTime: null
-              });
+            
+            if (profileData) {
+              setXp(profileData.xp || 0);
+              setStreak(profileData.streak || 0);
+              setCompletedEras(profileData.completed_eras || []);
+              if (profileData.preferred_era) {
+                setPreferredEra(profileData.preferred_era as HistoryEra);
+              }
+              // Set onboarded state based on is_onboarded field
+              setIsOnboarded(!!profileData.is_onboarded);
+              // Set preferences
+              if (profileData.preferred_era) {
+                setPreferences({
+                  interests: ['ancient-history'],
+                  era: profileData.preferred_era as HistoryEra,
+                  learningStyle: 'reading',
+                  dailyLearningTime: '15-min',
+                  reminderMethod: 'none',
+                  reminderTime: null
+                });
+              }
             }
+          } catch (error) {
+            console.error("Error fetching user profile:", error);
           }
-        } catch (error) {
-          console.error("Error fetching user profile:", error);
         }
+      } finally {
+        // Always set loading to false, whether user is found or not
+        setIsLoading(false);
       }
     };
     
@@ -92,6 +99,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setPreferredEra(null);
         setIsOnboarded(false);
         setPreferences(null);
+        setIsLoading(false);
       }
     });
   }, []);
@@ -264,6 +272,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     preferredEra,
     setPreferredEra: setPreferredEraPreference,
     isOnboarded,
+    isLoading,
     preferences,
     updatePreferences,
     completeOnboarding

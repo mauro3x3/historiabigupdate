@@ -21,6 +21,8 @@ export const saveUserContent = async (content: Omit<UserGeneratedContent, 'id' |
       coordinates: content.coordinates, // [longitude, latitude]
       image_url: content.imageUrl,
       author: content.author,
+      date_happened: content.dateHappened,
+      source: content.source,
       is_approved: true,
       is_public: true
     };

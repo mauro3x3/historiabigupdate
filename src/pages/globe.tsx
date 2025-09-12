@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Menu, X, Home, Globe, Trophy, BarChart3, Bookmark, ShoppingBag, Settings, User } from 'lucide-react';
 import GlobeComponent from '@/components/globe/Globe';
 import ModuleModal from '@/components/globe/ModuleModal';
@@ -31,11 +31,15 @@ interface Journey {
 
 export default function GlobeView() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [showDebug, setShowDebug] = useState(true);
   const [visibleJourneys, setVisibleJourneys] = useState<Set<number>>(new Set());
   const [journeys, setJourneys] = useState<Journey[]>([]);
   const [loading, setLoading] = useState(true);
   const [showSidebar, setShowSidebar] = useState(false);
+  
+  // Get content ID from URL parameters for sharing
+  const sharedContentId = searchParams.get('content');
   
   // Handle module clicks
   const handleModuleClick = (module: any) => {
@@ -195,8 +199,9 @@ export default function GlobeView() {
       key={`globe-${Array.from(visibleJourneys).sort().join('-')}`} // Force re-render when visibleJourneys changes
       journeys={filteredJourneys} 
       onModuleClick={handleModuleClick}
+      sharedContentId={sharedContentId}
     />
-  ), [filteredJourneys, visibleJourneys]);
+  ), [filteredJourneys, visibleJourneys, sharedContentId]);
 
   if (loading) {
     return (

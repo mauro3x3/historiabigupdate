@@ -9,6 +9,8 @@ import PlayTodaySlideshow from './PlayTodaySlideshow';
 import ContentModeration from './ContentModeration';
 import { MAPBOX_CONFIG } from '../../config/mapbox';
 import { supabase } from '@/integrations/supabase/client';
+import SettingsModal from '@/components/SettingsModal';
+import { useSettings } from '@/contexts/SettingsContext';
 
 interface Module {
   id: string;
@@ -29,6 +31,7 @@ interface Journey {
 interface ThreeGlobeProps {
   journeys: Journey[];
   onModuleClick?: (module: Module) => void;
+  sharedContentId?: string | null;
 }
 
 // Simple Globe component using Three.js sphere with Mapbox texture
@@ -295,9 +298,10 @@ function SimpleGlobe({
   );
 }
 
-export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps) {
+export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }: ThreeGlobeProps) {
   console.log('🔥🔥🔥 CALENDAR FIX V2 - TIMESTAMP:', Date.now(), '🔥🔥🔥');
   const navigate = useNavigate();
+  const { formatDate } = useSettings();
   
   // Calendar mode state
   const [calendarMode, setCalendarMode] = useState(false);
@@ -344,6 +348,7 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
   const [clickedCoordinates, setClickedCoordinates] = useState<[number, number] | null>(null);
   const [selectedUserContent, setSelectedUserContent] = useState<UserGeneratedContent | null>(null);
   const [showPlayToday, setShowPlayToday] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]); // Set to today's date
   const [newsflashContent, setNewsflashContent] = useState<UserGeneratedContent | null>(null);
   const [showNewsflash, setShowNewsflash] = useState(false);
@@ -568,25 +573,9 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
     };
   };
 
-  // Format date for display
+  // Format date for display using settings
   const formatDisplayDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const day = date.getDate();
-    const month = date.toLocaleDateString('en-US', { month: 'long' });
-    const year = date.getFullYear();
-    
-    // Add ordinal suffix to day
-    const getOrdinalSuffix = (day: number) => {
-      if (day >= 11 && day <= 13) return 'th';
-      switch (day % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-      }
-    };
-    
-    return `${day}${getOrdinalSuffix(day)} ${month} ${year}`;
+    return formatDate(dateString);
   };
 
   // Navigate to previous day
@@ -753,6 +742,19 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
         console.log('✅ ThreeGlobe: User content loaded:', content);
         console.log('📊 ThreeGlobe: Number of user dots:', content.length);
         setUserContent(content);
+        
+        // Check if there's a shared content ID to open
+        if (sharedContentId) {
+          console.log('🔗 ThreeGlobe: Opening shared content:', sharedContentId);
+          const sharedContent = content.find(c => c.id === sharedContentId);
+          if (sharedContent) {
+            console.log('✅ ThreeGlobe: Found shared content, opening modal:', sharedContent);
+            setSelectedUserContent(sharedContent);
+            setShowUserContentModal(true);
+          } else {
+            console.log('❌ ThreeGlobe: Shared content not found:', sharedContentId);
+          }
+        }
       } catch (error) {
         console.error('❌ ThreeGlobe: Failed to load user content:', error);
         console.error('❌ ThreeGlobe: Error details:', error);
@@ -1006,6 +1008,16 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
               Moderate Content ({userContent.length})
             </button>
 
+            <button
+              onClick={() => setShowSettings(true)}
+              className="w-full btn-secondary btn-small flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+              </svg>
+              Settings
+            </button>
+
             {/* Clear All User Content button removed */}
           </div>
 
@@ -1187,6 +1199,12 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
           </div>
         </div>
       )}
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
+      />
     </>
   );
 }
