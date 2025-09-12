@@ -8,6 +8,7 @@ import NewsflashNotification from './NewsflashNotification';
 import PlayTodaySlideshow from './PlayTodaySlideshow';
 import ContentModeration from './ContentModeration';
 import { MAPBOX_CONFIG } from '../../config/mapbox';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Module {
   id: string;
@@ -620,27 +621,92 @@ export default function ThreeGlobe({ journeys, onModuleClick }: ThreeGlobeProps)
     setSelectedDate(randomDate.toISOString().split('T')[0]);
   };
 
-  const handleRemoveContent = (contentId: string) => {
-    setUserContent(prev => prev.filter(content => content.id !== contentId));
-    // Update localStorage
-    const updatedContent = userContent.filter(content => content.id !== contentId);
-    localStorage.setItem('userContent', JSON.stringify(updatedContent));
+  const handleRemoveContent = async (contentId: string) => {
+    try {
+      // Delete from Supabase database
+      const { error } = await supabase
+        .from('userdots')
+        .delete()
+        .eq('id', contentId);
+
+      if (error) {
+        console.error('Error deleting content from database:', error);
+        alert('Failed to delete content from database. Please try again.');
+        return;
+      }
+
+      // Update local state
+      setUserContent(prev => prev.filter(content => content.id !== contentId));
+      
+      // Update localStorage as backup
+      const updatedContent = userContent.filter(content => content.id !== contentId);
+      localStorage.setItem('userContent', JSON.stringify(updatedContent));
+      
+      console.log('Content successfully deleted from database:', contentId);
+    } catch (error) {
+      console.error('Failed to delete content:', error);
+      alert('Failed to delete content. Please try again.');
+    }
   };
 
-  const handleApproveContent = (contentId: string) => {
-    setUserContent(prev => prev.map(content => 
-      content.id === contentId 
-        ? { ...content, isApproved: true }
-        : content
-    ));
+  const handleApproveContent = async (contentId: string) => {
+    try {
+      // Update approval status in Supabase database
+      const { error } = await supabase
+        .from('userdots')
+        .update({ is_approved: true })
+        .eq('id', contentId);
+
+      if (error) {
+        console.error('Error approving content in database:', error);
+        alert('Failed to approve content in database. Please try again.');
+        return;
+      }
+
+      // Update local state
+      setUserContent(prev => prev.map(content => 
+        content.id === contentId 
+          ? { ...content, isApproved: true }
+          : content
+      ));
+      
+      console.log('Content successfully approved in database:', contentId);
+    } catch (error) {
+      console.error('Failed to approve content:', error);
+      alert('Failed to approve content. Please try again.');
+    }
   };
 
-  const handleFlagContent = (contentId: string) => {
-    setUserContent(prev => prev.map(content => 
-      content.id === contentId 
-        ? { ...content, flags: (content.flags || 0) + 1 }
-        : content
-    ));
+  const handleFlagContent = async (contentId: string) => {
+    try {
+      // Get current flags count
+      const currentContent = userContent.find(c => c.id === contentId);
+      const newFlagsCount = (currentContent?.flags || 0) + 1;
+
+      // Update flags count in Supabase database
+      const { error } = await supabase
+        .from('userdots')
+        .update({ flags: newFlagsCount })
+        .eq('id', contentId);
+
+      if (error) {
+        console.error('Error updating flags in database:', error);
+        alert('Failed to update flags in database. Please try again.');
+        return;
+      }
+
+      // Update local state
+      setUserContent(prev => prev.map(content => 
+        content.id === contentId 
+          ? { ...content, flags: newFlagsCount }
+          : content
+      ));
+      
+      console.log('Content flags successfully updated in database:', contentId);
+    } catch (error) {
+      console.error('Failed to update flags:', error);
+      alert('Failed to update flags. Please try again.');
+    }
   };
 
   const handleModerationClick = () => {
