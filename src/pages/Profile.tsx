@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import DashboardHeader from '@/components/dashboard/DashboardHeader';
 import UserStats from '@/components/dashboard/UserStats';
 import { useDashboardData } from '@/hooks/useDashboardData';
 
@@ -38,7 +37,6 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-transparent pt-0">
-      <DashboardHeader />
       <div className="flex flex-col items-center w-full">
         <UserStats learningTrack={learningTrack} />
       </div>

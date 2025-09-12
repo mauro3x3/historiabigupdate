@@ -43,25 +43,25 @@ const COURSE_COLORS = {
 };
 
 const AVATAR_OPTIONS = [
-  { key: 'ghost', src: '/images/avatars/ghost.png', unlockCondition: 'default', description: 'Default avatar' },
-  { key: 'hummingbird', src: '/images/avatars/hummingbird.png', unlockCondition: 'ancient-egypt', description: 'Complete Ancient Egypt modules' },
-  { key: 'lion', src: '/images/avatars/lion.png', unlockCondition: 'judaism', description: 'Complete Judaism modules' },
-  { key: 'whale', src: '/images/avatars/whale.png', unlockCondition: 'vikings', description: 'Complete Viking modules' },
-  { key: 'squid', src: '/images/avatars/squid.png', unlockCondition: 'ancient-greece', description: 'Complete Ancient Greece modules' },
-  { key: 'axolotl', src: '/images/avatars/axolotl.png', unlockCondition: 'aztec-maya', description: 'Complete Aztec/Maya modules' },
-  { key: 'bison', src: '/images/avatars/bison.png', unlockCondition: 'native-american', description: 'Complete Native American modules' },
-  { key: 'cat', src: '/images/avatars/cat.png', unlockCondition: 'ancient-egypt-advanced', description: 'Complete all Ancient Egypt modules' },
-  { key: 'crow', src: '/images/avatars/crow.png', unlockCondition: 'germanic-tribes', description: 'Complete Germanic Tribes modules' },
-  { key: 'koala', src: '/images/avatars/koala.png', unlockCondition: 'australian', description: 'Complete Australian history modules' },
-  { key: 'orangutan', src: '/images/avatars/orangutan.png', unlockCondition: 'southeast-asian', description: 'Complete Southeast Asian modules' },
-  { key: 'panda', src: '/images/avatars/panda.png', unlockCondition: 'china', description: 'Complete all Chinese modules' },
-  { key: 'snail', src: '/images/avatars/snail.png', unlockCondition: 'roman-empire', description: 'Complete Roman Empire modules' },
-  { key: 'snake', src: '/images/avatars/snake.png', unlockCondition: 'islam', description: 'Complete Islamic history modules' },
-  { key: 'snowfox', src: '/images/avatars/snowfox.png', unlockCondition: 'russia', description: 'Complete Russian history modules' },
+  { key: 'ghost', src: '/images/avatars/ghost.png', unlockCondition: 'default', description: 'Ghost avatar' },
+  { key: 'hummingbird', src: '/images/avatars/hummingbird.png', unlockCondition: 'default', description: 'Hummingbird avatar' },
+  { key: 'lion', src: '/images/avatars/lion.png', unlockCondition: 'default', description: 'Lion avatar' },
+  { key: 'whale', src: '/images/avatars/whale.png', unlockCondition: 'default', description: 'Whale avatar' },
+  { key: 'squid', src: '/images/avatars/squid.png', unlockCondition: 'default', description: 'Squid avatar' },
+  { key: 'axolotl', src: '/images/avatars/axolotl.png', unlockCondition: 'default', description: 'Axolotl avatar' },
+  { key: 'bison', src: '/images/avatars/bison.png', unlockCondition: 'default', description: 'Bison avatar' },
+  { key: 'cat', src: '/images/avatars/cat.png', unlockCondition: 'default', description: 'Cat avatar' },
+  { key: 'crow', src: '/images/avatars/crow.png', unlockCondition: 'default', description: 'Crow avatar' },
+  { key: 'koala', src: '/images/avatars/koala.png', unlockCondition: 'default', description: 'Koala avatar' },
+  { key: 'orangutan', src: '/images/avatars/orangutan.png', unlockCondition: 'default', description: 'Orangutan avatar' },
+  { key: 'panda', src: '/images/avatars/panda.png', unlockCondition: 'default', description: 'Panda avatar' },
+  { key: 'snail', src: '/images/avatars/snail.png', unlockCondition: 'default', description: 'Snail avatar' },
+  { key: 'snake', src: '/images/avatars/snake.png', unlockCondition: 'default', description: 'Snake avatar' },
+  { key: 'snowfox', src: '/images/avatars/snowfox.png', unlockCondition: 'default', description: 'Snow fox avatar' },
 ];
 
-// Set ghost as the default avatar for all users
-const DEFAULT_AVATAR_KEY = 'ghost';
+// Set cat as the default avatar for all users
+const DEFAULT_AVATAR_KEY = 'cat';
 
 // Prize avatar filenames
 const PRIZE_AVATARS = [
@@ -611,23 +611,15 @@ export default function UserStats(props: UserStatsProps) {
                 {profileTab === 'avatar' && (
                   <div className="grid grid-cols-3 gap-4">
                     {AVATAR_OPTIONS.map(opt => {
-                      const isLocked = opt.unlockCondition !== 'default' && !displayCompletedEras.includes(opt.unlockCondition);
                       return (
                         <button
                           key={opt.key}
-                          className={`rounded-xl border-2 p-2 flex flex-col items-center transition-all focus:outline-none focus:ring-2 focus:ring-timelingo-gold relative group ${selectedAvatar === opt.key ? 'border-timelingo-gold bg-timelingo-navy/80 scale-105 shadow-lg' : 'border-gray-600 bg-timelingo-navy/40 hover:border-timelingo-gold hover:scale-105'} ${isLocked ? 'opacity-60 cursor-not-allowed' : ''}`}
-                          onClick={() => !isLocked && setSelectedAvatar(opt.key)}
+                          className={`rounded-xl border-2 p-2 flex flex-col items-center transition-all focus:outline-none focus:ring-2 focus:ring-timelingo-gold relative group ${selectedAvatar === opt.key ? 'border-timelingo-gold bg-timelingo-navy/80 scale-105 shadow-lg' : 'border-gray-600 bg-timelingo-navy/40 hover:border-timelingo-gold hover:scale-105'}`}
+                          onClick={() => setSelectedAvatar(opt.key)}
                           aria-label={opt.key}
                           tabIndex={0}
-                          disabled={isLocked}
                         >
                           <img src={opt.src} alt={opt.key} className="w-20 h-20 object-contain mb-0" />
-                          {isLocked && (
-                            <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center rounded-xl">
-                              <svg className="w-8 h-8 text-white mb-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 17v1m0-4a2 2 0 00-2 2v1a2 2 0 002 2h0a2 2 0 002-2v-1a2 2 0 00-2-2zm0 0V9a4 4 0 10-8 0v4" /></svg>
-                              <span className="text-xs text-white font-bold bg-black/60 px-2 py-0.5 rounded text-center">{opt.description}</span>
-                            </div>
-                          )}
                         </button>
                       );
                     })}

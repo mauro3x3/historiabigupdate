@@ -61,8 +61,8 @@ const Bookmarks = () => {
             // For modules, fetch from modules table
             const { data: moduleData, error } = await supabase
               .from('modules')
-              .select('id, title, description, era, module_type')
-              .eq('id', bookmark.content_id)
+              .select('id, title, description, era, content_type')
+              .eq('id', Number(bookmark.content_id))
               .single();
 
             if (error) {
@@ -81,7 +81,7 @@ const Bookmarks = () => {
               title: moduleData?.title || 'Unknown Module',
               description: moduleData?.description || '',
               era: moduleData?.era || 'unknown',
-              module_type: moduleData?.module_type || 'lesson'
+              module_type: moduleData?.content_type || 'lesson'
             };
           }
         })

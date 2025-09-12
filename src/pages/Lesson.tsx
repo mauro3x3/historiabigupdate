@@ -693,25 +693,7 @@ const LessonPage = () => {
         storyPhaseContent
       ) : (
         <main className="container mx-auto py-8 px-4">
-          {/* Show lives and streak in a compact status bar */}
-          {!lessonCompleted && (
-            <div className="flex justify-center mb-8">
-              <div className="flex items-center gap-4 px-6 py-2 rounded-full shadow bg-white/80 border border-gray-200" style={{ minWidth: 220 }}>
-                <div className="flex items-center gap-1">
-                  {[...Array(MAX_LIVES)].map((_, i) => (
-                    <Heart key={i} className={`w-6 h-6 ${i < lives ? 'text-red-500 fill-red-400' : 'text-gray-300'}`} fill={i < lives ? '#f87171' : 'none'} />
-                  ))}
-                </div>
-                <div className="flex items-center gap-1 text-orange-500 font-bold text-base">
-                  <Flame className="w-5 h-5" />
-                  <span>{streak} day streak</span>
-                </div>
-              </div>
-              {showStreakReward && (
-                <div className="ml-4 text-green-600 font-bold animate-bounce">🔥 Streak reward! Bonus XP!</div>
-              )}
-            </div>
-          )}
+          {/* Streak indicator hidden */}
           {(!lessonCompleted) ? (
             <>
               <LessonProgress 
@@ -757,13 +739,16 @@ const LessonPage = () => {
               </div>
             ) : (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-gradient-to-br from-blue-100/80 via-yellow-50/80 to-purple-100/80 backdrop-blur animate-aurora-fade-in">
-                <div className="bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col items-center max-w-lg w-full border-4 border-yellow-200">
-                  <span className="text-4xl font-extrabold text-timelingo-purple mb-2">🎉 Module Completed!</span>
-                  <h2 className="text-2xl font-bold mb-4 text-center">{lesson?.title}</h2>
-                  <p className="text-lg text-gray-700 mb-6 text-center">
+                <div className="bg-white/90 rounded-3xl shadow-2xl p-16 flex flex-col items-center max-w-3xl w-full border-4 border-yellow-200">
+                  <div className="mb-8">
+                    <span className="text-6xl font-extrabold text-timelingo-purple block text-center">🎉</span>
+                    <span className="text-4xl font-extrabold text-timelingo-purple block text-center mt-4">Module Completed!</span>
+                  </div>
+                  <h2 className="text-3xl font-bold mb-8 text-center text-gray-800 leading-tight">{lesson?.title}</h2>
+                  <p className="text-xl text-gray-700 mb-12 text-center leading-relaxed max-w-2xl">
                     {lesson?.description || "Great job finishing this module!"}
                   </p>
-                  <div className="flex gap-4 mt-2 w-full justify-center">
+                  <div className="flex gap-8 mt-6 w-full justify-center">
                     <Button
                       className="px-8 py-3 text-lg bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white rounded-full shadow-lg font-bold tracking-wide"
                       onClick={() => nextModule && nextModule.id && navigate(`/lesson/${nextModule.id}`)}

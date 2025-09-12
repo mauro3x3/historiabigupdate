@@ -18,22 +18,13 @@ const DashboardHeader = () => {
         <div className="flex items-center gap-4 min-w-[120px]">
           {/* Logo removed - sidebar navigation is used instead */}
         </div>
-        {/* Center: HISTORIA title */}
+        {/* Center: Empty space */}
         <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-full pointer-events-none">
-          <span className="text-3xl font-extrabold text-white drop-shadow-lg tracking-widest select-none" style={{letterSpacing: '0.15em'}}>HISTORIA</span>
+          {/* HISTORIA title removed */}
         </div>
-        {/* Right: Actions */}
-        <div className="flex items-center gap-6 min-w-[220px] justify-end">
-          <button className="text-white/70 hover:text-timelingo-purple transition-colors flex items-center gap-1">
-            <span className="sr-only">Settings</span>
-            <Settings size={22} />
-          </button>
-          <button
-            className="text-lg font-semibold text-timelingo-gold hover:text-white transition-colors"
-            onClick={handleLogout}
-          >
-            Logout
-          </button>
+        {/* Right: Empty space */}
+        <div className="flex items-center gap-6 min-w-[120px] justify-end">
+          {/* Settings icon removed */}
         </div>
       </div>
     </header>

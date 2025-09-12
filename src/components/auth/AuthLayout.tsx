@@ -18,9 +18,9 @@ const AuthLayout = ({ children }: AuthLayoutProps) => {
         style={{ display: 'inline-block' }}
       >
         <img
-          src="/images/avatars/logo.png"
+          src="/images/rainbowjohan (2).png"
           alt="Historia Logo"
-          className="w-14 h-14 object-contain drop-shadow"
+          className="w-20 h-20 object-contain drop-shadow"
         />
       </a>
       <div className="w-full max-w-md mx-auto px-10 py-12 bg-white rounded-2xl shadow-none flex flex-col items-center">

@@ -55,9 +55,9 @@ function Sidebar() {
       {/* Logo */}
       <div className="p-6 border-b border-gray-700">
         <Link to="/home" className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg overflow-hidden">
+          <div className="w-12 h-12 rounded-lg overflow-hidden">
             <img 
-              src="/images/avatars/logo.png" 
+              src="/images/rainbowjohan (2).png" 
               alt="Johan Logo" 
               className="w-full h-full object-cover"
             />
