@@ -273,6 +273,8 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              style={{ appearance: 'auto' }}
+              size={5}
             >
               <option value="Historical Event">Historical Event</option>
               <option value="Historical Figure">Historical Figure</option>
@@ -281,6 +283,11 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
               <option value="Monument">Monument</option>
               <option value="Cultural Site">Cultural Site</option>
               <option value="Discovery">Discovery</option>
+              <option value="Politics / Government">Politics / Government</option>
+              <option value="Conflict / War Updates">Conflict / War Updates</option>
+              <option value="Environment / Climate">Environment / Climate</option>
+              <option value="Protests">Protests</option>
+              <option value="Economy / Business">Economy / Business</option>
               <option value="Other">Other</option>
             </select>
           </div>
@@ -409,12 +416,23 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
                   />
                 </div>
                 {imagePreview && (
-                  <div className="mt-4">
+                  <div className="mt-4 relative">
                     <img 
                       src={imagePreview} 
                       alt="Preview" 
                       className="w-full h-32 object-cover rounded-md border"
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImagePreview(null);
+                        setImageFile(null);
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
+                      title="Remove image"
+                    >
+                      ×
+                    </button>
                   </div>
                 )}
               </>
@@ -427,8 +445,13 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
                   placeholder="https://example.com/image.jpg"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                {imageUrl && !imageUrl.startsWith('http') && (
+                  <p className="text-xs text-red-500 mt-1">
+                    ⚠️ URL should start with http:// or https://
+                  </p>
+                )}
                 {imageUrl && (
-                  <div className="mt-2">
+                  <div className="mt-2 relative">
                     <img 
                       src={imageUrl} 
                       alt="Preview" 
@@ -437,6 +460,16 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
                         e.currentTarget.style.display = 'none';
                       }}
                     />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setImageUrl('');
+                      }}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-sm font-bold"
+                      title="Remove image"
+                    >
+                      ×
+                    </button>
                   </div>
                 )}
               </>

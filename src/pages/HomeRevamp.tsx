@@ -87,7 +87,7 @@ function CourseSelectionModal({ isOpen, onClose, era, onChange }) {
       style={{ margin: 0, padding: 0 }}
     >
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-6 shadow-lg sticky top-0 z-50">
+      <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-8 py-6 shadow-lg sticky top-0 z-50">
         <div className="flex items-center justify-between max-w-7xl mx-auto">
           <div>
             <h1 className="text-4xl font-bold mb-2">Choose Your Historical Journey</h1>

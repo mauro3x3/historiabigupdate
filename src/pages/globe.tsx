@@ -378,8 +378,12 @@ export default function GlobeView() {
             <div className="p-6 border-b border-gray-700">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-green-500 rounded-lg flex items-center justify-center">
-                    <span className="text-white font-bold text-lg">H</span>
+                  <div className="w-8 h-8 rounded-lg overflow-hidden">
+                    <img 
+                      src="/images/rainbowjohan (2).png" 
+                      alt="Johan Logo" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                   <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-green-400 bg-clip-text text-transparent">
                     Historia
@@ -400,28 +404,51 @@ export default function GlobeView() {
                 { label: 'HOME', href: '/home', icon: <Home className="h-6 w-6" /> },
                 { label: 'GLOBE', href: '/globe', icon: <Globe className="h-6 w-6" /> },
                 { label: 'MUSEUM', href: '/museum', icon: <Trophy className="h-6 w-6" /> },
-                { label: 'LEADERBOARD', href: '/leaderboard', icon: <BarChart3 className="h-6 w-6" /> },
+                { label: 'LEADERBOARD', href: '/leaderboard', icon: <BarChart3 className="h-6 w-6" />, disabled: true },
                 { label: 'BOOKMARKS', href: '/bookmarks', icon: <Bookmark className="h-6 w-6" /> },
-                { label: 'GET A JOHAN PLUSHIE!', href: '/store', icon: <ShoppingBag className="h-6 w-6" /> },
+                { label: 'GET A JOHAN PLUSHIE!', href: '/store', icon: <ShoppingBag className="h-6 w-6" />, disabled: true },
                 { label: 'SETTINGS', href: '/settings', icon: <Settings className="h-6 w-6" /> },
                 { label: 'PROFILE', href: '/profile', icon: <User className="h-6 w-6" /> },
-              ].map((item) => (
-                <button
-                  key={item.href}
-                  onClick={() => {
-                    navigate(item.href);
-                    setShowSidebar(false);
-                  }}
-                  className="w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 group text-left hover:bg-gray-800"
-                >
-                  <div className="text-gray-400 group-hover:text-white transition-colors">
-                    {item.icon}
-                  </div>
-                  <span className="font-semibold text-sm tracking-wide">
-                    {item.label}
-                  </span>
-                </button>
-              ))}
+              ].map((item) => {
+                if (item.disabled) {
+                  return (
+                    <div
+                      key={item.href}
+                      className="w-full flex items-center gap-4 px-4 py-3 rounded-lg text-gray-500 cursor-not-allowed opacity-50"
+                    >
+                      <div className="text-gray-500">
+                        {item.icon}
+                      </div>
+                      <span className="font-semibold text-sm tracking-wide">
+                        {item.label}
+                      </span>
+                      <div className="ml-auto">
+                        <svg className="h-4 w-4 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                  );
+                }
+                
+                return (
+                  <button
+                    key={item.href}
+                    onClick={() => {
+                      navigate(item.href);
+                      setShowSidebar(false);
+                    }}
+                    className="w-full flex items-center gap-4 px-4 py-3 rounded-lg transition-all duration-200 group text-left hover:bg-gray-800"
+                  >
+                    <div className="text-gray-400 group-hover:text-white transition-colors">
+                      {item.icon}
+                    </div>
+                    <span className="font-semibold text-sm tracking-wide">
+                      {item.label}
+                    </span>
+                  </button>
+                );
+              })}
             </nav>
           </div>
         </div>

@@ -14,26 +14,55 @@ export const useUserProfile = (userId: string | undefined) => {
 
   const fetchUserProfile = async (userId: string) => {
     try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      // Try to get the most recent record, handling duplicates
+      let profileData, profileError;
+      
+      try {
+        // First try with .single() for efficiency
+        const result = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+        profileData = result.data;
+        profileError = result.error;
+      } catch (singleError) {
+        // If .single() fails due to multiple rows, use limit(1) with ordering
+        const result = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', userId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        profileData = result.data;
+        profileError = result.error;
+      }
 
       if (profileError) {
         throw profileError;
       }
 
-      if (profileData) {
-        setXp(profileData.xp || 0);
-        setStreak(profileData.streak || 0);
-        setCompletedEras(profileData.completed_eras || []);
-        setPreferredEra(profileData.preferred_era || null);
-        setUsername(profileData.username || '');
-        setAvatarBase(profileData.avatar_base || 'mascot');
-        setCreatedAt(profileData.created_at || null);
+      // Handle both single record and array responses
+      const userProfile = Array.isArray(profileData) ? profileData[0] : profileData;
+      
+      if (userProfile) {
+        console.log('✅ Setting profile data for user:', userId, userProfile);
+        console.log('📋 Profile data details:', {
+          id: userProfile.id,
+          username: userProfile.username,
+          email: userProfile.email,
+          avatar_base: userProfile.avatar_base
+        });
+        setXp(userProfile.xp || 0);
+        setStreak(userProfile.streak || 0);
+        setCompletedEras(userProfile.completed_eras || []);
+        setPreferredEra(userProfile.preferred_era || null);
+        setUsername(userProfile.username || '');
+        setAvatarBase(userProfile.avatar_base || 'mascot');
+        setCreatedAt(userProfile.created_at || null);
+        return userProfile;
       }
-      return profileData;
+      return null;
     } catch (error) {
       console.error('Error fetching user profile:', error);
       return null;
@@ -45,6 +74,13 @@ export const useUserProfile = (userId: string | undefined) => {
       fetchUserProfile(userId);
     }
   }, [userId]);
+
+  // Expose a refetch function
+  const refetchProfile = () => {
+    if (userId) {
+      fetchUserProfile(userId);
+    }
+  };
 
   const addXp = async (amount: number) => {
     const newXp = xp + amount;
@@ -151,6 +187,7 @@ export const useUserProfile = (userId: string | undefined) => {
     achievements: [],
     created_at: createdAt,
     fetchUserProfile,
+    refetchProfile,
     addXp,
     incrementStreak,
     completeEra,

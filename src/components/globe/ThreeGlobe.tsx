@@ -11,6 +11,7 @@ import { MAPBOX_CONFIG } from '../../config/mapbox';
 import { supabase } from '@/integrations/supabase/client';
 import SettingsModal from '@/components/SettingsModal';
 import { useSettings } from '@/contexts/SettingsContext';
+import { playNewDotSound } from '@/utils/soundUtils';
 
 interface Module {
   id: string;
@@ -362,6 +363,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
   const [mapStyle, setMapStyle] = useState('satellite');
   const [isLoadingTexture, setIsLoadingTexture] = useState(false);
   const [globeTexture, setGlobeTexture] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Categories');
 
 
   // Load a simple Earth texture
@@ -380,6 +382,9 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
       setNewsflashContent(newContent);
       setShowNewsflash(true);
       
+      // Play sound effect for new dot notification
+      playNewDotSound();
+      
       console.log('Adding new user content:', newContent);
       setUserContent(prev => [...prev, newContent]);
     } catch (error) {
@@ -393,6 +398,10 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
       
       setNewsflashContent(newContent);
       setShowNewsflash(true);
+      
+      // Play sound effect for new dot notification (fallback case)
+      playNewDotSound();
+      
       setUserContent(prev => [...prev, newContent]);
     }
   }, []);
@@ -537,8 +546,13 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
     const selectedDateObj = new Date(selectedDate);
     const selectedYear = selectedDateObj.getFullYear();
     
-    // Filter user content by date
+    // Filter user content by date and category
     const filteredUserContent = userContent.filter(content => {
+      // Filter by category first
+      if (selectedCategory !== 'All Categories' && content.category !== selectedCategory) {
+        return false;
+      }
+      
       if (!content.dateHappened) return false;
       
       // Parse the date from various formats
@@ -970,9 +984,9 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
         </div>
 
         {/* Content */}
-        <div className="p-4 pt-6 space-y-4">
+        <div className="p-4 pt-4 space-y-3">
           {/* Total Historical Dots */}
-          <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-lg p-4 text-center cursor-pointer hover:from-blue-100 hover:to-purple-100 transition-colors"
+          <div className="bg-gradient-to-r from-blue-50 to-gray-50 border border-blue-200 rounded-lg p-3 text-center cursor-pointer hover:from-blue-100 hover:to-gray-100 transition-colors"
                onClick={() => setShowAllDotsModal(true)}>
             <div className="text-3xl font-bold text-blue-700 mb-1">
               {getFilteredContent().userContent.length + getFilteredContent().officialModules.length}
@@ -983,10 +997,10 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
 
 
           {/* Date Selector */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <h4 className="font-medium text-gray-900 text-sm">Current Date</h4>
             
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
               <div className="text-center">
                 <div className="text-lg font-bold text-blue-900">
                   {formatDisplayDate(selectedDate)}
@@ -1037,6 +1051,35 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
                 title={formatDisplayDate(selectedDate)}
               />
             </div>
+          </div>
+
+          {/* Category Filter */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <h4 className="font-medium text-gray-900 text-sm">Category</h4>
+              </div>
+            
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500 text-xs"
+              size={1}
+            >
+              <option value="All Categories">All Categories</option>
+              <option value="Historical Event">Historical Event</option>
+              <option value="Historical Figure">Historical Figure</option>
+              <option value="Archaeological Site">Archaeological Site</option>
+              <option value="Battle">Battle</option>
+              <option value="Monument">Monument</option>
+              <option value="Cultural Site">Cultural Site</option>
+              <option value="Discovery">Discovery</option>
+              <option value="Politics / Government">Politics / Government</option>
+              <option value="Conflict / War Updates">Conflict / War Updates</option>
+              <option value="Environment / Climate">Environment / Climate</option>
+              <option value="Protests">Protests</option>
+              <option value="Economy / Business">Economy / Business</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
 
           {/* Quick Actions */}
@@ -1239,7 +1282,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
                       <div key={index} className="p-3 bg-green-50 rounded-lg border border-green-200">
                         <div className="font-medium text-green-900">{content.title}</div>
                         <div className="text-sm text-green-700">Date: {content.dateHappened}</div>
-                        <div className="text-sm text-gray-600">Location: {content.latitude}, {content.longitude}</div>
+                        <div className="text-sm text-gray-600">Location: {content.coordinates[1]?.toFixed(4) || 'Unknown'}, {content.coordinates[0]?.toFixed(4) || 'Unknown'}</div>
                         <div className="text-sm text-gray-600">Source: {content.source}</div>
                       </div>
                     ))}

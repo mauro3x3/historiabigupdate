@@ -1,5 +1,5 @@
 import React from "react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from '@/components/ui/UserAvatar';
 import { Button } from "@/components/ui/button";
 import { Edit, BookOpen } from "lucide-react";
 import EraLabel from "@/components/admin/lesson/EraLabel";
@@ -24,10 +24,6 @@ interface UserProfileHeaderProps {
   avatarSrc?: string;
 }
 
-const AVATAR_MAP = {
-  mascot_default: '/images/rainbowjohan (1).png',
-  // Add more avatar options here in the future
-};
 
 const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
   user,
@@ -89,12 +85,14 @@ const UserProfileHeader: React.FC<UserProfileHeaderProps> = ({
     <div className="flex flex-col items-center gap-2 w-full">
       <div className="relative flex flex-col items-center mb-2">
         <div className="rounded-full bg-gradient-to-br from-yellow-200 via-timelingo-gold to-purple-300 p-2 shadow-lg">
-          <Avatar className="h-32 w-32 border-4 border-white shadow-xl">
-            <AvatarImage src={avatarSrc || AVATAR_MAP[user?.user_metadata?.avatar_base || 'mascot_default']} alt={avatarAltText || 'User avatar'} />
-            <AvatarFallback className="bg-timelingo-purple text-4xl">
-              {displayName?.charAt(0).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
+          <UserAvatar
+            avatarBase={user?.user_metadata?.avatar_base}
+            avatarAccessories={user?.user_metadata?.avatar_accessories}
+            username={displayName}
+            size="xl"
+            showBorder={true}
+            className="shadow-xl"
+          />
         </div>
       </div>
       <div className="flex flex-col items-center">

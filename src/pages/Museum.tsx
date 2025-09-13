@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Search, Filter, Grid, List } from 'lucide-react';
+import { ArrowLeft, Search, Filter, Grid, List, Lock } from 'lucide-react';
+import { useUser } from '@/contexts/UserContext';
+import { MuseumService, MuseumArtifact } from '@/services/museumService';
 
 interface MuseumItem {
   id: string;
@@ -15,14 +17,16 @@ interface MuseumItem {
 
 export default function Museum() {
   const navigate = useNavigate();
-  const [items, setItems] = useState<MuseumItem[]>([]);
-  const [filteredItems, setFilteredItems] = useState<MuseumItem[]>([]);
+  const { user } = useUser();
+  const [items, setItems] = useState<MuseumArtifact[]>([]);
+  const [filteredItems, setFilteredItems] = useState<MuseumArtifact[]>([]);
+  const [userArtifacts, setUserArtifacts] = useState<MuseumArtifact[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedEra, setSelectedEra] = useState('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [loading, setLoading] = useState(false); // Set to false for testing
-  const [displayCount, setDisplayCount] = useState(50); // Show all items by default
+  const [loading, setLoading] = useState(true);
+  const [displayCount, setDisplayCount] = useState(50);
 
   // Real museum items from the museum folder
   const sampleItems: MuseumItem[] = [
@@ -529,11 +533,31 @@ export default function Museum() {
   ];
 
   useEffect(() => {
-    // Load museum items immediately
-    setItems(sampleItems);
-    setFilteredItems(sampleItems);
-    setLoading(false);
-  }, []);
+    const loadMuseumData = async () => {
+      setLoading(true);
+      try {
+        // Load all available artifacts
+        const allArtifacts = await MuseumService.getAllArtifacts();
+        setItems(allArtifacts);
+        setFilteredItems(allArtifacts);
+        
+        // Load user's owned artifacts if logged in
+        if (user) {
+          const ownedArtifacts = await MuseumService.getUserArtifacts(user.id);
+          setUserArtifacts(ownedArtifacts);
+        }
+      } catch (error) {
+        console.error('Error loading museum data:', error);
+        // Fallback to sample items if service fails
+        setItems(sampleItems);
+        setFilteredItems(sampleItems);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadMuseumData();
+  }, [user]);
 
   useEffect(() => {
     // Filter items based on search and filters
@@ -588,7 +612,9 @@ export default function Museum() {
               </button>
               <div>
                 <h1 className="text-3xl font-bold text-gray-800">Museum</h1>
-                <p className="text-gray-600">Explore historical artifacts and treasures</p>
+                <p className="text-gray-600">
+                  {user ? `Your Collection: ${userArtifacts.length}/${items.length} artifacts` : 'Explore historical artifacts and treasures'}
+                </p>
               </div>
             </div>
             
@@ -668,7 +694,7 @@ export default function Museum() {
         {/* Results Count */}
         <div className="mb-6">
           <p className="text-gray-600">
-            Showing {Math.min(filteredItems.length, displayCount)} of {items.length} artifacts
+            {user ? `Showing ${Math.min(filteredItems.length, displayCount)} of ${items.length} artifacts (${userArtifacts.length} owned)` : `Showing ${Math.min(filteredItems.length, displayCount)} of ${items.length} artifacts`}
           </p>
         </div>
 
@@ -681,53 +707,85 @@ export default function Museum() {
           </div>
         ) : (
           <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-            {filteredItems.slice(0, displayCount).map((item) => (
-              <div
-                key={item.id}
-                className={`bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-md transition-shadow ${
-                  viewMode === 'list' ? 'flex' : ''
-                }`}
-              >
-                <div className={viewMode === 'list' ? 'w-48 h-32 flex-shrink-0' : 'h-48'}>
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="w-full h-full object-contain bg-gray-100"
-                    onError={(e) => {
-                      // Fallback to placeholder if image fails to load
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      target.nextElementSibling?.classList.remove('hidden');
-                    }}
-                  />
-                  <div className="w-full h-full bg-gray-200 flex items-center justify-center hidden">
-                    <span className="text-gray-400 text-sm">Image Placeholder</span>
+            {filteredItems.slice(0, displayCount).map((item) => {
+              const isOwned = userArtifacts.some(owned => owned.id === item.id);
+              const rarityColors = {
+                common: 'bg-gray-100 text-gray-800',
+                rare: 'bg-blue-100 text-blue-800',
+                epic: 'bg-purple-100 text-purple-800',
+                legendary: 'bg-yellow-100 text-yellow-800'
+              };
+              
+              return (
+                <div
+                  key={item.id}
+                  className={`bg-white rounded-xl shadow-sm overflow-hidden transition-shadow relative ${
+                    viewMode === 'list' ? 'flex' : ''
+                  } ${isOwned ? 'hover:shadow-md' : 'opacity-60'} ${!isOwned ? 'border-2 border-gray-300' : ''}`}
+                >
+                  {/* Lock overlay for unowned items */}
+                  {!isOwned && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
+                      <div className="text-center text-white">
+                        <Lock className="w-8 h-8 mx-auto mb-2" />
+                        <p className="text-sm font-semibold">Locked</p>
+                        <p className="text-xs">Complete modules to unlock</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className={viewMode === 'list' ? 'w-48 h-32 flex-shrink-0' : 'h-48'}>
+                    <img
+                      src={item.imageUrl}
+                      alt={item.name}
+                      className={`w-full h-full object-contain bg-gray-100 ${!isOwned ? 'grayscale' : ''}`}
+                      onError={(e) => {
+                        // Fallback to placeholder if image fails to load
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        target.nextElementSibling?.classList.remove('hidden');
+                      }}
+                    />
+                    <div className="w-full h-full bg-gray-200 flex items-center justify-center hidden">
+                      <span className="text-gray-400 text-sm">Image Placeholder</span>
+                    </div>
+                  </div>
+                  
+                  <div className="p-6 flex-1">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className={`text-xl font-semibold ${isOwned ? 'text-gray-800' : 'text-gray-500'}`}>
+                        {item.name}
+                      </h3>
+                      <div className="text-right">
+                        <span className={`text-sm ${isOwned ? 'text-gray-500' : 'text-gray-400'}`}>{item.year}</span>
+                        {isOwned && (
+                          <div className={`inline-block ml-2 px-2 py-1 rounded-full text-xs font-semibold ${rarityColors[item.rarity]}`}>
+                            {item.rarity.toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <p className={`mb-4 line-clamp-3 ${isOwned ? 'text-gray-600' : 'text-gray-400'}`}>
+                      {item.description}
+                    </p>
+                    
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      <span className={`px-3 py-1 text-sm rounded-full ${isOwned ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-500'}`}>
+                        {item.category}
+                      </span>
+                      <span className={`px-3 py-1 text-sm rounded-full ${isOwned ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-500'}`}>
+                        {item.era}
+                      </span>
+                    </div>
+                    
+                    <div className={`text-sm ${isOwned ? 'text-gray-500' : 'text-gray-400'}`}>
+                      <p>📍 {item.location}</p>
+                    </div>
                   </div>
                 </div>
-                
-                <div className="p-6 flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-xl font-semibold text-gray-800">{item.name}</h3>
-                    <span className="text-sm text-gray-500">{item.year}</span>
-                  </div>
-                  
-                  <p className="text-gray-600 mb-4 line-clamp-3">{item.description}</p>
-                  
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 text-sm rounded-full">
-                      {item.category}
-                    </span>
-                    <span className="px-3 py-1 bg-purple-100 text-purple-800 text-sm rounded-full">
-                      {item.era}
-                    </span>
-                  </div>
-                  
-                  <div className="text-sm text-gray-500">
-                    <p>📍 {item.location}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
+              );
+            })}
             
             {/* Load More Button */}
             {filteredItems.length > displayCount && (

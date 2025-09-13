@@ -1,6 +1,7 @@
 import { UserGeneratedContent } from '@/components/globe/AddContentModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useUser } from '@/hooks/useUser';
+import { playNewDotSound } from '@/utils/soundUtils';
 
 // Service for managing user-generated content
 export const saveUserContent = async (content: Omit<UserGeneratedContent, 'id' | 'createdAt'>): Promise<UserGeneratedContent> => {
@@ -52,6 +53,9 @@ export const saveUserContent = async (content: Omit<UserGeneratedContent, 'id' |
       dateHappened: content.dateHappened, // Store in description or separate field
       source: content.source // Store in description or separate field
     };
+
+    // Play sound effect for new dot added
+    playNewDotSound();
 
     return newContent;
   } catch (error) {

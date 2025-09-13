@@ -172,7 +172,48 @@ export default function PlayTodaySlideshow({
   };
 
   const formatEventDate = (dateString: string) => {
-    const date = new Date(dateString);
+    if (!dateString) return 'No date';
+    
+    // Handle different date formats
+    let date: Date;
+    
+    if (dateString.includes('/')) {
+      // Handle MM/DD/YYYY or DD/MM/YYYY format
+      const parts = dateString.split('/');
+      if (parts.length === 3) {
+        const month = parseInt(parts[0]);
+        const day = parseInt(parts[1]);
+        const year = parseInt(parts[2]);
+        
+        // Check if it's MM/DD/YYYY (American) or DD/MM/YYYY (European)
+        if (month > 12) {
+          date = new Date(year, day - 1, month); // DD/MM/YYYY
+        } else if (day > 12) {
+          date = new Date(year, month - 1, day); // MM/DD/YYYY
+        } else {
+          // Ambiguous case - assume American format for now
+          date = new Date(year, month - 1, day); // MM/DD/YYYY
+        }
+      } else {
+        return 'Invalid date format';
+      }
+    } else if (dateString.includes('-')) {
+      // Handle YYYY-MM-DD format
+      date = new Date(dateString);
+    } else {
+      // Handle year-only format (e.g., "1066", "44 BC")
+      const year = parseInt(dateString.replace(/[^\d-]/g, ''));
+      if (!isNaN(year)) {
+        date = new Date(year, 0, 1); // January 1st of that year
+      } else {
+        return 'Invalid date format';
+      }
+    }
+    
+    if (isNaN(date.getTime())) {
+      return 'Invalid date';
+    }
+    
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
@@ -184,9 +225,9 @@ export default function PlayTodaySlideshow({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden">
+      <div className="bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Play className="w-6 h-6" />
@@ -215,13 +256,13 @@ export default function PlayTodaySlideshow({
         {/* Progress Bar */}
         <div className="bg-gray-200 h-1">
           <div 
-            className="bg-gradient-to-r from-blue-500 to-purple-500 h-full transition-all duration-100 ease-linear"
+            className="bg-gradient-to-r from-blue-500 to-blue-600 h-full transition-all duration-100 ease-linear"
             style={{ width: `${progress}%` }}
           />
         </div>
 
         {/* Event Content */}
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           {currentEvent && (
             <div className="space-y-6">
               {/* Event Image */}

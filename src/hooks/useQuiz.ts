@@ -3,6 +3,8 @@ import { HistoryLesson, QuizQuestion } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { dbService } from '@/services/dbService';
+import { playCorrectAnswerSound } from '@/utils/soundUtils';
+import { MuseumService } from '@/services/museumService';
 
 export const useQuiz = (
   lesson: HistoryLesson | null,
@@ -85,6 +87,19 @@ export const useQuiz = (
     addXp(Math.round(xpEarned));
     
     toast.success(`Lesson completed! You earned ${Math.round(xpEarned)} XP and ${stars} stars!`);
+    
+    // Play success sound for lesson completion
+    playCorrectAnswerSound();
+    
+    // Award random museum artifact (30% chance)
+    if (Math.random() < 0.3) {
+      const artifact = await MuseumService.awardRandomArtifact(user.id);
+      if (artifact) {
+        toast.success(`🏛️ New Museum Artifact Unlocked: ${artifact.name} (${artifact.rarity.toUpperCase()})!`, {
+          duration: 5000,
+        });
+      }
+    }
     
     try {
       if (!user) {

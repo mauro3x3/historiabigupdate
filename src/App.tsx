@@ -38,6 +38,7 @@ import UpvotingBoard from "./pages/UpvotingBoard";
 import ProfilePublic from './pages/ProfilePublic';
 import Globe from './pages/globe';
 import Museum from './pages/Museum';
+import Settings from './pages/Settings';
 import Layout from './components/layout/Layout';
 import ContentReviewPanel from './components/admin/ContentReviewPanel';
 import Bookmarks from './pages/Bookmarks';
@@ -96,7 +97,11 @@ const AppRoutes = () => {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/profile/:id" element={<ProfilePublic />} />
+      <Route path="/profile/:id" element={
+        <Layout>
+          <ProfilePublic />
+        </Layout>
+      } />
       <Route path="/leaderboard" element={
         <ProtectedRoute>
           <Layout>
@@ -170,13 +175,7 @@ const AppRoutes = () => {
           </Layout>
         </ProtectedRoute>
       } />
-      <Route path="/globe" element={
-        <ProtectedRoute>
-          <Layout>
-            <Globe />
-          </Layout>
-        </ProtectedRoute>
-      } />
+      <Route path="/globe" element={<Globe />} />
       <Route path="/admin/review" element={
         <ProtectedRoute>
           <Layout>
@@ -202,6 +201,13 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <Layout>
             <Store />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/settings" element={
+        <ProtectedRoute>
+          <Layout>
+            <Settings />
           </Layout>
         </ProtectedRoute>
       } />

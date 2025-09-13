@@ -10,6 +10,8 @@ export interface RankingUser {
   xp: number;
   streak: number;
   completedEras: string[];
+  avatarBase: string | null;
+  avatarAccessories: any;
   rank: number;
 }
 
@@ -27,7 +29,7 @@ export function useLeaderboard(type: 'xp' | 'streak') {
       // Get all users ordered by the selected metric
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('id, username, email, xp, streak, completed_eras')
+        .select('id, username, email, xp, streak, completed_eras, avatar_base, avatar_accessories')
         .order(orderBy, { ascending: false })
         .limit(100);
         
@@ -50,6 +52,8 @@ export function useLeaderboard(type: 'xp' | 'streak') {
         xp: profile.xp || 0,
         streak: profile.streak || 0,
         completedEras: profile.completed_eras || [],
+        avatarBase: profile.avatar_base,
+        avatarAccessories: profile.avatar_accessories,
         rank: index + 1
       }));
     },

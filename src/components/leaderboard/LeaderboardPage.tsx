@@ -9,9 +9,9 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useUser } from '@/contexts/UserContext';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import XpBadge from '@/components/XpBadge';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
+import UserAvatar from '@/components/ui/UserAvatar';
 
 export default function LeaderboardPage({ initialType = 'xp' }: { initialType?: 'xp' | 'streak' }) {
   const navigate = useNavigate();
@@ -88,9 +88,14 @@ export default function LeaderboardPage({ initialType = 'xp' }: { initialType?: 
             {podium.map((rank, idx) => (
               <div key={rank.id} className={`flex flex-col items-center p-8 rounded-3xl shadow-2xl bg-white border-4 ${idx === 0 ? 'from-yellow-100 to-amber-50 border-timelingo-gold scale-105 z-10' : idx === 1 ? 'from-gray-50 to-gray-100 border-gray-300' : 'from-amber-50 to-yellow-100 border-amber-600'} w-full sm:w-[220px] relative`}>
                 <span className="absolute -top-10 left-1/2 -translate-x-1/2 text-6xl">{idx === 0 ? '🥇' : idx === 1 ? '🥈' : '🥉'}</span>
-                <Avatar className="h-24 w-24 border-4 border-white mb-6 shadow-lg">
-                  <AvatarFallback className="bg-timelingo-purple text-white text-4xl font-bold">{rank.username?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  avatarBase={rank.avatarBase}
+                  avatarAccessories={rank.avatarAccessories}
+                  username={rank.username}
+                  size="lg"
+                  showBorder={true}
+                  className="mb-6"
+                />
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
@@ -157,11 +162,13 @@ export default function LeaderboardPage({ initialType = 'xp' }: { initialType?: 
                         <TableCell className="font-bold text-gray-700 pl-8 py-4">#{index + 4}</TableCell>
                         <TableCell className="py-4">
                           <div className="flex items-center gap-4">
-                            <Avatar className="h-12 w-12 border-2 border-timelingo-purple/20">
-                              <AvatarFallback className="bg-timelingo-purple text-white font-semibold text-lg">
-                                {rank.username?.charAt(0).toUpperCase() || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar
+                              avatarBase={rank.avatarBase}
+                              avatarAccessories={rank.avatarAccessories}
+                              username={rank.username}
+                              size="md"
+                              className="border-2 border-timelingo-purple/20"
+                            />
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <button

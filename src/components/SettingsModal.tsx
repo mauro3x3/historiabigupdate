@@ -74,12 +74,6 @@ export default function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             </div>
           </div>
 
-          {/* Info */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> This setting will be saved to your browser and applied across all date displays in the application.
-            </p>
-          </div>
         </div>
 
         {/* Footer */}

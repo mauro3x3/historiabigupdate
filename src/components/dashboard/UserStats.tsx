@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useUser } from "@/contexts/UserContext";
 import UserProfileHeader from "./UserProfileHeader";
 import { supabase } from "@/integrations/supabase/client";
@@ -190,31 +190,85 @@ export interface UserStatsProps {
 export default function UserStats(props: UserStatsProps) {
   const { userId, learningTrack } = props;
   const isPublic = !!userId;
+  
   const { user, xp: myXp, streak: myStreak, completedEras: myCompletedEras, preferredEra: myPreferredEra, setPreferredEra: setMyPreferredEra } = useUser();
-  const { xp, streak, completedEras, preferredEra, username, avatar_base, featured_eras, achievements, created_at } = useUserProfile(userId || user?.id);
-  // Use the correct data depending on view
-  const displayXp = isPublic ? xp : myXp;
-  const displayStreak = isPublic ? streak : myStreak;
-  const displayCompletedEras = isPublic ? completedEras : myCompletedEras;
-  const displayPreferredEra = isPublic ? preferredEra : myPreferredEra;
-  const displayUsername = isPublic ? username : (user?.username || user?.email?.split('@')[0] || 'Historian');
-  const displayAvatar = isPublic ? avatar_base : (user?.user_metadata?.avatar_base || 'ghost');
-  const displayFeaturedEras = (isPublic ? featured_eras : undefined) || [];
-  const displayAchievements = (isPublic ? achievements : undefined) || [];
-  const displayCreatedAt = isPublic ? created_at : user?.created_at;
+  const { xp, streak, completedEras, preferredEra, username, avatar_base, featured_eras, achievements, created_at, refetchProfile } = useUserProfile(userId || user?.id);
+  // Use the correct data depending on view - memoized to prevent infinite re-renders
+  const displayXp = useMemo(() => isPublic ? xp : myXp, [isPublic, xp, myXp]);
+  const displayStreak = useMemo(() => isPublic ? streak : myStreak, [isPublic, streak, myStreak]);
+  const displayCompletedEras = useMemo(() => isPublic ? completedEras : myCompletedEras, [isPublic, completedEras, myCompletedEras]);
+  const displayPreferredEra = useMemo(() => isPublic ? preferredEra : myPreferredEra, [isPublic, preferredEra, myPreferredEra]);
+  const displayUsername = useMemo(() => {
+    console.log('🔍 Username calculation debug:', {
+      isPublic,
+      username,
+      userEmail: user?.email,
+      userId: user?.id,
+      userAuthEmail: user?.user_metadata?.email
+    });
+    
+    if (isPublic) {
+      return username || 'User Not Found';
+    } else {
+      // For current user, prioritize username from user_profiles, then email fallback
+      const profileUsername = username; // This comes from useUserProfile
+      const emailFallback = user?.email?.split('@')[0];
+      const result = profileUsername || emailFallback || 'Historian';
+      console.log('Display username calculation:', { profileUsername, emailFallback, result, userEmail: user?.email });
+      return result;
+    }
+  }, [isPublic, username, user?.email, user?.id]);
+  const displayAvatar = useMemo(() => {
+    const result = isPublic ? (avatar_base || 'cat') : (user?.user_metadata?.avatar_base || avatar_base || 'cat');
+    console.log('🎭 Avatar calculation:', { isPublic, avatar_base, userMetadataAvatar: user?.user_metadata?.avatar_base, result });
+    return result;
+  }, [isPublic, avatar_base, user?.user_metadata?.avatar_base]);
+  const displayFeaturedEras = useMemo(() => (isPublic ? featured_eras : undefined) || [], [isPublic, featured_eras]);
+  const displayAchievements = useMemo(() => (isPublic ? achievements : undefined) || [], [isPublic, achievements]);
+  const displayCreatedAt = useMemo(() => isPublic ? created_at : user?.created_at, [isPublic, created_at, user?.created_at]);
+  
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [displayName, setDisplayName] = useState(user?.email?.split('@')[0] || "Historian");
+  // Use displayUsername directly instead of maintaining separate state
+  const displayName = displayUsername;
   const [showEraSelector, setShowEraSelector] = useState(false);
   const [quoteIdx, setQuoteIdx] = useState(0);
   const [showAvatarModal, setShowAvatarModal] = useState(false);
-  const [selectedAvatar, setSelectedAvatar] = useState(displayAvatar || DEFAULT_AVATAR_KEY);
+  // Use displayAvatar directly instead of maintaining separate state
+  const selectedAvatar = displayAvatar || DEFAULT_AVATAR_KEY;
+  
+  // Local state for modal avatar selection
+  const [modalSelectedAvatar, setModalSelectedAvatar] = useState(selectedAvatar);
   const [isSaving, setIsSaving] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const profileUrl = `${window.location.origin}/profile/${user?.id}`;
-  const [featuredCourses, setFeaturedCourses] = useState<FeaturedCourse[]>(ALL_COURSES.slice(0, 4));
-  const { handleDragEnd: handleCourseDragEnd } = useFeaturedCourses(featuredCourses, setFeaturedCourses);
+  
+  // Calculate featured courses directly instead of using useEffect
+  const featuredCourses = useMemo(() => {
+    if (isPublic && displayCompletedEras.length > 0) {
+      // For public profiles, show their completed eras as featured courses
+      return displayCompletedEras.slice(0, 3).map(era => ({
+        title: era,
+        emoji: ALL_COURSES.find(c => c.title === era)?.emoji || '📚'
+      }));
+    } else if (isPublic) {
+      // If no completed eras, show default courses
+      return ALL_COURSES.slice(0, 3);
+    } else {
+      // Use current user's featured courses
+      return ALL_COURSES.slice(0, 4);
+    }
+  }, [isPublic, displayCompletedEras]);
+  
+  // For featured courses drag and drop, we'll use a local state when needed
+  const [localFeaturedCourses, setLocalFeaturedCourses] = useState<FeaturedCourse[]>(featuredCourses);
+  const { handleDragEnd: handleCourseDragEnd } = useFeaturedCourses(localFeaturedCourses, setLocalFeaturedCourses);
+  
+  // Update local state when featuredCourses changes
+  useEffect(() => {
+    setLocalFeaturedCourses(featuredCourses);
+  }, [featuredCourses]);
   const [profileTab, setProfileTab] = useState('avatar');
   const [showAddFriendModal, setShowAddFriendModal] = useState(false);
   const [addFriendInput, setAddFriendInput] = useState('');
@@ -243,12 +297,7 @@ export default function UserStats(props: UserStatsProps) {
           .eq('id', user.id)
           .single();
         if (error) throw error;
-        if (data && data.username) {
-          setDisplayName(data.username);
-        }
-        if (data && data.avatar_base) {
-          setSelectedAvatar(data.avatar_base);
-        }
+        // Username and avatar are now handled by displayUsername and displayAvatar directly
       } catch (error) {
         console.error('Error loading user profile:', error);
       }
@@ -276,7 +325,7 @@ export default function UserStats(props: UserStatsProps) {
   
   // Open modal and reset selection
   const openAvatarModal = () => {
-    setSelectedAvatar(displayAvatar);
+    setModalSelectedAvatar(selectedAvatar);
     setShowAvatarModal(true);
   };
 
@@ -285,24 +334,26 @@ export default function UserStats(props: UserStatsProps) {
     setIsSaving(true);
     try {
       if (user) {
-        await supabase.from('user_profiles').update({ avatar_base: selectedAvatar }).eq('id', user.id);
-        // Re-fetch avatar_base after saving
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('user_profiles')
-          .select('avatar_base')
-          .eq('id', user.id)
-          .single();
-        if (!error && data && data.avatar_base) {
-          setSelectedAvatar(data.avatar_base);
-        } else {
-          setSelectedAvatar(selectedAvatar); // fallback
+          .update({ avatar_base: modalSelectedAvatar })
+          .eq('id', user.id);
+        
+        if (error) {
+          console.error('Avatar update error:', error);
+          throw error;
         }
+        
+        // Refresh the profile data to show the new avatar immediately
+        refetchProfile();
+        
         // Unlock Profile Pro achievement
         await unlockAchievement(user.id, 'customize_avatar');
       }
       setShowAvatarModal(false);
       toast.success('Avatar updated!');
     } catch (e) {
+      console.error('Failed to update avatar:', e);
       toast.error('Failed to update avatar');
     } finally {
       setIsSaving(false);
@@ -316,17 +367,17 @@ export default function UserStats(props: UserStatsProps) {
       if (e.key === 'Escape') setShowAvatarModal(false);
       if (e.key === 'Enter') handleAvatarSave();
       // Arrow keys navigation
-      const idx = ALL_COURSES.findIndex(opt => opt.title === selectedAvatar);
+      const idx = AVATAR_OPTIONS.findIndex(opt => opt.key === modalSelectedAvatar);
       if (e.key === 'ArrowRight') {
-        setSelectedAvatar(ALL_COURSES[(idx + 1) % ALL_COURSES.length].title);
+        setModalSelectedAvatar(AVATAR_OPTIONS[(idx + 1) % AVATAR_OPTIONS.length].key);
       }
       if (e.key === 'ArrowLeft') {
-        setSelectedAvatar(ALL_COURSES[(idx - 1 + ALL_COURSES.length) % ALL_COURSES.length].title);
+        setModalSelectedAvatar(AVATAR_OPTIONS[(idx - 1 + AVATAR_OPTIONS.length) % AVATAR_OPTIONS.length].key);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showAvatarModal, selectedAvatar]);
+  }, [showAvatarModal, modalSelectedAvatar]);
 
   // Download profile card as image
   const handleDownloadCard = async () => {
@@ -421,7 +472,18 @@ export default function UserStats(props: UserStatsProps) {
 
   // Calculate eraProgress based on completed modules and total modules
   const eraProgress = (eras || []).map(era => {
-    // Example: Replace with real calculation from props or Supabase
+    // For public profiles, we'll show a simplified progress based on completed eras
+    if (isPublic) {
+      const isCompleted = displayCompletedEras.includes(era.name);
+      console.log(`Era progress for ${era.name}:`, { isCompleted, displayCompletedEras, isPublic });
+      return {
+        era: era.name,
+        percent: isCompleted ? 100 : 0,
+        color: COURSE_COLORS[era.name] || 'from-gray-200 to-gray-400',
+      };
+    }
+    
+    // For current user, use the existing logic
     const total = props.eraModuleCounts?.[era.name] || 10;
     const completed = props.eraCompletedModules?.[era.name] || 0;
     return {
@@ -533,14 +595,9 @@ export default function UserStats(props: UserStatsProps) {
   useEffect(() => {
     if (!user) return;
     const fetchPrizeAvatars = async () => {
-      const { data, error } = await supabase
-        .from('user_profiles')
-        .select('prize_avatars')
-        .eq('id', user.id)
-        .single();
-      if (!error && data && Array.isArray(data.prize_avatars)) {
-        setUnlockedPrizeAvatars(data.prize_avatars);
-      }
+      // For now, skip prize avatars since the column doesn't exist in the database
+      // TODO: Add prize_avatars column to user_profiles table if needed
+      setUnlockedPrizeAvatars([]);
     };
     fetchPrizeAvatars();
   }, [user]);
@@ -588,16 +645,18 @@ export default function UserStats(props: UserStatsProps) {
               <span className="absolute -bottom-2 -right-2 bg-timelingo-gold text-timelingo-navy font-bold px-3 py-1 rounded-full shadow text-xs border-2 border-white">Level {level}</span>
             </div>
             <Dialog open={showProfileModal} onOpenChange={setShowProfileModal}>
-              <DialogTrigger asChild>
-                <button
-                  className="px-4 py-1 rounded-full bg-timelingo-gold/90 text-timelingo-navy font-bold text-sm shadow hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors"
-                  onClick={() => setShowProfileModal(true)}
-                  tabIndex={0}
-                  aria-label="Customize Profile"
-                >
-                  Customize Profile
-                </button>
-              </DialogTrigger>
+              {!isPublic && (
+                <DialogTrigger asChild>
+                  <button
+                    className="px-4 py-1 rounded-full bg-timelingo-gold/90 text-timelingo-navy font-bold text-sm shadow hover:bg-yellow-300 focus:outline-none focus:ring-2 focus:ring-yellow-400 transition-colors"
+                    onClick={() => setShowProfileModal(true)}
+                    tabIndex={0}
+                    aria-label="Customize Profile"
+                  >
+                    Customize Profile
+                  </button>
+                </DialogTrigger>
+              )}
               <DialogContent className="max-w-2xl">
                 <DialogHeader>
                   <DialogTitle>Customize Profile</DialogTitle>
@@ -614,8 +673,8 @@ export default function UserStats(props: UserStatsProps) {
                       return (
                         <button
                           key={opt.key}
-                          className={`rounded-xl border-2 p-2 flex flex-col items-center transition-all focus:outline-none focus:ring-2 focus:ring-timelingo-gold relative group ${selectedAvatar === opt.key ? 'border-timelingo-gold bg-timelingo-navy/80 scale-105 shadow-lg' : 'border-gray-600 bg-timelingo-navy/40 hover:border-timelingo-gold hover:scale-105'}`}
-                          onClick={() => setSelectedAvatar(opt.key)}
+                          className={`rounded-xl border-2 p-2 flex flex-col items-center transition-all focus:outline-none focus:ring-2 focus:ring-timelingo-gold relative group ${modalSelectedAvatar === opt.key ? 'border-timelingo-gold bg-timelingo-navy/80 scale-105 shadow-lg' : 'border-gray-600 bg-timelingo-navy/40 hover:border-timelingo-gold hover:scale-105'}`}
+                          onClick={() => setModalSelectedAvatar(opt.key)}
                           aria-label={opt.key}
                           tabIndex={0}
                         >
@@ -664,7 +723,21 @@ export default function UserStats(props: UserStatsProps) {
                   </div>
                 )}
                 {profileTab === 'username' && (
-                  <ChangeUsername user={user} onUsernameChange={setDisplayName} />
+                  <div className="space-y-4">
+                    <div className="mb-4">
+                      <h3 className="text-lg font-semibold text-white mb-2">Current Username</h3>
+                      <p className="text-gray-300">
+                        Profile: <span className="font-mono">{username || 'Not set'}</span>
+                      </p>
+                      <p className="text-gray-300">
+                        Email: <span className="font-mono">{user?.email}</span>
+                      </p>
+                      <p className="text-gray-300">
+                        Display: <span className="font-mono">{displayUsername}</span>
+                      </p>
+                    </div>
+                    <ChangeUsername user={user} onUsernameChange={() => {}} />
+                  </div>
                 )}
                 {profileTab !== 'courses' && (
                   <DialogFooter className="mt-6">
