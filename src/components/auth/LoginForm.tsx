@@ -122,26 +122,25 @@ const LoginForm = ({ setActiveTab }: LoginFormProps) => {
           <h2 className="text-3xl font-extrabold text-center text-black mb-1 tracking-tight">Log In</h2>
           <button
             type="button"
-            onClick={signInWithGoogle}
-            className="w-full flex items-center justify-center gap-3 border border-black rounded-xl py-0 px-6 text-base font-medium text-black bg-white hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-black cursor-pointer h-14 mb-3"
-            disabled={isGoogleLoading}
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-0 px-6 text-base font-medium text-gray-500 bg-gray-100 cursor-not-allowed h-14 mb-3"
+            disabled
             style={{ fontFamily: 'Inter, sans-serif' }}
           >
             <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-              <img src="/google.svg" alt="Google" className="w-5 h-5" />
+              <img src="/google.svg" alt="Google" className="w-5 h-5 opacity-50" />
             </span>
-            <span className="flex-1 text-center">{isGoogleLoading ? 'Loading...' : 'Continue with Google'}</span>
+            <span className="flex-1 text-center">Coming Soon!</span>
           </button>
           <button
             type="button"
-            className="w-full flex items-center justify-center gap-3 border border-black rounded-xl py-0 px-6 text-base font-medium text-black bg-white hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-black cursor-pointer h-14 mb-6"
+            className="w-full flex items-center justify-center gap-3 border border-gray-300 rounded-xl py-0 px-6 text-base font-medium text-gray-500 bg-gray-100 cursor-not-allowed h-14 mb-6"
             style={{ fontFamily: 'Inter, sans-serif' }}
             disabled
           >
             <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-              <img src="/apple.svg" alt="Apple" className="w-5 h-5" />
+              <img src="/apple.svg" alt="Apple" className="w-5 h-5 opacity-50" />
             </span>
-            <span className="flex-1 text-center">Continue with Apple</span>
+            <span className="flex-1 text-center">Coming Soon!</span>
           </button>
           <div className="flex items-center gap-2 my-1">
             <div className="flex-1 h-px bg-gray-200" />
