@@ -298,22 +298,35 @@ export default function MapLibreGlobe({ journeys, onModuleClick }: MapLibreGlobe
             type: 'module'
           }
         })) : []),
-        ...(showUserContent ? filteredUserContent.map(content => ({
-          type: 'Feature' as const,
-          geometry: {
-            type: 'Point' as const,
-            coordinates: content.coordinates
-          },
-          properties: {
-            id: content.id,
-            title: content.title,
-            author: content.author,
-            category: content.category,
-            color: getCategoryColor(content.category),
-            type: 'user-content',
-            imageUrl: content.imageUrl
-          }
-        })) : [])
+        ...(showUserContent ? filteredUserContent
+          .filter(content => {
+            // Validate coordinates before adding to map
+            const [lng, lat] = content.coordinates;
+            const isValidLat = typeof lat === 'number' && !isNaN(lat) && lat >= -90 && lat <= 90;
+            const isValidLng = typeof lng === 'number' && !isNaN(lng) && lng >= -180 && lng <= 180;
+            
+            if (!isValidLat || !isValidLng) {
+              console.warn('🗺️ MapLibreGlobe: Skipping invalid coordinates:', content.title, 'coords:', content.coordinates);
+              return false;
+            }
+            return true;
+          })
+          .map(content => ({
+            type: 'Feature' as const,
+            geometry: {
+              type: 'Point' as const,
+              coordinates: content.coordinates
+            },
+            properties: {
+              id: content.id,
+              title: content.title,
+              author: content.author,
+              category: content.category,
+              color: getCategoryColor(content.category),
+              type: 'user-content',
+              imageUrl: content.imageUrl
+            }
+          })) : [])
       ];
       
       console.log('Creating map with', allPoints.length, 'total points');

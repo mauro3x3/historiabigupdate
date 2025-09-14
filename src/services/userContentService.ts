@@ -13,6 +13,40 @@ export const saveUserContent = async (content: Omit<UserGeneratedContent, 'id' |
       throw new Error('User not authenticated');
     }
 
+    // Enhanced coordinate validation to prevent crashes and trolling
+    const [lng, lat] = content.coordinates;
+    
+    // Check if coordinates are valid numbers
+    if (typeof lat !== 'number' || typeof lng !== 'number' || 
+        isNaN(lat) || isNaN(lng) || !isFinite(lat) || !isFinite(lng)) {
+      throw new Error('Coordinates must be valid numbers');
+    }
+    
+    // Check for extremely large numbers that could cause crashes
+    if (Math.abs(lat) > 1e10 || Math.abs(lng) > 1e10) {
+      throw new Error('Coordinates contain extremely large numbers that could cause system issues');
+    }
+    
+    // Check for suspiciously large numbers (potential trolling)
+    if (Math.abs(lat) > 1000 || Math.abs(lng) > 1000) {
+      throw new Error('Coordinates appear to be invalid. Please check your values.');
+    }
+    
+    // Standard range validation
+    const isValidLat = lat >= -90 && lat <= 90;
+    const isValidLng = lng >= -180 && lng <= 180;
+    
+    if (!isValidLat || !isValidLng) {
+      throw new Error(`Invalid coordinates: latitude must be between -90 and 90, longitude must be between -180 and 180. Received: [${lng}, ${lat}]`);
+    }
+    
+    // Additional pattern detection for trolling
+    const latStr = lat.toString();
+    const lngStr = lng.toString();
+    if (this.hasSuspiciousCoordinatePattern(latStr) || this.hasSuspiciousCoordinatePattern(lngStr)) {
+      throw new Error('Coordinates contain suspicious patterns. Please verify your values.');
+    }
+
     // Prepare data for database
     const contentData = {
       user_id: user.id,
@@ -355,6 +389,44 @@ export class UserContentService {
       const storedContent = JSON.parse(localStorage.getItem('userGeneratedContent') || '[]');
       return storedContent.filter((content: any) => content.status === 'pending');
     }
+  }
+
+  /**
+   * Check for suspicious patterns in coordinate strings (anti-trolling)
+   */
+  private hasSuspiciousCoordinatePattern(str: string): boolean {
+    // Remove decimal point for pattern analysis
+    const cleanStr = str.replace('.', '');
+    
+    // Check for repeated digits (like 4848488448)
+    if (/(\d)\1{4,}/.test(cleanStr)) {
+      return true;
+    }
+    
+    // Check for alternating patterns (like 484848)
+    if (/(\d{2})\1{2,}/.test(cleanStr)) {
+      return true;
+    }
+    
+    // Check for sequences that are too long without variation
+    if (cleanStr.length > 8 && /^\d+$/.test(cleanStr)) {
+      // Check if more than 80% of digits are the same
+      const digitCounts: { [key: string]: number } = {};
+      for (const digit of cleanStr) {
+        digitCounts[digit] = (digitCounts[digit] || 0) + 1;
+      }
+      const maxCount = Math.max(...Object.values(digitCounts));
+      if (maxCount / cleanStr.length > 0.8) {
+        return true;
+      }
+    }
+    
+    // Check for suspiciously long sequences of the same digit
+    if (/(\d)\1{6,}/.test(cleanStr)) {
+      return true;
+    }
+    
+    return false;
   }
 
   /**

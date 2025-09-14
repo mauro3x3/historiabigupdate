@@ -151,36 +151,49 @@ const MapboxGlobe: React.FC<MapboxGlobeProps> = ({
     if (showUserContent && userContent) {
       console.log('🗺️ MapboxGlobe: Adding user content markers:', userContent.length);
       
-      userContent.forEach(content => {
-        console.log('🗺️ Adding user content marker:', content.title, 'at', content.coordinates);
-
-        // Create a marker for user content
-        const marker = document.createElement('div');
-        marker.className = 'user-content-marker';
-        marker.style.width = '12px';
-        marker.style.height = '12px';
-        marker.style.borderRadius = '50%';
-        marker.style.backgroundColor = getCategoryColor(content.category);
-        marker.style.cursor = 'pointer';
-        marker.style.border = '2px solid white';
-        marker.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
-
-        // Add click handler
-        marker.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (onUserContentClick) {
-            onUserContentClick(content);
+      userContent
+        .filter(content => {
+          // Validate coordinates before adding to map
+          const [lng, lat] = content.coordinates;
+          const isValidLat = typeof lat === 'number' && !isNaN(lat) && lat >= -90 && lat <= 90;
+          const isValidLng = typeof lng === 'number' && !isNaN(lng) && lng >= -180 && lng <= 180;
+          
+          if (!isValidLat || !isValidLng) {
+            console.warn('🗺️ MapboxGlobe: Skipping invalid coordinates:', content.title, 'coords:', content.coordinates);
+            return false;
           }
+          return true;
+        })
+        .forEach(content => {
+          console.log('🗺️ Adding user content marker:', content.title, 'at', content.coordinates);
+
+          // Create a marker for user content
+          const marker = document.createElement('div');
+          marker.className = 'user-content-marker';
+          marker.style.width = '12px';
+          marker.style.height = '12px';
+          marker.style.borderRadius = '50%';
+          marker.style.backgroundColor = getCategoryColor(content.category);
+          marker.style.cursor = 'pointer';
+          marker.style.border = '2px solid white';
+          marker.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+
+          // Add click handler
+          marker.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (onUserContentClick) {
+              onUserContentClick(content);
+            }
+          });
+
+          // Use content coordinates
+          const lng = content.coordinates[0];
+          const lat = content.coordinates[1];
+
+          new mapboxgl.Marker(marker)
+            .setLngLat([lng, lat])
+            .addTo(map.current!);
         });
-
-        // Use content coordinates
-        const lng = content.coordinates[0];
-        const lat = content.coordinates[1];
-
-        new mapboxgl.Marker(marker)
-          .setLngLat([lng, lat])
-          .addTo(map.current!);
-      });
     }
 
   }, [journeys, showOfficialModules, showUserContent, userContent, isLoaded, onModuleClick, onUserContentClick, calendarMode, selectedYear, selectedMonth, selectedDay]);

@@ -130,20 +130,26 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
           dateHappened: dateHappened.trim(),
           source: source.trim()
         };
-        onSubmit(newContent);
-        
-        // Reset form and close modal after successful submission
-        setTitle('');
-        setDescription('');
-        setCategory('Historical Event');
-        setAuthor('');
-        setDateHappened('');
-        setSource('');
-        setImageFile(null);
-        setImagePreview(null);
-        setImageUrl('');
-        setUseImageUrl(false);
-        onClose();
+        try {
+          onSubmit(newContent);
+          
+          // Reset form and close modal after successful submission
+          setTitle('');
+          setDescription('');
+          setCategory('Historical Event');
+          setAuthor('');
+          setDateHappened('');
+          setSource('');
+          setImageFile(null);
+          setImagePreview(null);
+          setImageUrl('');
+          setUseImageUrl(false);
+          onClose();
+        } catch (error) {
+          console.error('Error submitting content:', error);
+          // Show error message to user
+          alert(`Error submitting content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
       };
       reader.readAsDataURL(imageFile);
       return; // Exit early since we're handling async file reading
@@ -159,21 +165,27 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
       dateHappened: dateHappened.trim(),
       source: source.trim()
     };
-    onSubmit(newContent);
-    
-    // Reset form
-    setTitle('');
-    setDescription('');
-    setCategory('Historical Event');
-    setAuthor('');
-    setDateHappened('');
-    setSource('');
-    setImageFile(null);
-    setImagePreview(null);
-    setImageUrl('');
-    setUseImageUrl(false);
-    
-    onClose();
+    try {
+      onSubmit(newContent);
+      
+      // Reset form
+      setTitle('');
+      setDescription('');
+      setCategory('Historical Event');
+      setAuthor('');
+      setDateHappened('');
+      setSource('');
+      setImageFile(null);
+      setImagePreview(null);
+      setImageUrl('');
+      setUseImageUrl(false);
+      
+      onClose();
+    } catch (error) {
+      console.error('Error submitting content:', error);
+      // Show error message to user
+      alert(`Error submitting content: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   };
 
   if (!isOpen || !coordinates) {
