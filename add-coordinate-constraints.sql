@@ -107,3 +107,4 @@ SELECT
   validate_coordinates('[2.3522, 4884844884484849]'::jsonb) as invalid_large_lat,
   validate_coordinates('["invalid", "data"]'::jsonb) as invalid_strings,
   validate_coordinates('[2.3522]'::jsonb) as invalid_array_length;
+

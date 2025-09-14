@@ -335,7 +335,7 @@ export default function PlayTodaySlideshow({
               
               <button
                 onClick={togglePlayPause}
-                className="p-3 rounded-full bg-blue-600 hover:bg-blue-700 text-white transition-colors"
+                className="p-3 rounded-full bg-gray-800 hover:bg-gray-700 text-white transition-colors"
               >
                 {isPlaying ? (
                   <Pause className="w-6 h-6" />

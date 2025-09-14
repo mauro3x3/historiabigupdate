@@ -195,11 +195,11 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="bg-blue-600 rounded-t-xl p-6 text-white">
+        <div className="bg-gray-800 rounded-t-xl p-6 text-white">
           <div className="flex justify-between items-start">
             <div>
               <h2 className="text-2xl font-bold">Add Content</h2>
-              <p className="text-blue-100 mt-1">Share your knowledge with the community</p>
+              <p className="text-gray-300 mt-1">Share your knowledge with the community</p>
             </div>
             <button
               onClick={onClose}
@@ -526,7 +526,7 @@ export default function AddContentModal({ isOpen, onClose, coordinates, onSubmit
             <button
               type="submit"
               disabled={isValidating || (validationResult && !validationResult.isValid)}
-              className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold"
+              className="px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-semibold"
             >
               {isValidating ? 'Validating...' : 'Add to Map'}
             </button>

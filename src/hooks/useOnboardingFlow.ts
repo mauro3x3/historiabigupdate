@@ -34,7 +34,14 @@ export const useOnboardingFlow = (
       return;
     }
 
-
+    // Check if user selected "World Map History" in Step 1
+    const hasWorldMapHistory = interests.includes('world-map-history');
+    
+    if (step === 1 && hasWorldMapHistory) {
+      console.log('🔄 User selected World Map History, skipping Step 2 and finishing onboarding');
+      finishOnboarding();
+      return;
+    }
 
     console.log('🔄 All validations passed, proceeding...');
     console.log('🔄 Current step:', step, 'Total steps:', totalSteps);
@@ -55,10 +62,14 @@ export const useOnboardingFlow = (
   };
   
   const finishOnboarding = async () => {
-    if (interests.length > 0 && era) {
+    // Check if user selected "World Map History" interest
+    const hasWorldMapHistory = interests.includes('world-map-history');
+    
+    // For World Map History users, we don't require an era selection
+    if (interests.length > 0 && (era || hasWorldMapHistory)) {
       const preferences: UserPreferences = {
         interests,
-        era,
+        era: era || 'rome-greece', // Default era for World Map History users
         learningStyle: 'journey', // Default since we removed the selection
         dailyLearningTime: '15-min', // Default since we removed the time selection
         reminderMethod: 'none', // Default to no reminders since we removed that step
@@ -74,7 +85,7 @@ export const useOnboardingFlow = (
             .from('user_profiles')
             .update({
               updated_at: new Date().toISOString(),
-              preferred_era: era,
+              preferred_era: era || 'rome-greece', // Default era for World Map History users
               learning_style: 'journey', // Default since we removed the selection
               is_onboarded: true
             })
@@ -92,9 +103,6 @@ export const useOnboardingFlow = (
       // Direct user based on interests selected in Step 1
       console.log('🎯 Onboarding complete! Directing user based on interests:', interests);
       console.log('🎯 User era:', era);
-      
-      // Check if user selected "World Map History" interest
-      const hasWorldMapHistory = interests.includes('world-map-history');
       
       if (hasWorldMapHistory) {
         console.log('🎯 User selected World Map History, navigating to Globe (/globe)');

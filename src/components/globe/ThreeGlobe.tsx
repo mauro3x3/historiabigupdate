@@ -364,6 +364,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
   const [isLoadingTexture, setIsLoadingTexture] = useState(false);
   const [globeTexture, setGlobeTexture] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All Categories');
+  const [showYearView, setShowYearView] = useState(false);
 
 
   // Load a simple Earth texture
@@ -596,7 +597,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
       
       if (isNaN(contentDate.getTime())) return false;
       
-      // Check if the content date matches the selected date
+      // Check if the content date matches the selected date or year
       const contentYear = contentDate.getFullYear();
       const contentMonth = contentDate.getMonth();
       const contentDay = contentDate.getDate();
@@ -605,10 +606,15 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
       const selectedMonth = selectedDateObj.getMonth();
       const selectedDay = selectedDateObj.getDate();
       
-      // Match exact date
-      return contentYear === selectedYear && 
-             contentMonth === selectedMonth && 
-             contentDay === selectedDay;
+      if (showYearView) {
+        // Match entire year
+        return contentYear === selectedYear;
+      } else {
+        // Match exact date
+        return contentYear === selectedYear && 
+               contentMonth === selectedMonth && 
+               contentDay === selectedDay;
+      }
     });
     
     console.log(`🗓️ Date filtering: Selected date "${selectedDate}", showing ${filteredUserContent.length} of ${userContent.length} user content items`);
@@ -648,17 +654,25 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
     return formatDate(dateString);
   };
 
-  // Navigate to previous day
+  // Navigate to previous day/year
   const goToPreviousDay = () => {
     const currentDate = new Date(selectedDate);
-    currentDate.setDate(currentDate.getDate() - 1);
+    if (showYearView) {
+      currentDate.setFullYear(currentDate.getFullYear() - 1);
+    } else {
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
     setSelectedDate(currentDate.toISOString().split('T')[0]);
   };
 
-  // Navigate to next day
+  // Navigate to next day/year
   const goToNextDay = () => {
     const currentDate = new Date(selectedDate);
-    currentDate.setDate(currentDate.getDate() + 1);
+    if (showYearView) {
+      currentDate.setFullYear(currentDate.getFullYear() + 1);
+    } else {
+      currentDate.setDate(currentDate.getDate() + 1);
+    }
     setSelectedDate(currentDate.toISOString().split('T')[0]);
   };
 
@@ -962,19 +976,19 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
       </div>
       
       {/* Enhanced Control Panel */}
-      <div className="absolute top-20 left-4 bg-white rounded-xl shadow-xl border border-gray-200 z-10 max-w-sm">
+      <div className="absolute top-20 left-2 bg-white rounded-xl shadow-xl border border-gray-200 z-10 max-w-sm">
         {/* Header */}
-        <div className="bg-blue-600 rounded-t-xl p-4 text-white">
+        <div className="bg-gray-800 rounded-t-xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-lg">Globe Controls</h3>
-              <p className="text-blue-100 text-sm">Filter and manage content</p>
+              <p className="text-gray-300 text-sm">Filter and manage content</p>
             </div>
             <button
               onClick={() => {
                 console.log('Current user content:', userContent);
               }}
-              className="text-blue-100 hover:text-white transition-colors"
+              className="text-gray-300 hover:text-white transition-colors"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
@@ -998,15 +1012,31 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
 
           {/* Date Selector */}
           <div className="space-y-2">
-            <h4 className="font-medium text-gray-900 text-sm">Current Date</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-medium text-gray-900 text-sm">
+                {showYearView ? 'Current Year' : 'Current Date'}
+              </h4>
+              <button
+                onClick={() => setShowYearView(!showYearView)}
+                className={`px-2 py-1 text-xs rounded-full transition-colors ${
+                  showYearView 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                }`}
+                title={showYearView ? 'Switch to single date view' : 'Switch to entire year view'}
+              >
+                {showYearView ? 'Year' : 'Date'}
+              </button>
+            </div>
             
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-2">
               <div className="text-center">
                 <div className="text-lg font-bold text-blue-900">
-                  {formatDisplayDate(selectedDate)}
+                  {showYearView ? new Date(selectedDate).getFullYear() : formatDisplayDate(selectedDate)}
                 </div>
                 <div className="text-sm text-blue-600 mt-1">
-                  {getFilteredContent().userContent.length} event{getFilteredContent().userContent.length !== 1 ? 's' : ''} on this date
+                  {getFilteredContent().userContent.length} event{getFilteredContent().userContent.length !== 1 ? 's' : ''} 
+                  {showYearView ? ' in this year' : ' on this date'}
                 </div>
               </div>
             </div>
@@ -1014,9 +1044,10 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
             <div className="flex items-center gap-2">
               <button
                 onClick={goToPreviousDay}
-                className="flex-1 btn-secondary btn-small"
+                className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium px-2 py-1 text-sm rounded-lg transition-colors duration-200 border border-gray-600"
+                style={{ backgroundColor: '#1f2937', color: 'white', borderColor: '#4b5563' }}
               >
-                ← Previous
+                ← {showYearView ? 'Prev Year' : 'Previous'}
               </button>
               <button
                 onClick={goToToday}
@@ -1026,9 +1057,10 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
               </button>
               <button
                 onClick={goToNextDay}
-                className="flex-1 btn-secondary btn-small"
+                className="flex-1 bg-gray-800 hover:bg-gray-700 text-white font-medium px-2 py-1 text-sm rounded-lg transition-colors duration-200 border border-gray-600"
+                style={{ backgroundColor: '#1f2937', color: 'white', borderColor: '#4b5563' }}
               >
-                Next →
+                {showYearView ? 'Next Year' : 'Next'} →
               </button>
             </div>
             
@@ -1101,7 +1133,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
               </svg>
-              Play Selected Date ({getFilteredContent().userContent.length})
+              Play Selected {showYearView ? 'Year' : 'Date'} ({getFilteredContent().userContent.length})
             </button>
 
             <button
@@ -1116,7 +1148,8 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
 
             <button
               onClick={() => setShowSettings(true)}
-              className="w-full btn-secondary btn-small flex items-center justify-center gap-2"
+              className="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium px-2 py-1 text-sm rounded-lg transition-colors duration-200 border border-gray-600 flex items-center justify-center gap-2"
+              style={{ backgroundColor: '#1f2937', color: 'white', borderColor: '#4b5563' }}
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
@@ -1253,7 +1286,9 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl w-full mx-4 max-h-[80vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-xl font-bold">All Historical Dots for {formatDisplayDate(selectedDate)}</h3>
+              <h3 className="text-xl font-bold">
+                All Historical Dots for {showYearView ? new Date(selectedDate).getFullYear() : formatDisplayDate(selectedDate)}
+              </h3>
               <button
                 onClick={() => setShowAllDotsModal(false)}
                 className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -1269,10 +1304,30 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
                   <h4 className="font-semibold text-lg mb-2 text-blue-700">Official Modules ({getFilteredContent().officialModules.length})</h4>
                   <div className="space-y-2">
                     {getFilteredContent().officialModules.map((module, index) => (
-                      <div key={index} className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div 
+                        key={index} 
+                        className="p-3 bg-blue-50 rounded-lg border border-blue-200 cursor-pointer hover:bg-blue-100 transition-colors"
+                        onClick={() => {
+                          // Navigate to the module location and open it
+                          if (typeof module.latitude === 'number' && typeof module.longitude === 'number' && !isNaN(module.latitude) && !isNaN(module.longitude)) {
+                            // Close the modal first
+                            setShowAllDotsModal(false);
+                            // Then trigger the module click
+                            if (onModuleClick) {
+                              onModuleClick(module);
+                            }
+                          }
+                        }}
+                      >
                         <div className="font-medium text-blue-900">{module.title}</div>
                         <div className="text-sm text-blue-700">Year: {module.year}</div>
-                        <div className="text-sm text-gray-600">Location: {module.latitude}, {module.longitude}</div>
+                        <div className="text-sm text-gray-600">
+                          Location: {
+                            typeof module.latitude === 'number' && typeof module.longitude === 'number' && !isNaN(module.latitude) && !isNaN(module.longitude)
+                              ? `${module.latitude.toFixed(4)}, ${module.longitude.toFixed(4)}`
+                              : 'Invalid coordinates'
+                          }
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1285,10 +1340,31 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
                   <h4 className="font-semibold text-lg mb-2 text-green-700">User Content ({getFilteredContent().userContent.length})</h4>
                   <div className="space-y-2">
                     {getFilteredContent().userContent.map((content, index) => (
-                      <div key={index} className="p-3 bg-green-50 rounded-lg border border-green-200">
+                      <div 
+                        key={index} 
+                        className="p-3 bg-green-50 rounded-lg border border-green-200 cursor-pointer hover:bg-green-100 transition-colors"
+                        onClick={() => {
+                          // Navigate to the location on the globe
+                          if (content.coordinates && content.coordinates.length === 2) {
+                            const [lng, lat] = content.coordinates;
+                            if (typeof lat === 'number' && typeof lng === 'number' && !isNaN(lat) && !isNaN(lng)) {
+                              // Close the modal first
+                              setShowAllDotsModal(false);
+                              // Then trigger the user content click to show details
+                              handleUserContentClick(content);
+                            }
+                          }
+                        }}
+                      >
                         <div className="font-medium text-green-900">{content.title}</div>
                         <div className="text-sm text-green-700">Date: {content.dateHappened}</div>
-                        <div className="text-sm text-gray-600">Location: {content.latitude}, {content.longitude}</div>
+                        <div className="text-sm text-gray-600">
+                          Location: {
+                            content.coordinates && content.coordinates.length === 2 
+                              ? `${content.coordinates[1].toFixed(4)}, ${content.coordinates[0].toFixed(4)}` 
+                              : 'Invalid coordinates'
+                          }
+                        </div>
                         <div className="text-sm text-gray-600">Source: {content.source}</div>
                       </div>
                     ))}

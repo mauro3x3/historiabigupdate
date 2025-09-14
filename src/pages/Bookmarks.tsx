@@ -148,7 +148,7 @@ const Bookmarks = () => {
           {/* Header */}
           <div className="text-center mb-8">
             <div className="inline-flex items-center gap-3 mb-4">
-              <Bookmark className="w-8 h-8 text-purple-600" />
+              <Bookmark className="w-8 h-8 text-blue-600" />
               <h1 className="text-4xl font-bold text-gray-800">Your Bookmarks</h1>
             </div>
             <p className="text-gray-600 text-lg">
@@ -189,7 +189,11 @@ const Bookmarks = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {bookmarks.map((bookmark) => (
-                <div key={bookmark.id} className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-200 overflow-hidden">
+                <a 
+                  key={bookmark.id} 
+                  href={bookmark.content_type === 'user_content' ? '/globe' : `/lesson/${bookmark.content_id}`}
+                  className="block bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 overflow-hidden hover:scale-[1.02] cursor-pointer"
+                >
                   {/* Content Type Badge */}
                   <div className={`h-2 bg-gradient-to-r ${
                     bookmark.content_type === 'user_content' 
@@ -219,7 +223,7 @@ const Bookmarks = () => {
                           <span className={`px-2 py-1 rounded-full text-xs ${
                             bookmark.content_type === 'user_content'
                               ? 'bg-green-100 text-green-700'
-                              : 'bg-purple-100 text-purple-700'
+                              : 'bg-gray-100 text-gray-700'
                           }`}>
                             {bookmark.content_type === 'user_content' ? 'Community' : 'Official'}
                           </span>
@@ -231,7 +235,11 @@ const Bookmarks = () => {
                         </div>
                       </div>
                       <button
-                        onClick={() => handleRemoveBookmark(bookmark.id, bookmark.content_id, bookmark.content_type)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRemoveBookmark(bookmark.id, bookmark.content_id, bookmark.content_type);
+                        }}
                         className="text-gray-400 hover:text-red-500 transition-colors p-1"
                         title="Remove bookmark"
                       >
@@ -273,23 +281,16 @@ const Bookmarks = () => {
                     </div>
 
                     {/* Footer */}
-                    <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-100">
+                    <div className="flex items-center justify-center text-xs text-gray-500 pt-4 border-t border-gray-100">
                       <div className="flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         <span>
                           {formatDate(bookmark.created_at)}
                         </span>
                       </div>
-                      <a
-                        href={bookmark.content_type === 'user_content' ? '/globe' : `/lesson/${bookmark.content_id}`}
-                        className="text-purple-600 hover:text-purple-700 font-medium flex items-center gap-1"
-                      >
-                        <ExternalLink className="w-3 h-3" />
-                        {bookmark.content_type === 'user_content' ? 'View on Globe' : 'View Module'}
-                      </a>
                     </div>
                   </div>
-                </div>
+                </a>
               ))}
             </div>
           )}

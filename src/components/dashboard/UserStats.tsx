@@ -17,6 +17,9 @@ import { useUserActivity } from '@/hooks/useUserActivity';
 import { useFeaturedCourses } from '@/hooks/useFeaturedCourses';
 import LeaderboardPage from "@/components/leaderboard/LeaderboardPage";
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { getLessonProgress } from '@/services/progressService';
+import FriendsManager from './FriendsManager';
+import { generateTrackForEra } from '@/data/trackData';
 
 const MOTIVATIONAL_QUOTES = [
   "Keep going! Every day is progress.",
@@ -193,6 +196,15 @@ export default function UserStats(props: UserStatsProps) {
   
   const { user, xp: myXp, streak: myStreak, completedEras: myCompletedEras, preferredEra: myPreferredEra, setPreferredEra: setMyPreferredEra } = useUser();
   const { xp, streak, completedEras, preferredEra, username, avatar_base, featured_eras, achievements, created_at, refetchProfile } = useUserProfile(userId || user?.id);
+  
+  // Debug logging for completed eras
+  console.log('🔍 Completed eras debug:', {
+    isPublic,
+    myCompletedEras,
+    completedEras,
+    displayCompletedEras: isPublic ? completedEras : myCompletedEras,
+    displayCompletedErasLength: (isPublic ? completedEras : myCompletedEras)?.length || 0
+  });
   // Use the correct data depending on view - memoized to prevent infinite re-renders
   const displayXp = useMemo(() => isPublic ? xp : myXp, [isPublic, xp, myXp]);
   const displayStreak = useMemo(() => isPublic ? streak : myStreak, [isPublic, streak, myStreak]);
@@ -243,6 +255,8 @@ export default function UserStats(props: UserStatsProps) {
   const [showShareModal, setShowShareModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const profileUrl = `${window.location.origin}/profile/${user?.id}`;
+  const [dotsCount, setDotsCount] = useState(0);
+  const [museumItemsCount, setMuseumItemsCount] = useState(0);
   
   // Calculate featured courses directly instead of using useEffect
   const featuredCourses = useMemo(() => {
@@ -270,16 +284,12 @@ export default function UserStats(props: UserStatsProps) {
     setLocalFeaturedCourses(featuredCourses);
   }, [featuredCourses]);
   const [profileTab, setProfileTab] = useState('avatar');
-  const [showAddFriendModal, setShowAddFriendModal] = useState(false);
-  const [addFriendInput, setAddFriendInput] = useState('');
-  const [addFriendError, setAddFriendError] = useState('');
-  const addFriendInputRef = useRef<HTMLInputElement>(null);
   const [eras, setEras] = useState<any[]>([]);
   const [eraLoading, setEraLoading] = useState(true);
   const [userFeaturedEras, setUserFeaturedEras] = useState<string[]>([]);
   const [savingFeaturedEras, setSavingFeaturedEras] = useState(false);
   const [selectedFeaturedEras, setSelectedFeaturedEras] = useState<string[]>([]);
-  const [eraProgressData, setEraProgressData] = useState([]);
+  // Removed eraProgressData state - using direct calculation instead
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [leaderboardType, setLeaderboardType] = useState<'xp' | 'streak'>('xp');
   const [unlockedPrizeAvatars, setUnlockedPrizeAvatars] = useState<string[]>([]);
@@ -319,8 +329,8 @@ export default function UserStats(props: UserStatsProps) {
   const xpPercent = Math.min(100, Math.round((displayXp % xpForNextLevel) / xpForNextLevel * 100));
   
   // Dummy values for journey progress (replace with real data if available)
-  const totalModules = props.totalModules || 12;
-  const completedModules = props.completedModules || 3;
+  const totalModules = 12;
+  const completedModules = 3;
   const journeyProgressPercent = Math.round((completedModules / totalModules) * 100);
   
   // Open modal and reset selection
@@ -412,63 +422,6 @@ export default function UserStats(props: UserStatsProps) {
 
   useEffect(() => { setAchievementsLoading(false); }, [achievements]);
 
-  // Add friend by email or username
-  const handleAddFriend = async () => {
-    setAddFriendError('');
-    if (!addFriendInput.trim()) {
-      setAddFriendError('Please enter a username or email.');
-      return;
-    }
-    // Find user by email or username
-    const { data: users, error } = await supabase
-      .from('user_profiles')
-      .select('id, username, email')
-      .or(`email.eq.${addFriendInput},username.eq.${addFriendInput}`);
-    if (error || !users || users.length === 0) {
-      setAddFriendError('User not found.');
-      return;
-    }
-    const friendId = users[0].id;
-    if (friendId === user.id) {
-      setAddFriendError('You cannot add yourself as a friend.');
-      return;
-    }
-    // Check if already friends
-    const { data: existing } = await supabase
-      .from('friends')
-      .select('id')
-      .eq('user_id', user.id)
-      .eq('friend_id', friendId);
-    if (existing && existing.length > 0) {
-      setAddFriendError('Already friends.');
-      return;
-    }
-    // Add friend
-    const { error: addError } = await supabase
-      .from('friends')
-      .insert({ user_id: user.id, friend_id: friendId });
-    if (addError) {
-      setAddFriendError('Failed to add friend.');
-      return;
-    }
-    setShowAddFriendModal(false);
-    setAddFriendInput('');
-    toast.success('Friend added!');
-  };
-
-  // Remove friend
-  const handleRemoveFriend = async (friendId: string) => {
-    const { error } = await supabase
-      .from('friends')
-      .delete()
-      .eq('user_id', user.id)
-      .eq('friend_id', friendId);
-    if (error) {
-      toast.error('Failed to remove friend.');
-    } else {
-      toast.success('Friend removed.');
-    }
-  };
 
   // Calculate eraProgress based on completed modules and total modules
   const eraProgress = (eras || []).map(era => {
@@ -483,15 +436,15 @@ export default function UserStats(props: UserStatsProps) {
       };
     }
     
-    // For current user, use the existing logic
-    const total = props.eraModuleCounts?.[era.name] || 10;
-    const completed = props.eraCompletedModules?.[era.name] || 0;
+    // For current user, use simplified logic
+    const total = 10; // Default total
+    const completed = 0; // Default completed
     return {
       era: era.name,
       percent: total > 0 ? Math.round((completed / total) * 100) : 0,
       color: COURSE_COLORS[era.name] || 'from-gray-200 to-gray-400',
     };
-  }).filter(e => e.percent > 0 || (props.eraModuleCounts && props.eraModuleCounts[e.era]));
+  }).filter(e => e.percent > 0);
 
   useEffect(() => {
     const fetchEras = async () => {
@@ -514,11 +467,11 @@ export default function UserStats(props: UserStatsProps) {
       if (!user) return;
       const { data, error } = await supabase
         .from('user_profiles')
-        .select('featured_eras')
+        .select('*')
         .eq('id', user.id)
         .single();
-      if (data && data.featured_eras) {
-        setUserFeaturedEras(data.featured_eras);
+      if (data && (data as any).featured_eras) {
+        setUserFeaturedEras((data as any).featured_eras);
       }
     };
     fetchUserFeaturedEras();
@@ -528,6 +481,8 @@ export default function UserStats(props: UserStatsProps) {
   const featuredEraObjects = userFeaturedEras
     .map(code => eras.find(e => e.code === code))
     .filter(Boolean);
+  
+  // Debug logging removed to fix MIME type issues
 
   // When opening the modal, sync selection with user's current featured eras
   useEffect(() => {
@@ -542,7 +497,7 @@ export default function UserStats(props: UserStatsProps) {
     try {
       await supabase
         .from('user_profiles')
-        .update({ featured_eras: selectedFeaturedEras })
+        .update({ featured_eras: selectedFeaturedEras } as any)
         .eq('id', user.id);
       setUserFeaturedEras(selectedFeaturedEras);
       toast.success('Featured courses updated!');
@@ -566,24 +521,56 @@ export default function UserStats(props: UserStatsProps) {
     return era.name.replace(/ History$/, '');
   }
 
-  // Fetch per-era progress for the current user
+  // Use the same progress data as the home tab
+  const [progressData, setProgressData] = useState({});
+  const [eraProgressData, setEraProgressData] = useState({});
+  
   useEffect(() => {
-    async function fetchEraProgress() {
+    const loadProgress = async () => {
       if (!user) return;
-      const { data, error } = await supabase.rpc('get_user_era_progress', { user_id: user.id });
-      // If you don't have an RPC, you can use a SQL query here instead
-      setEraProgressData(data || []);
-    }
-    fetchEraProgress();
-  }, [user]);
+      try {
+        const progress = await getLessonProgress(user.id);
+        setProgressData(progress);
+        
+        // Calculate progress for each era like the home tab does
+        const eraProgress = {};
+        for (const era of featuredEraObjects) {
+          try {
+            const track = await generateTrackForEra(era.code as HistoryEra);
+            const trackWithProgress = track.levels.map(level => ({
+              ...level,
+              lessons: (level.lessons || []).map(lesson => ({
+                ...lesson,
+                progress: progress[String(lesson.id)] || undefined,
+              })),
+            }));
+            
+            const totalModules = trackWithProgress.reduce((sum, level) => sum + (level.lessons?.length || 0), 0);
+            const completedModules = trackWithProgress.reduce(
+              (sum, level) => sum + (level.lessons?.filter(l => l.progress?.completed).length || 0),
+              0
+            );
+            
+            eraProgress[era.code] = {
+              completed: completedModules,
+              total: totalModules,
+              percent: totalModules > 0 ? Math.round((completedModules / totalModules) * 100) : 0
+            };
+          } catch (error) {
+            console.error(`Error calculating progress for ${era.code}:`, error);
+            eraProgress[era.code] = { completed: 0, total: 0, percent: 0 };
+          }
+        }
+        
+        setEraProgressData(eraProgress);
+      } catch (error) {
+        console.error('Error loading progress:', error);
+      }
+    };
+    loadProgress();
+  }, [user, featuredEraObjects]);
 
-  // Helper: get progress for a given era code
-  function getEraProgress(eraCode) {
-    const prog = eraProgressData.find(p => p.era_code === eraCode);
-    if (!prog) return { percent: 0, completed: 0, total: 0 };
-    const percent = prog.total_modules > 0 ? Math.round((prog.completed_modules / prog.total_modules) * 100) : 0;
-    return { percent, completed: prog.completed_modules, total: prog.total_modules };
-  }
+  // Removed getEraProgress function - using direct calculation instead
 
   // Leaderboard modal state
   const openLeaderboard = (type: 'xp' | 'streak') => {
@@ -601,6 +588,67 @@ export default function UserStats(props: UserStatsProps) {
     };
     fetchPrizeAvatars();
   }, [user]);
+
+  // Fetch dots count
+  useEffect(() => {
+    const fetchDotsCount = async () => {
+      if (!user) return;
+      try {
+        // Use direct query with any type since userdots table is not in types
+        const { data: directData, error: directError } = await (supabase as any)
+          .from('userdots')
+          .select('id')
+          .eq('user_id', user.id);
+        
+        if (directError) {
+          console.error('Direct query error:', directError);
+          setDotsCount(0);
+        } else {
+          setDotsCount(directData?.length || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching dots count:', error);
+        setDotsCount(0);
+      }
+    };
+    fetchDotsCount();
+  }, [user]);
+
+  // Fetch museum items count
+  useEffect(() => {
+    const fetchMuseumItemsCount = async () => {
+      if (!user) {
+        console.log('🔍 No user found for museum items fetch');
+        return;
+      }
+      
+      try {
+        const { data, error } = await (supabase as any)
+          .from('museum_items')
+          .select('id')
+          .eq('user_id', user.id);
+        
+        if (error) {
+          console.error('Error fetching museum items count:', error);
+          setMuseumItemsCount(0);
+        } else {
+          const count = data?.length || 0;
+          console.log('🔍 Museum items count for user', user.id, ':', count);
+          if (count > 0) {
+            console.log('🔍 Museum item IDs:', data?.map(item => item.id));
+          }
+          setMuseumItemsCount(count);
+        }
+      } catch (error) {
+        console.error('Error fetching museum items count:', error);
+        setMuseumItemsCount(0);
+      }
+    };
+    fetchMuseumItemsCount();
+  }, [user]);
+
+  // Temporarily disabled complex journey checking to fix loading issues
+  // TODO: Re-enable once component loading is stable
 
   // Reward logic (simulate with a button for now)
   const handleRewardPrizeAvatar = async () => {
@@ -633,7 +681,7 @@ export default function UserStats(props: UserStatsProps) {
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col items-center z-10">
         {/* Glassy Profile Header */}
-        <div className="w-full max-w-5xl rounded-3xl bg-white/10 backdrop-blur-xl shadow-2xl border border-timelingo-gold/30 flex flex-col md:flex-row items-center gap-8 px-10 py-8 mb-8 transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(255,215,0,0.10)]">
+        <div className="w-full max-w-3xl rounded-3xl bg-white/10 backdrop-blur-xl shadow-2xl border border-timelingo-gold/30 flex flex-col md:flex-row items-center gap-8 px-6 py-8 mb-8 transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(255,215,0,0.10)]">
           {/* Avatar + Level Badge */}
           <div className="flex flex-col items-center md:items-start gap-4 min-w-[180px]">
             <div className="relative">
@@ -754,7 +802,6 @@ export default function UserStats(props: UserStatsProps) {
           <div className="flex-1 flex flex-col items-center md:items-start gap-2">
             <div className="flex items-center gap-3">
               <h2 className="text-3xl font-extrabold text-white drop-shadow-sm">{displayName}</h2>
-              <span className="bg-timelingo-teal/80 text-white px-3 py-1 rounded-full text-xs font-semibold shadow border border-white/10">{displayCreatedAt ? `${Math.max(1, new Date().getFullYear() - new Date(displayCreatedAt).getFullYear())} Years of Service` : 'New Scholar'}</span>
             </div>
             <div className="text-sm text-white/80 mt-1">Historian since {displayCreatedAt ? new Date(displayCreatedAt).getFullYear() : '2024'}</div>
             {/* XP Progress Bar */}
@@ -776,17 +823,17 @@ export default function UserStats(props: UserStatsProps) {
             </div>
           </div>
             {/* Compact Stats Row */}
-            <div className="w-full max-w-md mt-4 flex flex-row justify-between items-center gap-0 rounded-xl bg-gradient-to-br from-white/10 to-timelingo-navy/20 shadow border border-white/10 backdrop-blur-xl overflow-hidden">
+            <div className="w-full max-w-lg mt-4 grid grid-cols-5 gap-1 rounded-xl bg-gradient-to-br from-white/10 to-timelingo-navy/20 shadow border border-white/10 backdrop-blur-xl overflow-hidden">
               {[
-                { value: displayStreak, label: 'Streak', color: 'text-timelingo-teal', type: 'streak' as 'xp' | 'streak' },
-                { value: displayCompletedEras.length, label: 'Eras', color: 'text-timelingo-gold', type: 'xp' as 'xp' | 'streak' },
-                { value: '-', label: 'Achv.', color: 'text-timelingo-purple', type: 'xp' as 'xp' | 'streak' },
-                { value: displayXp, label: 'XP', color: 'text-white', type: 'xp' as 'xp' | 'streak' },
+                { value: displayStreak, label: 'Streak', color: 'text-timelingo-teal' },
+                { value: displayCompletedEras.length, label: 'Journeys', color: 'text-timelingo-gold' },
+                { value: museumItemsCount, label: 'Museum', color: 'text-timelingo-purple' },
+                { value: dotsCount, label: 'Dots', color: 'text-timelingo-teal' },
+                { value: displayXp, label: 'XP', color: 'text-white' },
               ].map((stat, idx, arr) => (
                 <div
                   key={stat.label}
-                  className={`flex-1 flex flex-col items-center justify-center py-2 transition-all duration-200 cursor-pointer group text-xs ${idx < arr.length - 1 ? 'border-r border-white/10' : ''}`}
-                  onClick={() => openLeaderboard(stat.type)}
+                  className="flex flex-col items-center justify-center py-2 transition-all duration-200 group text-xs"
                 >
                   <span className={`text-xl font-extrabold drop-shadow ${stat.color} group-hover:scale-110 group-hover:text-yellow-300 transition-all`}>{stat.value}</span>
                   <span className="text-xs text-white/80 font-semibold mt-1 tracking-wide group-hover:text-white transition-all">{stat.label}</span>
@@ -796,7 +843,7 @@ export default function UserStats(props: UserStatsProps) {
           </div>
         </div>
         {/* Featured Courses Row */}
-        <div className="w-full max-w-5xl mb-8 px-10">
+        <div className="w-full max-w-3xl mb-8 px-6">
           <h3 className="text-xl font-bold text-white mb-3">Featured Courses</h3>
           {eraLoading && <div className="text-white/70">Loading...</div>}
           {!eraLoading && featuredEraObjects.length === 0 && <div className="text-white/70">No featured courses selected. <button className='underline' onClick={() => { setShowProfileModal(true); setProfileTab('courses'); }}>Customize</button></div>}
@@ -811,94 +858,40 @@ export default function UserStats(props: UserStatsProps) {
             ))}
           </div>
         </div>
-        {/* Friends Section */}
-        {friendsLoading && <div className="w-full max-w-5xl mb-8 px-10 text-white/70 text-sm">Loading friends...</div>}
-        {friendsError && <div className="w-full max-w-5xl mb-8 px-10 text-red-500 text-sm">{friendsError}</div>}
-        {(!friendsLoading && friends?.length > 0) && (
-          <div className="w-full max-w-5xl mb-8 px-10">
-            <h3 className="text-xl font-bold text-white mb-3">Friends</h3>
-            <div className="flex flex-col gap-2">
-              {friends.map((f, idx) => (
-                <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
-                  <img src={ALL_COURSES.find(opt => opt.title === f.friend?.avatar_base)?.src || ALL_COURSES[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
-                  <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
-                  <button className="ml-auto px-2 py-1 rounded bg-red-500 text-white text-xs" onClick={() => handleRemoveFriend(f.friend_id)}>Remove</button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
       {/* Sidebar (desktop) or below (mobile) */}
-      <aside className="w-full lg:w-[320px] flex-shrink-0 mt-10 lg:mt-0 lg:ml-8 px-6 lg:px-0 sticky top-10 z-30">
-        <div className="rounded-2xl bg-white/20 backdrop-blur-2xl shadow-2xl border border-timelingo-gold/30 p-6 flex flex-col gap-8 transition-all duration-300 hover:shadow-[0_8px_40px_0_rgba(255,215,0,0.10)]">
-          {/* Achievement Progress (replaces Groups) */}
+      <aside className="w-full lg:w-[260px] flex-shrink-0 mt-10 lg:mt-0 px-6 lg:px-0 lg:mr-8" style={{ transform: 'translateX(-20px)' }}>
+        <div className="space-y-6">
+          {/* Achievement Progress - Simplified */}
           {featuredEraObjects.length > 0 && (
-            <div>
-              <h4 className="text-lg font-bold text-white mb-3">Achievement Progress</h4>
-              <div className="flex flex-col gap-3">
+            <div className="bg-white/10 backdrop-blur-xl rounded-xl p-4 border border-white/20">
+              <h4 className="text-lg font-bold text-white mb-4">Learning Progress</h4>
+              <div className="space-y-3">
                 {featuredEraObjects.map((era, idx) => {
-                  const prog = getEraProgress(era.code);
+                  const progress = eraProgressData[era.code] || { completed: 0, total: 0, percent: 0 };
+                  const isCompleted = progress.percent === 100;
+                  
                   return (
-                    <div key={era.code} className="flex flex-col gap-0.5">
-                      <div className="flex justify-between items-center">
-                        <span className="text-white text-xs font-semibold flex items-center gap-1">{era.emoji} {getDisplayEraName(era)}</span>
-                        <span className="text-white/80 text-xs font-mono">{prog.percent}%</span>
+                    <div key={era.code} className="flex items-center gap-3 p-3 rounded-lg bg-white/5 border border-white/10">
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white font-medium text-sm">{getDisplayEraName(era)}</div>
+                        <div className="text-white/60 text-xs">
+                          {progress.completed}/{progress.total} modules
+                        </div>
                       </div>
-                      <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden relative">
-                        <div className="h-full bg-gradient-to-r from-timelingo-gold to-timelingo-purple rounded-full transition-all duration-700" style={{ width: `${prog.percent}%` }}></div>
+                      <div className="flex-shrink-0">
+                        <div className={`text-xs font-semibold px-2 py-1 rounded-full ${isCompleted ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}`}>
+                          {progress.percent}%
+                        </div>
                       </div>
-                      <span className="text-xs text-white/60 mt-0.5">{prog.completed} / {prog.total} modules</span>
                     </div>
                   );
                 })}
               </div>
             </div>
           )}
-          {/* Friends (NOW in sidebar) */}
-          <div>
-            <h4 className="text-lg font-bold text-white mb-3">Friends</h4>
-            <div className="flex flex-col gap-2">
-              {friends?.length === 0 && (
-                <div className="text-white/70 text-xs">No friends yet.</div>
-              )}
-              {friends?.map((f, idx) => (
-                <div key={idx} className="flex items-center gap-3 rounded-lg bg-white/20 px-3 py-2 shadow border border-white/10 cursor-pointer hover:bg-timelingo-gold/30 hover:shadow-lg transition-colors">
-                  <img src={ALL_COURSES.find(opt => opt.title === f.friend?.avatar_base)?.src || ALL_COURSES[0].src} alt={f.friend?.username} className="w-8 h-8 rounded-full object-contain border-2 border-timelingo-gold" />
-                  <span className="text-white font-medium">{f.friend?.username || 'Friend'}</span>
-                  <button className="ml-auto px-2 py-1 rounded bg-red-500 text-white text-xs" onClick={() => handleRemoveFriend(f.friend_id)}>Remove</button>
-                </div>
-              ))}
-              {!showAddFriendModal && (
-                <button className="flex flex-row items-center justify-center bg-green-500/80 hover:bg-green-600 text-white rounded-lg px-3 py-2 mt-2 w-fit self-center" onClick={() => setShowAddFriendModal(true)}>
-                  <span className="text-lg mr-1">+</span>
-                  <span className="text-xs font-semibold">Add Friend</span>
-                </button>
-              )}
-            </div>
-            {/* Add Friend Modal */}
-            <Dialog open={showAddFriendModal} onOpenChange={setShowAddFriendModal}>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add a Friend</DialogTitle>
-                </DialogHeader>
-                <input
-                  ref={addFriendInputRef}
-                  type="text"
-                  className="w-full p-2 rounded border border-gray-300 mb-2"
-                  placeholder="Enter username or email"
-                  value={addFriendInput}
-                  onChange={e => setAddFriendInput(e.target.value)}
-                  autoFocus
-                />
-                {addFriendError && <div className="text-red-500 text-xs mb-2">{addFriendError}</div>}
-                <DialogFooter>
-                  <button className="px-4 py-2 rounded bg-gray-200 text-gray-800 mr-2" onClick={() => setShowAddFriendModal(false)}>Cancel</button>
-                  <button className="px-4 py-2 rounded bg-green-500 text-white" onClick={handleAddFriend}>Add Friend</button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
-          </div>
+          {/* Friends Manager */}
+          <FriendsManager />
         </div>
       </aside>
       {/* Interactivity for main content */}

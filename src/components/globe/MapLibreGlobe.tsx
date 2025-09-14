@@ -429,7 +429,7 @@ export default function MapLibreGlobe({ journeys, onModuleClick }: MapLibreGlobe
       {/* Enhanced Control Panel */}
       <div className="absolute top-4 left-4 bg-white rounded-xl shadow-xl border border-gray-200 z-10 max-w-sm">
         {/* Header */}
-        <div className="bg-blue-600 rounded-t-xl p-4 text-white">
+        <div className="bg-gray-800 rounded-t-xl p-4 text-white">
           <div className="flex items-center justify-between">
             <div>
               <h3 className="font-semibold text-lg">Map Controls</h3>
@@ -533,7 +533,7 @@ export default function MapLibreGlobe({ journeys, onModuleClick }: MapLibreGlobe
                 setUserContent(prev => [...prev, testContent]);
                 console.log('Added test content:', testContent);
               }}
-              className="w-full px-3 py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center gap-2"
+              className="w-full px-3 py-2 bg-gray-800 text-white text-sm rounded-lg hover:bg-gray-700 transition-colors flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />

@@ -37,7 +37,7 @@ const MapControls = ({
         variant="ghost" 
         size="icon" 
         onClick={onPlayToggle}
-        className="bg-timelingo-purple text-white hover:bg-timelingo-purple/90 rounded-full mx-2"
+        className="bg-gray-800 text-white hover:bg-gray-700 rounded-full mx-2"
       >
         {isPlaying ? (
           <Pause className="h-6 w-6" />

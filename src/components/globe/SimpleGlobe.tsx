@@ -246,7 +246,7 @@ const SimpleGlobe: React.FC<SimpleGlobeProps> = ({
             <div className="space-y-2">
               <button
                 onClick={() => {/* Add test dot functionality */}}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                className="w-full bg-gray-800 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm"
               >
                 + Add Test Dot
               </button>
