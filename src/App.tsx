@@ -43,6 +43,7 @@ import Layout from './components/layout/Layout';
 import ContentReviewPanel from './components/admin/ContentReviewPanel';
 import Bookmarks from './pages/Bookmarks';
 import Store from './pages/Store';
+import GamesTest from './pages/GamesTest';
 
 const queryClient = new QueryClient();
 
@@ -208,6 +209,13 @@ const AppRoutes = () => {
         <ProtectedRoute>
           <Layout>
             <Settings />
+          </Layout>
+        </ProtectedRoute>
+      } />
+      <Route path="/games-test" element={
+        <ProtectedRoute>
+          <Layout>
+            <GamesTest />
           </Layout>
         </ProtectedRoute>
       } />

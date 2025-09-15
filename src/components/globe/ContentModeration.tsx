@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Flag, Trash2, User, Shield, AlertTriangle, CheckCircle } from 'lucide-react';
+import { Flag, Trash2, User, Shield, AlertTriangle, CheckCircle, RefreshCw, X } from 'lucide-react';
+import { addDailyNewsToGlobe, clearAllNewsArticles } from '@/services/newsService';
 
 interface ContentModerationProps {
   userContent: Array<{
@@ -19,16 +20,20 @@ interface ContentModerationProps {
   onRemoveContent: (contentId: string) => void;
   onApproveContent: (contentId: string) => void;
   onFlagContent: (contentId: string) => void;
+  onRefreshContent?: () => void;
 }
 
 export default function ContentModeration({ 
   userContent, 
   onRemoveContent, 
   onApproveContent, 
-  onFlagContent 
+  onFlagContent,
+  onRefreshContent
 }: ContentModerationProps) {
   const [filter, setFilter] = useState<'all' | 'flagged' | 'pending' | 'approved'>('all');
   const [selectedContent, setSelectedContent] = useState<string[]>([]);
+  const [isAddingNews, setIsAddingNews] = useState(false);
+  const [isClearingNews, setIsClearingNews] = useState(false);
 
   const filteredContent = userContent.filter(content => {
     switch (filter) {
@@ -54,6 +59,41 @@ export default function ContentModeration({
     setSelectedContent([]);
   };
 
+  const handleAddNews = async () => {
+    try {
+      setIsAddingNews(true);
+      console.log('🔄 Starting news integration...');
+      await addDailyNewsToGlobe();
+      console.log('🔄 News integration completed, refreshing content...');
+      if (onRefreshContent) {
+        onRefreshContent();
+      }
+      alert('Daily news added successfully!');
+    } catch (error) {
+      console.error('❌ Failed to add news:', error);
+      alert('Failed to add news articles. Check console for details.');
+    } finally {
+      setIsAddingNews(false);
+    }
+  };
+
+  const handleClearNews = async () => {
+    try {
+      setIsClearingNews(true);
+      await clearAllNewsArticles();
+      if (onRefreshContent) {
+        onRefreshContent();
+      }
+      alert('All news articles cleared!');
+    } catch (error) {
+      console.error('❌ Failed to clear news:', error);
+      alert('Failed to clear news articles. Check console for details.');
+    } finally {
+      setIsClearingNews(false);
+    }
+  };
+
+
   const getContentStatus = (content: any) => {
     if (content.isApproved) return { status: 'approved', color: 'green', icon: CheckCircle };
     if ((content.flags || 0) > 0) return { status: 'flagged', color: 'red', icon: AlertTriangle };
@@ -67,6 +107,32 @@ export default function ContentModeration({
         <div className="text-sm text-gray-500">
           {filteredContent.length} of {userContent.length} items
         </div>
+      </div>
+
+      {/* News Management */}
+      <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-lg p-4 mb-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-3">News Management</h3>
+        <div className="flex gap-3">
+          <button
+            onClick={handleAddNews}
+            disabled={isAddingNews}
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white font-medium rounded-lg transition-colors duration-200 border border-green-500"
+          >
+            <RefreshCw className={`w-4 h-4 ${isAddingNews ? 'animate-spin' : ''}`} />
+            {isAddingNews ? 'Adding...' : 'Add News (10)'}
+          </button>
+          <button
+            onClick={handleClearNews}
+            disabled={isClearingNews}
+            className="flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white font-medium rounded-lg transition-colors duration-200 border border-red-500"
+          >
+            <X className={`w-4 h-4 ${isClearingNews ? 'animate-pulse' : ''}`} />
+            {isClearingNews ? 'Clearing...' : 'Clear All News'}
+          </button>
+        </div>
+        <p className="text-sm text-gray-600 mt-2">
+          Add daily news articles from NewsAPI or clear all existing news content.
+        </p>
       </div>
 
       {/* Filters */}

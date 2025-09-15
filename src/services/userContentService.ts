@@ -133,6 +133,31 @@ export const getUserContent = async (): Promise<UserGeneratedContent[]> => {
       .order('created_at', { ascending: false });
 
     console.log('🔍 Filtered query result:', { data, error });
+    console.log('🔍 Number of filtered results:', data?.length || 0);
+    
+    // Also try without filters to see all data
+    const { data: allDataFiltered, error: allErrorFiltered } = await supabase
+      .from('userdots')
+      .select('*')
+      .order('created_at', { ascending: false });
+    
+    console.log('🔍 All data without filters:', allDataFiltered);
+    console.log('🔍 All data count:', allDataFiltered?.length || 0);
+    
+    // Check specific fields for news articles
+    if (allDataFiltered) {
+      const newsArticles = allDataFiltered.filter(item => item.category === 'News Event');
+      const apiArticles = allDataFiltered.filter(item => item.user_id === 'api');
+      console.log('🔍 News articles found:', newsArticles.length);
+      console.log('🔍 API articles found:', apiArticles.length);
+      newsArticles.forEach(article => {
+        console.log(`🔍 News article: ${article.title}`);
+        console.log(`   user_id: ${article.user_id}`);
+        console.log(`   is_public: ${article.is_public}`);
+        console.log(`   is_approved: ${article.is_approved}`);
+        console.log(`   coordinates: ${JSON.stringify(article.coordinates)}`);
+      });
+    }
 
     if (error) {
       console.error('❌ Error fetching user content:', error);
@@ -142,13 +167,30 @@ export const getUserContent = async (): Promise<UserGeneratedContent[]> => {
     console.log('📊 Raw database data:', data);
     console.log('📊 Number of records:', data?.length || 0);
 
+    // If no data with filters, try to get all data and filter manually
+    let finalData = data;
     if (!data || data.length === 0) {
+      console.log('⚠️ No filtered content found, trying to get all data...');
+      if (allDataFiltered && allDataFiltered.length > 0) {
+        // Filter manually to include news articles even if they don't have proper flags
+        finalData = allDataFiltered.filter(item => {
+          // Include if it's public and approved, OR if it's a news event, OR if it's API content
+          return (item.is_public === true && item.is_approved === true) || 
+                 (item.category === 'News Event') ||
+                 (item.user_id === 'api');
+        });
+        console.log('📊 Manual filtered data:', finalData);
+        console.log('📊 Manual filtered count:', finalData.length);
+      }
+    }
+
+    if (!finalData || finalData.length === 0) {
       console.log('⚠️ No user content found in database');
       return [];
     }
 
     // Convert database format to UserGeneratedContent format
-    const content: UserGeneratedContent[] = data.map(item => {
+    const content: UserGeneratedContent[] = finalData.map(item => {
       console.log('🔄 Converting item:', item);
       return {
         id: item.id.toString(), // Convert to string

@@ -40,6 +40,7 @@ const sidebarItems: SidebarItem[] = [
   { label: 'MUSEUM', href: '/museum', icon: <Trophy className="h-6 w-6" /> },
   { label: 'LEADERBOARD', href: '/leaderboard', icon: <BarChart3 className="h-6 w-6" />, disabled: true },
   { label: 'BOOKMARKS', href: '/bookmarks', icon: <Bookmark className="h-6 w-6" /> },
+  { label: 'GAMES TEST', href: '/games-test', icon: <Gamepad2 className="h-6 w-6" /> },
   { label: 'GET A JOHAN PLUSHIE!', href: '/store', icon: <ShoppingBag className="h-6 w-6" />, disabled: true },
   { label: 'SETTINGS', href: '/settings', icon: <Settings className="h-6 w-6" /> },
   { label: 'PROFILE', href: '/profile', icon: <User className="h-6 w-6" /> },

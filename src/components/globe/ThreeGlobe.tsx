@@ -12,6 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import SettingsModal from '@/components/SettingsModal';
 import { useSettings } from '@/contexts/SettingsContext';
 import { playNewDotSound } from '@/utils/soundUtils';
+import { addDailyNewsToGlobe, clearAllNewsArticles } from '@/services/newsService';
+import { getUserContent } from '@/services/userContentService';
 
 interface Module {
   id: string;
@@ -547,11 +549,20 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
     const selectedDateObj = new Date(selectedDate);
     const selectedYear = selectedDateObj.getFullYear();
     
+    console.log('Date filtering: Selected date', selectedDate, 'showing', userContent.length, 'user content items');
+    console.log('All user content:', userContent);
+    
     // Filter user content by date and category
     const filteredUserContent = userContent.filter(content => {
       // Filter by category first
       if (selectedCategory !== 'All Categories' && content.category !== selectedCategory) {
         return false;
+      }
+      
+      // For news events, always show them regardless of date
+      if (content.category === 'News Event' || content.user_id === 'api') {
+        console.log('Including news event:', content.title, 'category:', content.category, 'user_id:', content.user_id);
+        return true;
       }
       
       if (!content.dateHappened) return false;
@@ -639,9 +650,14 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
     const spreadUserContent = spreadOutDots(filteredUserContent);
     
     console.log(`Selected year: ${selectedYear}, Found ${filteredOfficialModules.length} official modules, ${filteredUserContent.length} user content`);
-    console.log('All user content:', userContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates })));
+    console.log('All user content:', userContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates, category: c.category })));
     console.log('Official modules:', filteredOfficialModules.map(m => ({ title: m.title, year: m.year })));
-    console.log('Filtered user content:', filteredUserContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates })));
+    console.log('Filtered user content:', filteredUserContent.map(c => ({ title: c.title, date: c.dateHappened, coordinates: c.coordinates, category: c.category })));
+    
+    // Count news events specifically
+    const newsEvents = userContent.filter(c => c.category === 'News Event');
+    const filteredNewsEvents = filteredUserContent.filter(c => c.category === 'News Event');
+    console.log(`News events: ${newsEvents.length} total, ${filteredNewsEvents.length} filtered`);
     
     return {
       userContent: spreadUserContent,
@@ -986,7 +1002,15 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
             </div>
             <button
               onClick={() => {
-                console.log('Current user content:', userContent);
+                console.log('🔍 Current user content:', userContent);
+                console.log('🔍 User content length:', userContent.length);
+                console.log('🔍 User content details:', userContent.map(c => ({
+                  title: c.title,
+                  coordinates: c.coordinates,
+                  category: c.category,
+                  author: c.author
+                })));
+                alert(`Debug: Found ${userContent.length} content items. Check console for details.`);
               }}
               className="text-gray-300 hover:text-white transition-colors"
             >
@@ -1003,7 +1027,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
           <div className="bg-gradient-to-r from-blue-50 to-gray-50 border border-blue-200 rounded-lg p-3 text-center cursor-pointer hover:from-blue-100 hover:to-gray-100 transition-colors"
                onClick={() => setShowAllDotsModal(true)}>
             <div className="text-3xl font-bold text-blue-700 mb-1">
-              {getFilteredContent().userContent.length + getFilteredContent().officialModules.length}
+              {userContent.length + journeys.reduce((total, journey) => total + journey.modules.length, 0)}
             </div>
             <div className="text-sm text-blue-600 font-medium">Total Historical Dots</div>
             <div className="text-xs text-gray-500 mt-1">Click to view all</div>
@@ -1146,6 +1170,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
               Moderate Content ({userContent.length})
             </button>
 
+
             <button
               onClick={() => setShowSettings(true)}
               className="w-full bg-gray-800 hover:bg-gray-700 text-white font-medium px-2 py-1 text-sm rounded-lg transition-colors duration-200 border border-gray-600 flex items-center justify-center gap-2"
@@ -1275,6 +1300,10 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
                 onRemoveContent={handleRemoveContent}
                 onApproveContent={handleApproveContent}
                 onFlagContent={handleFlagContent}
+                onRefreshContent={async () => {
+                  const content = await getUserContent();
+                  setUserContent(content);
+                }}
               />
             </div>
           </div>

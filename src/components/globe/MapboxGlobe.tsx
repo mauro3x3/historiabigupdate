@@ -150,18 +150,22 @@ const MapboxGlobe: React.FC<MapboxGlobeProps> = ({
     // Add user content markers
     if (showUserContent && userContent) {
       console.log('🗺️ MapboxGlobe: Adding user content markers:', userContent.length);
+      console.log('🗺️ MapboxGlobe: User content data:', userContent);
       
       userContent
         .filter(content => {
           // Validate coordinates before adding to map
           const [lng, lat] = content.coordinates;
+          console.log('🗺️ MapboxGlobe: Processing content:', content.title, 'coords:', content.coordinates, 'lng:', lng, 'lat:', lat);
+          
           const isValidLat = typeof lat === 'number' && !isNaN(lat) && lat >= -90 && lat <= 90;
           const isValidLng = typeof lng === 'number' && !isNaN(lng) && lng >= -180 && lng <= 180;
           
           if (!isValidLat || !isValidLng) {
-            console.warn('🗺️ MapboxGlobe: Skipping invalid coordinates:', content.title, 'coords:', content.coordinates);
+            console.warn('🗺️ MapboxGlobe: Skipping invalid coordinates:', content.title, 'coords:', content.coordinates, 'isValidLat:', isValidLat, 'isValidLng:', isValidLng);
             return false;
           }
+          console.log('✅ MapboxGlobe: Valid coordinates for:', content.title);
           return true;
         })
         .forEach(content => {

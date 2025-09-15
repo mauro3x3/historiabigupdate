@@ -27,6 +27,7 @@ export default function PlayTodaySlideshow({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [timeRemaining, setTimeRemaining] = useState(8);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechEnabled, setSpeechEnabled] = useState(true);
   const [voicesLoaded, setVoicesLoaded] = useState(false);
@@ -42,6 +43,7 @@ export default function PlayTodaySlideshow({
       setCurrentIndex(0);
       setIsPlaying(false);
       setProgress(0);
+      setTimeRemaining(8);
       setIsSpeaking(false);
       
       // Load voices when slideshow opens
@@ -69,47 +71,39 @@ export default function PlayTodaySlideshow({
     }
   };
 
-  const stopSpeech = () => {
-    speechService.current.stopSpeech();
-    setIsSpeaking(false);
-  };
-
+  // Single auto-advance effect that handles everything
   useEffect(() => {
-    if (isPlaying && currentEvent) {
-      // Navigate to the event on the globe
-      onNavigateToEvent(currentEvent.coordinates, currentEvent);
-      
-      // Start speaking the event content
-      if (speechEnabled) {
-        speakEvent(currentEvent);
-      }
-      
-      // Start progress animation
-      setProgress(0);
-      progressIntervalRef.current = setInterval(() => {
-        setProgress(prev => {
-          if (prev >= 100) {
-            return 0;
-          }
-          return prev + 2; // 2% every 100ms = 5 seconds total
-        });
-      }, 100);
+    if (!isOpen || !currentEvent) return;
 
-      // Auto-advance after 5 seconds
-      intervalRef.current = setTimeout(() => {
-        nextEvent();
-      }, 5000);
-    } else {
-      if (intervalRef.current) {
-        clearTimeout(intervalRef.current);
-      }
-      if (progressIntervalRef.current) {
-        clearInterval(progressIntervalRef.current);
-      }
-      // Stop speech when not playing
-      stopSpeech();
-    }
+    // Navigate to the current event on the globe
+    onNavigateToEvent(currentEvent.coordinates, currentEvent);
+    
+    // Reset progress and timer
+    setProgress(0);
+    setTimeRemaining(8);
+    
+    // Start progress animation
+    progressIntervalRef.current = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 100) {
+          return 0;
+        }
+        return prev + 1.25; // 1.25% every 100ms = 8 seconds total
+      });
+      setTimeRemaining(prev => {
+        if (prev <= 0) {
+          return 8;
+        }
+        return prev - 0.1; // Decrease by 0.1 every 100ms
+      });
+    }, 100);
 
+    // Auto-advance after 8 seconds
+    intervalRef.current = setTimeout(() => {
+      nextEvent();
+    }, 8000);
+
+    // Cleanup function
     return () => {
       if (intervalRef.current) {
         clearTimeout(intervalRef.current);
@@ -117,9 +111,27 @@ export default function PlayTodaySlideshow({
       if (progressIntervalRef.current) {
         clearInterval(progressIntervalRef.current);
       }
-      stopSpeech();
     };
-  }, [isPlaying, currentIndex, currentEvent, onNavigateToEvent, speechEnabled]);
+  }, [currentIndex, isOpen, currentEvent, onNavigateToEvent]);
+
+  const stopSpeech = () => {
+    speechService.current.stopSpeech();
+    setIsSpeaking(false);
+  };
+
+  // Handle speech when play/pause is toggled
+  useEffect(() => {
+    if (isPlaying && currentEvent) {
+      // Start speaking the event content
+      if (speechEnabled) {
+        speakEvent(currentEvent);
+      }
+    } else {
+      // Stop speech when not playing
+      stopSpeech();
+    }
+  }, [isPlaying, currentEvent, speechEnabled]);
+
 
   const nextEvent = () => {
     if (currentIndex < totalEvents - 1) {
@@ -128,6 +140,7 @@ export default function PlayTodaySlideshow({
       // End of slideshow
       setIsPlaying(false);
       setProgress(0);
+      setTimeRemaining(8);
     }
   };
 
@@ -380,7 +393,19 @@ export default function PlayTodaySlideshow({
               </button>
               
               <div className="text-sm text-gray-500">
-                {isPlaying ? (isSpeaking ? 'Speaking...' : 'Playing...') : 'Paused'}
+                <div className="flex items-center gap-2">
+                  <span className="bg-green-100 text-green-800 px-2 py-1 rounded-full text-xs font-medium">
+                    Auto-advancing
+                  </span>
+                  <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full text-xs font-medium">
+                    Next in {Math.ceil(timeRemaining)}s
+                  </span>
+                  {isPlaying && (
+                    <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                      {isSpeaking ? 'Speaking...' : 'Audio on'}
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

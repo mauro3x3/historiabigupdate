@@ -60,3 +60,4 @@ CREATE TRIGGER update_friend_requests_updated_at
   BEFORE UPDATE ON friend_requests
   FOR EACH ROW
   EXECUTE FUNCTION update_updated_at_column();
+
