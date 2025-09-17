@@ -4,6 +4,12 @@ import { supabase } from '@/integrations/supabase/client';
 const NEWS_API_KEY = 'c8e585058c0a419a934dac762d26b68f';
 const NEWS_API_BASE_URL = 'https://newsapi.org/v2';
 
+// Fallback to a different news source if NewsAPI fails
+const FALLBACK_NEWS_SOURCES = [
+  'https://feeds.bbci.co.uk/news/rss.xml',
+  'https://rss.cnn.com/rss/edition.rss'
+];
+
 // Country codes to capital city coordinates mapping
 const COUNTRY_CAPITALS: { [key: string]: [number, number] } = {
   'US': [-77.0369, 38.9072], // Washington DC
@@ -31,6 +37,7 @@ const COUNTRY_CAPITALS: { [key: string]: [number, number] } = {
   'SA': [46.6753, 24.7136],  // Riyadh
   'AE': [54.3773, 24.4539],  // Abu Dhabi
   'IL': [35.2137, 31.7683],  // Jerusalem
+  'QA': [51.5310, 25.2854],  // Doha (Qatar)
   'TH': [100.5018, 13.7563], // Bangkok
   'VN': [105.8342, 21.0285], // Hanoi
   'ID': [106.8456, -6.2088], // Jakarta
@@ -38,6 +45,7 @@ const COUNTRY_CAPITALS: { [key: string]: [number, number] } = {
   'SG': [103.8198, 1.3521],  // Singapore
   'PH': [120.9842, 14.5995], // Manila
   'NZ': [174.7762, -41.2865], // Wellington
+  'NP': [85.3240, 27.7172],  // Kathmandu (Nepal)
   'NO': [10.7522, 59.9139],  // Oslo
   'SE': [18.0686, 59.3293],  // Stockholm
   'DK': [12.5683, 55.6761],  // Copenhagen
@@ -109,6 +117,16 @@ function detectCountryFromArticle(article: NewsArticle): string {
   
   // Country detection patterns
   const countryPatterns = {
+    // SOUTH ASIA & MIDDLE EAST FIRST
+    'NP': ['nepal', 'kathmandu', 'nepali'],
+    'QA': ['qatar', 'doha', 'al jazeera'],
+    'AE': ['uae', 'dubai', 'abu dhabi', 'emirates'],
+    'SA': ['saudi arabia', 'riyadh', 'jeddah', 'saudi'],
+    'TR': ['turkey', 'istanbul', 'ankara', 'turkish'],
+    'IL': ['israel', 'jerusalem', 'tel aviv', 'israeli'],
+    'EG': ['egypt', 'cairo', 'egyptian'],
+    'PK': ['pakistan', 'islamabad', 'karachi', 'pakistani'],
+    'BD': ['bangladesh', 'dhaka', 'bangladeshi'],
     'GB': ['london', 'britain', 'uk', 'england', 'scotland', 'wales', 'bbc', 'the guardian', 'daily mail', 'telegraph'],
     'DE': ['germany', 'berlin', 'munich', 'hamburg', 'deutschland', 'spiegel', 'bild'],
     'FR': ['france', 'paris', 'lyon', 'marseille', 'le monde', 'le figaro', 'french'],
@@ -181,7 +199,12 @@ function detectCountryFromArticle(article: NewsArticle): string {
   // Check each country pattern
   for (const [countryCode, patterns] of Object.entries(countryPatterns)) {
     for (const pattern of patterns) {
-      if (content.includes(pattern) || source.includes(pattern)) {
+      // Prefer content keyword match; treat source match as weaker
+      if (content.includes(pattern)) {
+        console.log(`🌍 Detected country ${countryCode} from content pattern "${pattern}" in: ${article.title}`);
+        return countryCode;
+      }
+      if (source.includes(pattern)) {
         console.log(`🌍 Detected country ${countryCode} from pattern "${pattern}" in: ${article.title}`);
         return countryCode;
       }
@@ -210,21 +233,59 @@ function getCountryCoordinates(countryCode: string): [number, number] {
 // Function to fetch news from NewsAPI
 export async function fetchNewsArticles(): Promise<NewsArticle[]> {
   try {
+    console.log('Attempting to fetch news...');
+    
+    // Try NewsAPI first
     const response = await fetch(
       `${NEWS_API_BASE_URL}/top-headlines?country=us&pageSize=10&apiKey=${NEWS_API_KEY}`
     );
 
-    if (!response.ok) {
-      throw new Error(`NewsAPI request failed: ${response.status}`);
-    }
-
-    const data = await response.json();
+    console.log('NewsAPI response status:', response.status);
     
-    if (data.status !== 'ok') {
-      throw new Error(`NewsAPI error: ${data.message}`);
+    if (response.ok) {
+      const data = await response.json();
+      console.log('NewsAPI data:', data);
+      if (data.status === 'ok' && data.articles) {
+        console.log('NewsAPI success, returning', data.articles.length, 'articles');
+        return data.articles;
+      }
     }
-
-    return data.articles || [];
+    
+    console.warn('NewsAPI failed with status', response.status, ', trying RSS fallback...');
+    
+    // Fallback to RSS feeds
+    const articles: NewsArticle[] = [];
+    
+    for (const feedUrl of FALLBACK_NEWS_SOURCES) {
+      try {
+        console.log('Trying RSS feed:', feedUrl);
+        const rssResponse = await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feedUrl)}`);
+        if (rssResponse.ok) {
+          const rssData = await rssResponse.json();
+          console.log('RSS data for', feedUrl, ':', rssData);
+          if (rssData.items && Array.isArray(rssData.items)) {
+            const feedArticles = rssData.items.slice(0, 5).map((item: any) => ({
+              title: item.title || 'No title',
+              description: item.description || item.content || '',
+              url: item.link || '#',
+              publishedAt: item.pubDate || new Date().toISOString(),
+              source: { id: rssData.feed?.title || 'RSS', name: rssData.feed?.title || 'RSS Feed' },
+              urlToImage: item.thumbnail || null,
+              content: item.content || item.description || ''
+            }));
+            articles.push(...feedArticles);
+            console.log('Added', feedArticles.length, 'articles from', feedUrl);
+          }
+        } else {
+          console.warn('RSS response not ok:', rssResponse.status);
+        }
+      } catch (rssError) {
+        console.warn(`RSS feed failed: ${feedUrl}`, rssError);
+      }
+    }
+    
+    console.log('Total articles from RSS fallback:', articles.length);
+    return articles.slice(0, 10);
   } catch (error) {
     console.error('Error fetching news:', error);
     throw error;
@@ -248,8 +309,9 @@ export async function addNewsToGlobe(article: NewsArticle): Promise<void> {
     console.log(`📍 Detected country: ${detectedCountry}`);
     console.log(`📍 Coordinates: [${coordinates[0]}, ${coordinates[1]}]`);
 
-    // Format the date for the historical event
-    const eventDate = new Date(article.publishedAt).toLocaleDateString('en-GB');
+    // Store as the user's local "today" (not the article's UTC date) to avoid off-by-one
+    const today = new Date();
+    const eventDate = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
 
     // Prepare content data for database
     const contentData = {

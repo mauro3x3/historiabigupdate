@@ -546,7 +546,14 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
 
   // Filter content by selected date (both official modules and user content)
   const getFilteredContent = () => {
-    const selectedDateObj = new Date(selectedDate);
+    // Parse selected date as LOCAL date to avoid UTC off-by-one
+    let selectedDateObj: Date;
+    if (/^\d{4}-\d{2}-\d{2}$/.test(selectedDate)) {
+      const [y, m, d] = selectedDate.split('-').map(Number);
+      selectedDateObj = new Date(y, m - 1, d);
+    } else {
+      selectedDateObj = new Date(selectedDate);
+    }
     const selectedYear = selectedDateObj.getFullYear();
     
     console.log('Date filtering: Selected date', selectedDate, 'showing', userContent.length, 'user content items');
@@ -559,11 +566,7 @@ export default function ThreeGlobe({ journeys, onModuleClick, sharedContentId }:
         return false;
       }
       
-      // For news events, always show them regardless of date
-      if (content.category === 'News Event' || content.user_id === 'api') {
-        console.log('Including news event:', content.title, 'category:', content.category, 'user_id:', content.user_id);
-        return true;
-      }
+      // News/API items should also respect the selected date
       
       if (!content.dateHappened) return false;
       
