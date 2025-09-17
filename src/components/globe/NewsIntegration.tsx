@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { addDailyNewsToGlobe, clearOldNewsArticles } from '@/services/newsService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,12 +12,16 @@ export default function NewsIntegration({ onNewsAdded }: NewsIntegrationProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  
+  const SIX_HOURS_MS = 6 * 60 * 60 * 1000;
+  const LAST_UPDATE_KEY = 'news_last_update_at';
 
   const handleAddNews = async () => {
     setIsLoading(true);
     try {
       await addDailyNewsToGlobe();
       setLastUpdate(new Date().toLocaleString());
+      localStorage.setItem(LAST_UPDATE_KEY, String(Date.now()));
       onNewsAdded?.();
     } catch (error) {
       console.error('Failed to add news:', error);
@@ -26,6 +30,50 @@ export default function NewsIntegration({ onNewsAdded }: NewsIntegrationProps) {
       setIsLoading(false);
     }
   };
+
+  // Silent variant used by the auto-scheduler (no alerts/UI blocking)
+  const handleAddNewsSilently = async () => {
+    try {
+      await addDailyNewsToGlobe();
+      setLastUpdate(new Date().toLocaleString());
+      localStorage.setItem(LAST_UPDATE_KEY, String(Date.now()));
+      onNewsAdded?.();
+      console.log('[Auto News] Successfully added news articles');
+    } catch (error) {
+      console.warn('[Auto News] Failed to add news articles:', error);
+    }
+  };
+
+  // Auto-trigger every 6 hours without any server/cron setup
+  useEffect(() => {
+    const checkAndRun = () => {
+      const last = Number(localStorage.getItem(LAST_UPDATE_KEY) || '0');
+      const now = Date.now();
+      if (now - last >= SIX_HOURS_MS) {
+        // Run silently to avoid user interruption
+        handleAddNewsSilently();
+      }
+    };
+
+    // Initial check on mount
+    checkAndRun();
+
+    // Re-check periodically (every 15 minutes)
+    const interval = setInterval(checkAndRun, 15 * 60 * 1000);
+
+    // Also run when the tab becomes visible again
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkAndRun();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, []);
 
   const handleClearOldNews = async () => {
     setIsClearing(true);

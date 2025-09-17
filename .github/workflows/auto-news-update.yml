@@ -1,0 +1,43 @@
+name: Auto News Update
+
+on:
+  schedule:
+    # Run every 6 hours (at 00:00, 06:00, 12:00, 18:00 UTC)
+    - cron: '0 */6 * * *'
+  workflow_dispatch: # Allow manual trigger from GitHub UI
+
+jobs:
+  update-news:
+    runs-on: ubuntu-latest
+    name: Update News Articles
+    
+    steps:
+      - name: Trigger News Update
+        run: |
+          echo "🔄 Triggering automatic news update..."
+          
+          # Call the Supabase Edge Function
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            https://${{ secrets.SUPABASE_URL }}/functions/v1/auto-news-update)
+          
+          # Extract response body and status code
+          http_code=$(echo "$response" | tail -n1)
+          response_body=$(echo "$response" | head -n -1)
+          
+          echo "📡 Response status: $http_code"
+          echo "📊 Response body: $response_body"
+          
+          if [ "$http_code" -eq 200 ]; then
+            echo "✅ News update completed successfully!"
+          else
+            echo "❌ News update failed with status $http_code"
+            exit 1
+          fi
+          
+      - name: Log Completion
+        run: |
+          echo "🕐 News update completed at $(date)"
+          echo "📰 Next update scheduled for 6 hours from now"
